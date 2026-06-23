@@ -16,7 +16,7 @@
 详细增量计划见 [docs/learning-plan.md](docs/learning-plan.md)。
 
 **第 1 周**
-- [ ] M0 LangChain 解析记账意图
+- [x] M0 LangChain 解析记账意图
 - [ ] M1 FastAPI + MySQL
 - [ ] M2-M4 Function Calling + LangGraph Agent + 聊天前端
 
@@ -44,8 +44,8 @@
 pip install -r requirements.txt
 # 配置 .env 文件
 cp .env.example .env
-# 填入 DEEPSEEK_API_KEY 后运行示例
-python examples/01_basic_chain.py
+# 填入 DEEPSEEK_API_KEY 后运行 M0 示例
+python examples/00_hello_chain.py
 ```
 
 ## 📖 项目结构
