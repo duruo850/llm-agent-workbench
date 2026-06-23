@@ -1,0 +1,55 @@
+# Day 1 / M0：LangChain 基础 + 记账意图解析链
+
+## 里程碑
+
+**M0** — 用 LangChain LCEL（`prompt | llm`）+ 已有 DeepSeek 配置，将自然语言输入解析为结构化记账 JSON。
+
+## 学习目标
+
+| 抽象 | 说明 |
+|------|------|
+| Model | LLM 调用封装（DeepSeek OpenAI 兼容接口） |
+| Prompt Template | 提示词模板化，变量占位 `{text}` |
+| Chain | LCEL `\|` 运算符串联 Prompt → LLM → Parser |
+
+## 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `src/common/langchain_llm.py` | LangChain ChatOpenAI 公共封装 |
+| `examples/00_hello_chain.py` | 记账意图解析链主示例 |
+
+## 运行命令
+
+```bash
+cd /Users/jayzhan/Desktop/My/llm-agent-workbench
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python examples/00_hello_chain.py
+```
+
+## 验收标准
+
+- [ ] `examples/00_hello_chain.py` 可独立运行
+- [ ] 代码含详细中文注释，解释 Model / Prompt / Chain 三概念
+- [ ] 至少 3 条测试语句输出正确结构化 JSON（`amount`, `category`, `merchant`, `note`）
+- [ ] 复用 `src/common/deepseek_client.py` 配置，无硬编码 API Key
+
+## 内置测试语句
+
+1. `"刚才 Starbucks 花了 38，算餐饮"`
+2. `"地铁 6 块，交通"`
+3. `"收到工资 15000"`
+4. `"在盒马买了水果牛奶一共 89.5 元"`（边界：无明确分类）
+
+## 官方文档
+
+- LangChain 快速入门：https://python.langchain.com/docs/introduction/
+- 核心概念：https://python.langchain.com/docs/concepts/
+- 快速开始 notebook：https://python.langchain.com/docs/tutorials/
+
+## 不在 M0 范围内
+
+- FastAPI 后端（M1）
+- Function Calling / `@tool`（M2）
+- LangGraph Agent 图（M4）
+- 单元测试目录 `tests/`（M0 用 example 内置用例即可）
