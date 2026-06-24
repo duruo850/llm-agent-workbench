@@ -1,10 +1,8 @@
 """LangChain ChatOpenAI 封装，复用 DeepSeek 配置。"""
 
-import os
-
 from langchain_openai import ChatOpenAI
 
-from src.common.deepseek_client import BASE_URL, MODEL
+from src.common.llm import LLMCapability, LLMProvider, get_langchain_chat_llm
 
 
 def get_chat_llm(temperature: float = 0) -> ChatOpenAI:
@@ -19,14 +17,8 @@ def get_chat_llm(temperature: float = 0) -> ChatOpenAI:
     Raises:
         ValueError: 未设置 DEEPSEEK_API_KEY 时抛出，并提示复制 .env.example。
     """
-    api_key = os.getenv("DEEPSEEK_API_KEY")
-    if not api_key:
-        raise ValueError(
-            "未找到 DEEPSEEK_API_KEY。请复制 .env.example 为 .env 并填入 API Key。"
-        )
-    return ChatOpenAI(
-        model=MODEL,
-        api_key=api_key,
-        base_url=BASE_URL,
+    return get_langchain_chat_llm(
+        provider=LLMProvider.DEEPSEEK,
+        capability=LLMCapability.TEXT,
         temperature=temperature,
     )

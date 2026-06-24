@@ -32,7 +32,7 @@
 
 - **Agent**: LangChain + LangGraph + Function Calling
 - **RAG**: LlamaIndex + Chroma + Embeddings
-- **LLM**: DeepSeek（OpenAI 兼容接口）
+- **LLM**: DeepSeek（云端文本）+ Ollama（本地视觉，OpenAI 兼容接口）
 - **存储**: MySQL + Chroma（向量）
 - **后端**: FastAPI（SSE 流式）
 - **前端**: React + Vite
@@ -44,9 +44,15 @@
 pip install -r requirements.txt
 # 配置 .env 文件
 cp .env.example .env
-# 填入 DEEPSEEK_API_KEY 后运行 M0 示例
+# 填入 DEEPSEEK_API_KEY 后运行 M0 文本入账示例
 python examples/00_hello_chain.py
+
+# 图片入账（Ollama 本地视觉模型，见 examples/README.md）
+./examples/setup-ollama.sh
+python examples/01_image_ollama_chain.py
 ```
+
+图片入账详见 [examples/README.md](examples/README.md)。
 
 ## 📖 项目结构
 
@@ -56,7 +62,7 @@ llm-agent-workbench/
 ├── agent/                   # LangGraph Agent + Tools + Skills
 ├── indexer/                 # LlamaIndex RAG + Embeddings
 ├── frontend/                # 聊天 + 仪表盘
-├── src/common/              # DeepSeek API 公共封装
+├── src/common/              # LLM 平台抽象 + DeepSeek / Ollama 封装
 ├── examples/                # 各阶段独立 demo
 ├── docs/                    # 学习计划
 └── tests/
