@@ -1,27 +1,34 @@
-"""DeepSeek API 公共模块。"""
+"""公共模块。"""
 
-from src.common.deepseek_adapter import DEFAULT_MODEL, DeepSeekAdapter, EvalResult
-from src.common.deepseek_client import BASE_URL, MODEL, get_client
-from src.common.langchain_llm import get_chat_llm
-from src.common.llm import LLMCapability, LLMProvider, get_langchain_chat_llm
-from src.common.ollama_llm import OLLAMA_BASE_URL, OLLAMA_VISION_MODEL, get_ollama_vision_llm
-from src.common.transaction_schema import ParsedTransaction, parse_llm_json, validate_fields
+from src.common.llm import (
+    DEEPSEEK_BASE_URL,
+    DEEPSEEK_MODEL,
+    LLMCapability,
+    LLMProvider,
+    OLLAMA_BASE_URL,
+    OLLAMA_VISION_MODEL,
+    format_json,
+    get_openai_client,
+    get_openai_chat_llm,
+)
+from src.model.Transaction import Transaction, LoadTransaction
+
+# 向后兼容旧名
+BASE_URL = DEEPSEEK_BASE_URL
+MODEL = DEEPSEEK_MODEL
 
 __all__ = [
     "BASE_URL",
-    "DEFAULT_MODEL",
-    "DeepSeekAdapter",
-    "EvalResult",
+    "DEEPSEEK_BASE_URL",
+    "DEEPSEEK_MODEL",
     "LLMCapability",
     "LLMProvider",
     "MODEL",
     "OLLAMA_BASE_URL",
     "OLLAMA_VISION_MODEL",
-    "ParsedTransaction",
-    "get_chat_llm",
-    "get_client",
-    "get_langchain_chat_llm",
-    "get_ollama_vision_llm",
-    "parse_llm_json",
-    "validate_fields",
+    "Transaction",
+    "format_json",
+    "get_openai_client",
+    "get_openai_chat_llm",
+    "LoadTransaction",
 ]

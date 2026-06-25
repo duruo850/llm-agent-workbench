@@ -20,9 +20,10 @@ if str(_ROOT) not in sys.path:
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from _chain_debug import trace_runnable
-from src.common.ollama_llm import get_ollama_vision_llm
-from src.common.transaction_schema import ParsedTransaction, parse_llm_json, validate_fields
+from examples.common.chain_debug import trace_runnable
+from src.common.llm import LLMCapability, LLMProvider, get_openai_chat_llm
+from src.common.llm import LLMCapability, LLMProvider, format_json, get_openai_chat_llm
+from src.model.Transaction import Transaction, LoadTransaction
 
 _IMAGE_SYSTEM_PROMPT = """\
 你是一个个人记账助手。从微信/支付宝等支付或转账截图中提取记账信息，只输出 JSON，不要任何额外文字。
@@ -67,7 +68,11 @@ def build_image_parse_chain(verbose: bool = False):
         ]
     )
 
-    llm = get_ollama_vision_llm(temperature=0)
+    llm = get_openai_chat_llm(
+        provider=LLMProvider.OLLAMA,
+        capability=LLMCapability.VISION,
+        temperature=0,
+    )
     parser = StrOutputParser()
 
     if not verbose:
@@ -83,7 +88,7 @@ def build_image_parse_chain(verbose: bool = False):
 def parse_transaction_from_image(
     path: Path | str,
     verbose: bool = False,
-) -> ParsedTransaction:
+) -> Transaction:
     """从支付/转账截图解析记账记录。"""
     image_path = Path(path)
     print("image_path:", image_path)
@@ -93,8 +98,7 @@ def parse_transaction_from_image(
     print("chain invoke start!!", chain)  
     raw_output = chain.invoke({"image_url": image_binary})
     print("chain invoke end!! raw_output:", raw_output)
-    data = parse_llm_json(raw_output)
-    return validate_fields(data)
+    return LoadTransaction(raw_output)
 
 
 def main() -> None:

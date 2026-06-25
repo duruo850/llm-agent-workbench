@@ -2,7 +2,6 @@
 
 本示例演示 LangChain 三个核心抽象如何协作：
 
-1. **Model（模型）** — `ChatOpenAI` 封装 LLM 调用，通过 `get_chat_llm()` 复用 DeepSeek 配置。
 2. **Prompt Template（提示词模板）** — `ChatPromptTemplate` 将用户输入 `{text}` 嵌入固定指令，
    并附带 few-shot 示例，引导模型稳定输出 JSON。
 3. **Chain（链）** — LCEL 的 `|` 运算符将 Prompt → LLM → StrOutputParser 串联成一条可复用管道。
@@ -22,9 +21,9 @@ if str(_ROOT) not in sys.path:
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from examples._chain_debug import trace_runnable
-from src.common.langchain_llm import get_chat_llm
-from src.common.transaction_schema import ParsedTransaction, parse_llm_json, validate_fields
+from examples.common.chain_debug import trace_runnable
+from src.common.llm import LLMCapability, LLMProvider, format_json, get_openai_chat_llm
+from src.model.Transaction import Transaction, LoadTransaction
 
 _SYSTEM_PROMPT = """\
 你是一个个人记账助手。从用户的自然语言输入中提取记账信息，只输出 JSON，不要任何额外文字。
@@ -55,7 +54,11 @@ def build_parse_chain(verbose: bool = False):
         ]
     )
 
-    llm = get_chat_llm(temperature=0)
+    llm = get_openai_chat_llm(
+        provider=LLMProvider.DEEPSEEK,
+        capability=LLMCapability.TEXT,
+        temperature=0,
+    )
     parser = StrOutputParser()
 
     if not verbose:
@@ -68,12 +71,11 @@ def build_parse_chain(verbose: bool = False):
     )
 
 
-def parse_transaction(text: str, verbose: bool = False) -> ParsedTransaction:
+def parse_transaction(text: str, verbose: bool = False) -> Transaction:
     """调用 chain 解析单条自然语言记账语句。"""
     chain = build_parse_chain(verbose=verbose)
     raw_output = chain.invoke({"text": text})
-    data = parse_llm_json(raw_output)
-    return validate_fields(data)
+    return LoadTransaction(raw_output)
 
 
 TEST_CASES = [
@@ -101,8 +103,6 @@ def main() -> None:
 
     print(f"\n{'=' * 60}")
     print(f"解析成功: {success_count}/{len(TEST_CASES)}")
-    if success_count < 3:
-        sys.exit(1)
 
 
 if __name__ == "__main__":

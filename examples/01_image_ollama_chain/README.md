@@ -80,8 +80,8 @@ docker compose -f examples/docker-compose.yml logs # 查看日志
 项目通过统一工厂将不同平台接入 LangChain：
 
 ```
-examples/00_hello_chain.py  ──► get_chat_llm()           ──► LLMProvider.DEEPSEEK + TEXT
-examples/01_image_ollama_chain.py ──► get_ollama_vision_llm() ──► LLMProvider.OLLAMA + VISION
+examples/00_hello_chain.py  ──► get_langchain_chat_llm()           ──► LLMProvider.DEEPSEEK + TEXT
+examples/01_image_ollama_chain.py ──► get_langchain_chat_llm() ──► LLMProvider.OLLAMA + VISION
                                           │
                                           ▼
                               get_langchain_chat_llm(provider, capability)
@@ -93,7 +93,6 @@ examples/01_image_ollama_chain.py ──► get_ollama_vision_llm() ──► LL
 - `LLMProvider`：平台（DeepSeek / Ollama）
 - `LLMCapability`：能力（TEXT / VISION）
 - `ProviderSpec`：运行时 model / base_url / api_key
-- 便捷函数：`get_chat_llm()`、`get_ollama_vision_llm()` 是对 factory 的薄封装
 
 ## 故障排查
 
