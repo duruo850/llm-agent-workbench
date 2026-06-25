@@ -33,7 +33,7 @@
 - **Agent**: LangChain + LangGraph + Function Calling
 - **RAG**: LlamaIndex + Chroma + Embeddings
 - **LLM**: DeepSeek（云端文本）+ Ollama（本地视觉，OpenAI 兼容接口）
-- **存储**: MySQL + Chroma（向量）
+- **存储**: PostgreSQL + Chroma（向量，M6+）
 - **后端**: FastAPI（SSE 流式）
 - **前端**: React + Vite
 - **进阶**: Embeddings、Fine-tuning、Agent Skills、LangSmith
@@ -57,13 +57,12 @@ python examples/01_image_ollama_chain.py
 ### M1 服务端（PostgreSQL）
 
 ```bash
-docker compose -f server/docker-compose.yml up -d
-alembic -c server/alembic.ini upgrade head
-uvicorn server.main:app --reload --port 8000
+docker compose up -d
+python server/main.py
 curl http://localhost:8000/health
 ```
 
-详见 [server/README.md](server/README.md)。
+启动时自动执行 Alembic 迁移。详见 [server/README.md](server/README.md) 与 [.harness/Skills/local-dev/SKILL.md](.harness/Skills/local-dev/SKILL.md)。
 
 ## 📖 项目结构
 
@@ -73,8 +72,11 @@ llm-agent-workbench/
 ├── agent/                   # LangGraph Agent + Tools + Skills
 ├── indexer/                 # LlamaIndex RAG + Embeddings
 ├── frontend/                # 聊天 + 仪表盘
-├── src/common/              # LLM 平台抽象 + DeepSeek / Ollama 封装
+├── common/                  # LLM 平台抽象 + DeepSeek / Ollama 封装
 ├── examples/                # 各阶段独立 demo
 ├── docs/                    # 学习计划
-└── tests/
+├── .harness/                # Agent 编码规范（Rules / Skills / Wiki / Changes）
+└── server/test/             # HTTP 集成测试
 ```
+
+Agent 实现功能前请读 [AGENTS.md](AGENTS.md) 与 [.harness/](.harness/)。里程碑交付单见 [.harness/Changes/](.harness/Changes/)。

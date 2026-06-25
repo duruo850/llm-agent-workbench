@@ -1,4 +1,8 @@
-# Day 1 / M0：LangChain 基础 + 记账意图解析链
+---
+status: done
+---
+
+# Day 0 / M0：LangChain 基础 + 记账意图解析链
 
 ## 里程碑
 
@@ -16,7 +20,7 @@
 
 | 文件 | 说明 |
 |------|------|
-| `src/common/langchain_llm.py` | LangChain ChatOpenAI 公共封装 |
+| `common/llm/` | LLM 平台抽象 + DeepSeek 封装 |
 | `examples/00_hello_chain.py` | 记账意图解析链主示例 |
 
 ## 运行命令
@@ -29,10 +33,10 @@ cd /Users/jayzhan/Desktop/My/llm-agent-workbench
 
 ## 验收标准
 
-- [ ] `examples/00_hello_chain.py` 可独立运行
-- [ ] 代码含详细中文注释，解释 Model / Prompt / Chain 三概念
-- [ ] 至少 3 条测试语句输出正确结构化 JSON（`amount`, `category`, `merchant`, `note`）
-- [ ] 复用 `src/common/deepseek_client.py` 配置，无硬编码 API Key
+- [x] `examples/00_hello_chain.py` 可独立运行
+- [x] 代码含详细中文注释，解释 Model / Prompt / Chain 三概念
+- [x] 至少 3 条测试语句输出正确结构化 JSON（`amount`, `category`, `merchant`, `note`）
+- [x] 复用 `common/llm/` 配置，无硬编码 API Key
 
 ## 内置测试语句
 
