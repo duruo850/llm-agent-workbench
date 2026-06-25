@@ -64,7 +64,7 @@ def test_create_category(http_client: httpx.Client, unique_suffix: str) -> None:
     http_client.delete(f"/categories/{body['id']}")
 ```
 
-Agent + 工具直测参考 [`server/api/agent_test.py`](../../../server/api/agent_test.py)。
+Agent 真实 LLM 参考 [`server/api/agent_test.py`](../../../server/api/agent_test.py)（无 mock，依赖 `DEEPSEEK_API_KEY`）。
 
 ## 反模式
 
@@ -73,3 +73,4 @@ Agent + 工具直测参考 [`server/api/agent_test.py`](../../../server/api/agen
 - 不要在测试里启动 uvicorn（session 级 API 由开发者手动起）
 - 不要用硬编码 id（用 fixture 或 POST 创建）
 - 不要放回 `server/test/`（已废弃）
+- **不要** `unittest.mock`、`@patch`、mock LLM / mock DB（缺外部依赖时用 `pytest.skip`，见 `require_llm`）

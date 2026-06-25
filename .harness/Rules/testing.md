@@ -16,7 +16,7 @@
 | `categories_test.py` | Category CRUD |
 | `budgets_test.py` | Budget CRUD |
 | `transactions_test.py` | Transaction + 按月列表 |
-| `agent_test.py` | Agent + db_tools |
+| `agent_test.py` | Agent `/agent/chat`（真实 LLM） |
 | `health_test.py` | `/health` |
 | `conftest.py` | 共用 fixture |
 
@@ -31,6 +31,7 @@
 | `category` | 创建分类并在 teardown 删除 |
 | `budget` | 依赖 category |
 | `transaction` | 依赖 category |
+| `require_llm` | 未配置 `DEEPSEEK_API_KEY` 则 `pytest.skip`（仅 Agent 测试） |
 
 ## 每表五用例模板
 
@@ -49,6 +50,7 @@ assert body["name"] == expected
 
 - **不要**封装自定义 `assert_*` helper
 - **不要**在测试里用 `TestClient`
+- **不要**使用 `unittest.mock` / `@patch`（含 mock LLM）；Agent 等需走真实 HTTP + 真实外部依赖，缺 Key 用 `require_llm` skip
 - 金额比较注意 `Decimal` 序列化可能是字符串 `"2000.00"` 或数字
 
 ## 自定义 API 测试
@@ -68,5 +70,7 @@ API 未启动时相关用例 `pytest.skip`，并提示：
 ```
 请先运行: python server/main.py
 ```
+
+Agent 测试未配置 `DEEPSEEK_API_KEY` 时 `require_llm` fixture 会 skip。
 
 详见 [Skills/http-integration-test/SKILL.md](../Skills/http-integration-test/SKILL.md)。
