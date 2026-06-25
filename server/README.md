@@ -64,22 +64,20 @@ curl -X DELETE http://localhost:8000/transactions/1
 ```
 server/
 ├── main.py              # FastAPI 入口
-├── crud/                # FastCRUD 实例 + crud_router
-├── api/                 # 自定义路由（按月查账、月度汇总）
-├── db/                  # SQLAlchemy ORM + session
+├── routers.py           # 路由注册
+├── api/                 # HTTP 编排
+├── service/             # 业务 Service + enter.py（FastCRUD 实例）
+├── db/                  # session + 迁移
 ├── model/
-│   ├── transaction.py     # 有 DB 表的领域实体
+│   ├── transaction.py
 │   ├── category.py
 │   ├── budget.py
-│   ├── request/             # *Request + parsed（LLM 输入）
-│   ├── response/            # *Response（含汇总等非表结构）
-├── alembic/             # 数据库迁移
-└── docker-compose.yml   # PostgreSQL 16
+│   ├── request/
+│   └── response/
+└── alembic/
 ```
 
-**架构**：`server/model/*Table` 定义 ORM 表 → `server/crud/` 用 `crud_router` 生成标准 CRUD → `server/api/` 只保留自定义查询。
-
-> `GET /categories`、`GET /budgets` 由 FastCRUD 生成，返回 `{ "data": [...], "total_count": N }` 分页结构；`GET /transactions?month=` 仍为自定义列表。
+**架构**：`server/model/` 定义 ORM → `server/service/` 业务逻辑 → `server/api/` HTTP 编排。
 
 与 `src/` 的协作：
 

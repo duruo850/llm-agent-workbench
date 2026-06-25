@@ -1,3 +1,5 @@
+"""Service 层 FastCRUD 实例入口（各 ``{entity}.py`` Service 内部使用）。"""
+
 from __future__ import annotations
 
 from fastcrud import FastCRUD

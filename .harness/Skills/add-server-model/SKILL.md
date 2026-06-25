@@ -25,11 +25,13 @@ description: 新增 server 数据库表：SQLModel + Alembic + Request/Response 
 - [ ] 3. 在 `server/model/response/{entity}.py` 添加 `{Entity}GetResponse`（仅标量字段）
 - [ ] 4. 在 `server/model/request/{entity}.py` 添加 `CreateRequest` / `UpdateRequest`
 - [ ] 5. 在 `server/model/request/__init__.py` 与 `response/__init__.py` 导出
-- [ ] 6. 在 `server/crud/instances.py` 添加 `FastCRUD(Entity)`
-- [ ] 7. 在 `server/crud/routers.py` 注册 `crud_router`
-- [ ] 8. 若为核心业务表，更新 `server/db/migrate.py` 的 `_REQUIRED_TABLES`
-- [ ] 9. 在 `server/test/test_{entity}.py` 写五用例 CRUD 测试
-- [ ] 10. 启动 `python server/main.py` 验证迁移 + pytest
+- [ ] 6. 在 `server/service/enter.py` 添加 `{entity}_crud = FastCRUD(Entity)`
+- [ ] 7. 在 `server/service/{entity}.py` 实现 `{Entity}Service`（create / get / list / update / delete）
+- [ ] 8. 在 `server/api/{entities}.py` 定义 `APIRouter`，**只调 service**
+- [ ] 9. 在 `server/routers.py` 的 `register_routers` 中 `include_router`
+- [ ] 10. 若为核心业务表，更新 `server/db/migrate.py` 的 `_REQUIRED_TABLES`
+- [ ] 11. 在 `server/api/{entities}_test.py` 写五用例 CRUD 测试
+- [ ] 12. 启动 `python server/main.py` 验证迁移 + pytest
 
 ## 文件清单
 
@@ -39,10 +41,11 @@ description: 新增 server 数据库表：SQLModel + Alembic + Request/Response 
 | `server/alembic/versions/NNN_*.py` | 新建 |
 | `server/model/response/{entity}.py` | 新建 |
 | `server/model/request/{entity}.py` | 新建 |
-| `server/crud/instances.py` | 修改 |
-| `server/crud/routers.py` | 修改 |
-| `server/db/migrate.py` | 修改（核心表） |
-| `server/test/test_{entity}.py` | 新建 |
+| `server/service/enter.py` | 修改 |
+| `server/service/{entity}.py` | 新建 |
+| `server/api/{entities}.py` | 新建 |
+| `server/routers.py` | `include_router` |
+| `server/api/{entities}_test.py` | 新建 |
 
 ## 验收
 
@@ -50,7 +53,7 @@ description: 新增 server 数据库表：SQLModel + Alembic + Request/Response 
 docker compose up -d
 python server/main.py
 # 另开终端
-pytest server/test/test_{entity}.py -v
+pytest server/api/{entities}_test.py -v
 curl http://127.0.0.1:8000/{entities}
 ```
 
@@ -58,6 +61,7 @@ curl http://127.0.0.1:8000/{entities}
 
 - 不要在 ORM 上加 `Relationship` 双向关联
 - 不要用 `CategoryTable` 命名
-- 不要把 CRUD 逻辑写进 `server/api/`
+- 不要把 CRUD 逻辑写进 `server/api/`（API 只调 Service）
+- 不要在 `server/api/` 直接调 FastCRUD
 - 不要跳过 Alembic revision 直接改表
 - 不要用 `TestClient` 代替 HTTP 集成测试

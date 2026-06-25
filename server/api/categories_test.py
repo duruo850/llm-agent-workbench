@@ -1,4 +1,4 @@
-"""Category CRUD — POST/GET/PATCH/DELETE /categories。"""
+"""Category API 集成测试 — POST/GET/PATCH/DELETE /categories。"""
 
 from __future__ import annotations
 

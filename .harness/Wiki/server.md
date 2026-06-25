@@ -35,17 +35,17 @@ HH:MM:SS INFO [billmind.request] GET /health -> 200 (1.2ms)
 |------|------|------|
 | GET | `/health` | `{"status":"ok"}` |
 
-### Category（FastCRUD）
+### Category（`api/categories` → `service/category`）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | POST | `/categories` | 创建 |
 | GET | `/categories/{id}` | 单条 |
-| GET | `/categories` | 列表 `{data: [...]}` |
-| PATCH | `/categories/{id}` | 更新（可能空 body） |
-| DELETE | `/categories/{id}` | 删除 |
+| GET | `/categories` | 列表 `{data, total_count}` |
+| PATCH | `/categories/{id}` | 更新 |
+| DELETE | `/categories/{id}` | 删除（204） |
 
-### Budget（FastCRUD）
+### Budget（`api/budgets` → `service/budget`）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -53,21 +53,19 @@ HH:MM:SS INFO [billmind.request] GET /health -> 200 (1.2ms)
 | GET | `/budgets/{id}` | 单条 |
 | GET | `/budgets` | 列表 |
 | PATCH | `/budgets/{id}` | 更新 |
-| DELETE | `/budgets/{id}` | 删除 |
+| DELETE | `/budgets/{id}` | 删除（204） |
 
-### Transaction
+### Transaction（`api/transactions` → `service/transaction`）
 
-| 方法 | 路径 | 提供方 | 说明 |
-|------|------|--------|------|
-| POST | `/transactions` | FastCRUD | 记一笔 |
-| GET | `/transactions/{id}` | FastCRUD | 单条 |
-| PATCH | `/transactions/{id}` | FastCRUD | 更新 |
-| DELETE | `/transactions/{id}` | FastCRUD | 删除 |
-| GET | `/transactions?month=` | 自定义 api/ | 按月列表 |
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/transactions` | 记一笔 |
+| GET | `/transactions/{id}` | 单条 |
+| PATCH | `/transactions/{id}` | 更新 |
+| DELETE | `/transactions/{id}` | 删除（204） |
+| GET | `/transactions?month=` | 按月列表（数组） |
 
-> FastCRUD 对 transaction 禁用了 `read_multi`（`deleted_methods=["read_multi"]`），列表走自定义路由。
-
-### Summary（自定义）
+### Summary（`api/summary` → `service/transaction`）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -94,7 +92,7 @@ curl 'http://127.0.0.1:8000/summary/monthly?month=2025-06'
 
 ```bash
 python server/main.py          # 终端 1
-pytest server/test -v          # 终端 2
+pytest server/api -v          # 终端 2
 ```
 
 ## 核心文件
@@ -102,9 +100,9 @@ pytest server/test -v          # 终端 2
 | 文件 | 职责 |
 |------|------|
 | [`main.py`](../../server/main.py) | FastAPI 入口、中间件、异常、路由注册 |
-| [`crud/routers.py`](../../server/crud/routers.py) | FastCRUD 路由 |
-| [`api/transactions.py`](../../server/api/transactions.py) | 按月查账 |
-| [`api/summary.py`](../../server/api/summary.py) | 月度汇总 |
+| [`service/{entity}.py`](../../server/service/category.py) | 业务 Service（增删改查） |
+| [`api/{entities}.py`](../../server/api/categories.py) | HTTP 编排，调 Service |
+| [`service/enter.py`](../../server/service/enter.py) | FastCRUD 实例（Service 内部使用） |
 | [`db/migrate.py`](../../server/db/migrate.py) | 启动迁移 |
 | [`db/session.py`](../../server/db/session.py) | 异步 engine + get_db |
 

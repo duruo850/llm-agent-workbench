@@ -10,7 +10,7 @@
 |--------|------|--------|---------|
 | **M0** | ✅ 完成 | LangChain 文本入账 + Ollama 视觉 | [M0_1-langchain-text](../Changes/M0_1-langchain-text.plan)、[M0_2-ollama-vision](../Changes/M0_2-ollama-vision.plan) |
 | **M1** | ✅ 完成 | FastAPI + PostgreSQL CRUD | —（完成于 harness 前，无编号 plan） |
-| **M2** | ⬜ 待做 | Function Calling 记一笔 / 查账 | — |
+| **M2** | ✅ 完成 | Function Calling 记一笔 / 查账 | [M2_1-function-calling](../Changes/M2_1-function-calling.plan) |
 | **M3** | ⬜ 待做 | 聊天前端 | — |
 | **M4** | ⬜ 待做 | LangGraph Agent | — |
 | **M5** | ⬜ 待做 | 文件导入 | — |
@@ -41,8 +41,15 @@
 
 - 服务端：[`server/`](../../server/)
 - 三表：`categories`、`budgets`、`transactions`
-- HTTP 集成测试：[`server/test/`](../../server/test/)
+- HTTP 集成测试：[`server/api/*_test.py`](../../server/api/)
 - 规范：本 harness Rules + Skills
+
+## M2 要点
+
+- Agent 层：[`agent/`](../../agent/)（`runner.py` + `tools/db_tools.py`）
+- CLI demo：[`examples/02_function_calling_agent.py`](../../examples/02_function_calling_agent.py)
+- HTTP：`POST /agent/chat`
+- 测试：[`server/api/agent_test.py`](../../server/api/agent_test.py)
 
 ## M2+ 启动前
 

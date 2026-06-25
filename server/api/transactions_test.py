@@ -1,4 +1,4 @@
-"""Transaction CRUD — POST/GET/PATCH/DELETE /transactions，及按月列表。"""
+"""Transaction API 集成测试 — CRUD + GET /transactions?month=。"""
 
 from __future__ import annotations
 

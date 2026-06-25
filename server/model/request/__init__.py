@@ -1,3 +1,4 @@
+from server.model.request.agent import AgentChatRequest
 from server.model.request.budget import (
     BudgetCreateRequest,
     BudgetListQueryRequest,
@@ -17,6 +18,7 @@ from server.model.request.transaction import (
 )
 
 __all__ = [
+    "AgentChatRequest",
     "BudgetCreateRequest",
     "BudgetListQueryRequest",
     "BudgetUpdateRequest",

@@ -1,6 +1,6 @@
 ---
 name: entity-service
-description: 实体服务全栈 SOP — model / request / response / crud / db 迁移 / 自定义 api / 集成测试（参考 Category / Budget / Transaction）
+description: 实体服务全栈 SOP — model / request / response / service / db 迁移 / api / 集成测试（参考 Category / Budget / Transaction）
 ---
 
 # entity-service — 实体服务全栈实现
@@ -36,12 +36,13 @@ BillMind M1 每个实体（Category / Budget / Transaction）都遵循同一套*
 | ORM | `model/category.py` | `model/budget.py` | `model/transaction.py` |
 | Request | `request/category.py` | `request/budget.py` | `request/transaction.py` |
 | Response | `response/category.py` | `response/budget.py` | `response/transaction.py` |
-| CRUD 实例 | `crud/instances.py` | 同上 | 同上 |
-| CRUD 路由 | `crud/routers.py` | 同上 | `deleted_methods=["read_multi"]` |
-| 自定义 API | — | — | `api/transactions.py` |
+| FastCRUD 实例 | `service/enter.py` | 同上 | 同上 |
+| Service | `service/category.py` | `service/budget.py` | `service/transaction.py` |
+| API Router | `api/categories.py` | `api/budgets.py` | `api/transactions.py` |
+| 路由注册 | `routers.py` | 同上 | 同上 |
 | 迁移 | `alembic/versions/001_*.py` | 同上 | 同上 |
-| 启动同步 | `db/migrate.py` `_REQUIRED_TABLES` | 同上 | 同上 + model import |
-| 测试 | `test/test_category.py` | `test/test_budget.py` | `test/test_transaction.py` |
+| 启动同步 | `db/migrate.py` `_REQUIRED_TABLES` | 同上 | 同上 |
+| 测试 | `api/{entities}_test.py` | `api/budgets_test.py` | `api/transactions_test.py` |
 
 ## 分层数据流
 
@@ -52,13 +53,14 @@ flowchart TB
   end
 
   subgraph app [server/]
-    Main[main.py include_router]
-    CRUDRouter[crud/routers.py crud_router]
-    CustomAPI[api/*.py 可选]
+    Main[main.py register_routers]
+    Routers[routers.py 路由注册表]
+    API[api/{entities}.py APIRouter]
+    Service[service/{entity}.py 增删改查]
     Req[model/request/*Request]
     Res[model/response/*Response]
     ORM[model/{entity}.py SQLModel]
-    FastCRUD[crud/instances.py]
+    FastCRUD[service/enter.py]
     Session[db/session.py get_db]
     Migrate[db/migrate.py]
   end
@@ -69,17 +71,14 @@ flowchart TB
   end
 
   Client --> Main
-  Main --> CRUDRouter
-  Main --> CustomAPI
-  CRUDRouter --> Req
-  CRUDRouter --> Res
-  CRUDRouter --> FastCRUD
-  CustomAPI --> Req
-  CustomAPI --> Res
-  CustomAPI --> FastCRUD
+  Main --> Routers
+  Routers --> API
+  API --> Service
+  API --> Req
+  API --> Res
+  Service --> FastCRUD
   FastCRUD --> ORM
-  CRUDRouter --> Session
-  CustomAPI --> Session
+  Service --> Session
   Session --> Tables
   Migrate --> Alembic
   Migrate --> Tables
@@ -121,26 +120,48 @@ class Category(SQLModel, table=True):
 - [ ] `model_config = ConfigDict(from_attributes=True)`
 - [ ] 在 `server/model/response/__init__.py` 导出
 
-### ④ CRUD — FastCRUD 实例与路由
+### ④ Service — 业务层 + enter.py
 
-- [ ] `server/crud/instances.py`：`{entity}_crud = FastCRUD({Entity})`
-- [ ] `server/crud/routers.py`：注册 `crud_router(...)`
-  - `session=get_db`
-  - `create_schema` / `update_schema` / `select_schema`
-  - `path="/{entities}"`（复数 kebab）
-- [ ] 若列表需自定义（如 Transaction）：`deleted_methods=["read_multi"]`
+- [ ] `server/service/enter.py`：添加 `{entity}_crud = FastCRUD({Entity})`
+- [ ] 新建 `server/service/{entity}.py`，类名 `{Entity}Service`
+- [ ] 实现：`create_{entity}` / `get_{entity}` / `list_{entities}` / `update_{entity}` / `delete_{entity}`
+- [ ] 第一参数 `db: AsyncSession`；内部调 `enter.py` 中的 FastCRUD 实例
+- [ ] 模块末尾：`{entity}_service = {Entity}Service()`
+- [ ] 自定义查询（如 Transaction 按月列表）作为 Service 额外方法
 
-[`server/crud/routers.py`](../../../server/crud/routers.py) 中 Category 为标准模板。
+参照 [`server/service/category.py`](../../../server/service/category.py)。
 
-### ⑤ API — 自定义路由（可选，档位 C）
+### ⑤ API Router — HTTP 编排 + 路由注册
 
-- [ ] 判断：FastCRUD 能否满足列表/查询？不能才加 `server/api/{entity}s.py`
-- [ ] 定义 Query Request + List Response
-- [ ] `APIRouter(prefix="/{entities}")` + `Depends(get_db)`
-- [ ] 复用 `crud/instances.py` 的 crud 实例做 `select`
-- [ ] `server/main.py` 中 `app.include_router(router)`
+**5a. 新建 `server/api/{entities}.py`**
 
-Transaction 示例：[`server/api/transactions.py`](../../../server/api/transactions.py) — `GET ?month=` 返回 `list[...]`，非 `{data: ...}`。
+- [ ] 定义 `router = APIRouter(prefix="/{entities}", tags=["{entities}"])`
+- [ ] 标准五路由：`POST ""` / `GET "/{id}"` / `GET ""` / `PATCH "/{id}"` / `DELETE "/{id}"`
+- [ ] 每 handler：`Depends(get_db)` → 调 `{entity}_service` 对应方法
+- [ ] 404：service 返回 `None` 时 `HTTPException(404)`；DELETE 成功返回 `204`
+
+参照 [`server/api/categories.py`](../../../server/api/categories.py)。
+
+**5b. 注册到 [`server/routers.py`](../../../server/routers.py)**
+
+- [ ] `from server.api import {entities}`（或追加到现有 import）
+- [ ] 在 `register_routers(app)` 内增加：`app.include_router({entities}.router)`
+
+```python
+# server/routers.py — 新增实体后追加一行
+from server.api import categories, budgets, transactions, tags  # 示例
+
+def register_routers(app: FastAPI) -> None:
+    app.include_router(categories.router)
+    ...
+    app.include_router(tags.router)  # 新实体
+```
+
+> `main.py` 只调用 `register_routers(app)`，**不要**在 `main.py` 里直接 `include_router`。
+
+档位 C 自定义列表（如 Transaction `GET ?month=`）仍在同一 `api/{entities}.py` 的 `GET ""` handler 中，逻辑委托给 Service 额外方法。
+
+Transaction 示例：[`server/api/transactions.py`](../../../server/api/transactions.py)。
 
 ### ⑥ DB — 迁移与启动同步
 
@@ -153,10 +174,10 @@ Transaction 示例：[`server/api/transactions.py`](../../../server/api/transact
 
 ### ⑦ Test — HTTP 集成测试
 
-- [ ] 新建 `server/test/test_{entity}.py`
+- [ ] 新建 `server/api/{entities}_test.py`（与 `api/{entities}.py` 同目录）
 - [ ] 五用例：create / get / list / update / delete
-- [ ] 有自定义 API 时追加用例（如 `test_list_{entity}s_by_month`）
-- [ ] 需要依赖时扩展 `conftest.py` fixture（Budget 依赖 category）
+- [ ] 有自定义 API 时追加用例（如 `test_list_transactions_by_month`）
+- [ ] 需要依赖时扩展 `server/api/conftest.py` fixture（Budget 依赖 category）
 - [ ] `response.raise_for_status()` + 标准 `assert`；PATCH 后 GET 校验
 
 详见 [http-integration-test](../http-integration-test/SKILL.md)。
@@ -172,20 +193,21 @@ Transaction 示例：[`server/api/transactions.py`](../../../server/api/transact
     ├─ 有外键 / 唯一约束？
     │       └─ 档位 B（参照 Budget）+ 档位 A 步骤
     │
-    └─ 列表或查询逻辑非 FastCRUD 默认？
-            └─ 档位 C（参照 Transaction）= A/B + api/ + deleted_methods
+    └─ 列表或查询逻辑非默认分页？
+            └─ 档位 C（参照 Transaction）= Service 额外方法 + 同一 api router
 ```
 
 ## 整合点（勿漏）
 
 | 文件 | 动作 |
 |------|------|
-| `server/main.py` | `include_router`（crud 路由自动注册；自定义 api 需手动加） |
-| `server/db/migrate.py` | `_REQUIRED_TABLES` + model import |
+| `server/service/enter.py` | 添加 `{entity}_crud` |
+| `server/service/{entity}.py` | `{Entity}Service` + `{entity}_service` 单例 |
+| `server/api/{entities}.py` | 定义 `router`，五路由调 service |
+| **`server/routers.py`** | **`register_routers` 中 `include_router`** |
 | `server/model/request/__init__.py` | 导出 Request |
 | `server/model/response/__init__.py` | 导出 Response |
-| `server/crud/instances.py` | FastCRUD 实例 |
-| `server/crud/routers.py` | crud_router |
+| `server/db/migrate.py` | `_REQUIRED_TABLES` + model import |
 
 ## 文件清单模板
 
@@ -197,12 +219,14 @@ server/model/request/tag.py
 server/model/response/tag.py
 server/model/request/__init__.py          # 修改
 server/model/response/__init__.py         # 修改
-server/crud/instances.py                  # 修改
-server/crud/routers.py                    # 修改
+server/service/enter.py                   # 修改
+server/service/tag.py                     # 新建
+server/api/tags.py                        # 新建
+server/routers.py                         # include_router
 server/alembic/versions/002_add_tags.py   # 新建
 server/db/migrate.py                      # 修改 _REQUIRED_TABLES + import
-server/test/test_tag.py                   # 新建
-server/test/conftest.py                   # 按需 fixture
+server/api/tags_test.py                     # 新建
+server/api/conftest.py                      # 按需 fixture
 ```
 
 ## 验收
@@ -212,10 +236,10 @@ docker compose up -d
 python server/main.py
 
 # 另开终端 — 单实体
-pytest server/test/test_{entity}.py -v
+pytest server/api/tags_test.py -v
 
 # 全量
-pytest server/test -v
+pytest server/api -v
 
 # 手动
 curl http://127.0.0.1:8000/{entities}
@@ -225,7 +249,7 @@ curl -X POST http://127.0.0.1:8000/{entities} -H 'Content-Type: application/json
 ## 反模式
 
 - 不要在 ORM 上加双向 `Relationship`
-- 不要把标准 CRUD 写进 `server/api/`（应用 FastCRUD）
+- 不要把 SQL / FastCRUD 调用写进 `server/api/`（必须经 Service）
 - 不要跳过 Alembic 或 `_REQUIRED_TABLES`
 - 不要用 `TestClient`；必须真实 HTTP 集成测试
 - 不要 Response 继承带关联的 ORM 类

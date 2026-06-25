@@ -22,7 +22,7 @@ description: 本地开发 SOP：docker、main、pytest、F5 调试
 - [ ] 3. `docker compose up -d` — 启动 PostgreSQL（根目录 compose）
 - [ ] 4. `python server/main.py` — 自动迁移 + 启动 API `:8000`
 - [ ] 5. `curl http://127.0.0.1:8000/health` 验收
-- [ ] 6. 测试：`pytest server/test -v`（须 API 已启动）
+- [ ] 6. 测试：`pytest server/api -v`（须 API 已启动）
 - [ ] 7. F5 调试：选 `.vscode/launch.json` 配置
 
 ## 文件清单
@@ -56,7 +56,7 @@ python examples/01_image_ollama_chain/01_image_ollama_chain.py
 
 ```bash
 curl http://127.0.0.1:8000/health
-pytest server/test/test_health.py -v
+pytest server/api/health_test.py -v
 ```
 
 ## 反模式

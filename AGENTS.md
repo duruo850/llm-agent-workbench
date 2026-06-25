@@ -14,11 +14,13 @@
 | 数据库迁移 | [Skills/db-migrate/SKILL.md](.harness/Skills/db-migrate/SKILL.md) |
 | 本地开发 / 调试 | [Skills/local-dev/SKILL.md](.harness/Skills/local-dev/SKILL.md) |
 | **定 plan 并实现功能** | [Skills/implement-plan/SKILL.md](.harness/Skills/implement-plan/SKILL.md) |
+| **提取 AI 知识点 / 写 docs/knowledge** | [Skills/extract-ai-knowledge/SKILL.md](.harness/Skills/extract-ai-knowledge/SKILL.md) |
 
 ## 禁止
 
 - 绕过 harness 自创目录或命名（如 `backend/schemas/`、`CategoryTable`）
 - 在 ORM 模型上恢复双向 `Relationship`
+- **不得修改** [Wiki/architecture.md](.harness/Wiki/architecture.md)（整体架构由用户维护）
 - 用户未要求时 `git commit`
 
 ## 背景

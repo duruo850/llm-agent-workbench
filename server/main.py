@@ -1,25 +1,23 @@
 from __future__ import annotations
 
-import sys
+import logging
+import time
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
+import sys
 
 _root = Path(__file__).resolve().parents[1]
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-import logging
-import time
-from contextlib import asynccontextmanager
-from collections.abc import AsyncIterator
-
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
-from server.api import summary, transactions
-from server.crud.routers import budget_router, category_router, transaction_router
 from server.db.migrate import migrate_on_startup
 from server.db.session import engine
+from server.routers import register_routers
 
 logging.basicConfig(
     level=logging.INFO,
@@ -60,11 +58,7 @@ async def integrity_error_handler(_request: Request, exc: IntegrityError) -> JSO
     return JSONResponse(status_code=409, detail=detail)
 
 
-app.include_router(category_router)
-app.include_router(budget_router)
-app.include_router(transaction_router)
-app.include_router(transactions.router)
-app.include_router(summary.router)
+register_routers(app)
 
 
 @app.get("/health")
@@ -75,5 +69,4 @@ async def health() -> dict[str, str]:
 if __name__ == "__main__":
     import uvicorn
 
-    # reload=False 便于断点调试；改代码后手动重启即可
     uvicorn.run(app, host="127.0.0.1", port=8000, reload=False)

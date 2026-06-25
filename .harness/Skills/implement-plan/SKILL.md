@@ -130,7 +130,7 @@ stateDiagram-v2
   - 若该 M{n} **所有** plan 均已 done → 里程碑状态改为 `✅ 完成`
   - 若仍有未 done 的 plan → 保持 `🔄 进行中`
 - [ ] 5. 若里程碑首次完成：可选更新根 [README.md](../../../README.md) 对应 `- [x]` 勾选
-- [ ] 6. 若架构/目录有变：按需更新 [Wiki/architecture.md](../../Wiki/architecture.md) 或 [server.md](../../Wiki/server.md)
+- [ ] 6. 若目录或 API 有变：按需更新 [repo-layout.md](../../Wiki/repo-layout.md) 或 [server.md](../../Wiki/server.md)（**不得**改 [architecture.md](../../Wiki/architecture.md)）
 
 ### milestones 状态符号
 

@@ -1,5 +1,6 @@
 """HTTP 响应 schema（*Response）。"""
 
+from server.model.response.agent import AgentChatResponse
 from server.model.response.budget import (
     BudgetCreateResponse,
     BudgetGetResponse,
@@ -21,6 +22,7 @@ from server.model.response.transaction import (
 )
 
 __all__ = [
+    "AgentChatResponse",
     "BudgetCreateResponse",
     "BudgetGetResponse",
     "BudgetListResponse",

@@ -2,21 +2,22 @@
 
 ## 目录与运行方式
 
-- 测试目录：[`server/test/`](../../server/test/)
+- 测试目录：[`server/api/`](../../server/api/)（与路由同目录，`*_test.py`）
 - **真实 HTTP** 打已启动的 `main`（**不用** FastAPI `TestClient`）
-- 先起 `python server/main.py`，再 `pytest server/test -v`
-- [`pytest.ini`](../../pytest.ini) 含 `-s` 显示 `print`；`pythonpath = .`
+- 先起 `python server/main.py`，再 `pytest server/api -v`
+- [`pytest.ini`](../../pytest.ini)：`testpaths = server/api`，`python_files = *_test.py`
 
 ## 文件组织
 
-每 model 独立文件：
+每 API 模块独立测试文件：
 
 | 文件 | 覆盖 |
 |------|------|
-| `test_category.py` | Category CRUD |
-| `test_budget.py` | Budget CRUD |
-| `test_transaction.py` | Transaction + 自定义列表 |
-| `test_health.py` | `/health` |
+| `categories_test.py` | Category CRUD |
+| `budgets_test.py` | Budget CRUD |
+| `transactions_test.py` | Transaction + 按月列表 |
+| `agent_test.py` | Agent + db_tools |
+| `health_test.py` | `/health` |
 | `conftest.py` | 共用 fixture |
 
 ## conftest 链
@@ -53,7 +54,7 @@ assert body["name"] == expected
 ## 自定义 API 测试
 
 - `GET /transactions?month=2025-06` — 返回数组，非 `{data: ...}`
-- `GET /summary/monthly?month=2025-06` — 见 `test_transaction.py` 或专门测试
+- `GET /summary/monthly?month=2025-06` — 可在 `transactions_test.py` 或新建 `summary_test.py`
 
 ## 调试
 

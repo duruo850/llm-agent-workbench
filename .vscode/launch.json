@@ -24,24 +24,11 @@
       "jinja": true
     },
     {
-      "name": "Debug pytest (current file)",
+      "name": "Python: Debug Tests",
       "type": "debugpy",
       "request": "launch",
+      "purpose": ["debug-test"],
       "python": "${workspaceFolder}/.venv/bin/python3.14",
-      "module": "pytest",
-      "args": ["${file}", "-v", "-s"],
-      "cwd": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/.env",
-      "console": "integratedTerminal",
-      "justMyCode": false
-    },
-    {
-      "name": "Debug pytest (test_budget.py)",
-      "type": "debugpy",
-      "request": "launch",
-      "python": "${workspaceFolder}/.venv/bin/python3.14",
-      "module": "pytest",
-      "args": ["server/test/test_budget.py", "-v", "-s"],
       "cwd": "${workspaceFolder}",
       "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",

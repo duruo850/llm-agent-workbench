@@ -1,4 +1,4 @@
-"""Budget CRUD — POST/GET/PATCH/DELETE /budgets。"""
+"""Budget API 集成测试 — POST/GET/PATCH/DELETE /budgets。"""
 
 from __future__ import annotations
 
@@ -43,7 +43,6 @@ def test_update_budget(http_client: httpx.Client, budget: dict[str, Any]) -> Non
     response.raise_for_status()
     response = http_client.get(f"/budgets/{budget['id']}")
     response.raise_for_status()
-    print(response.json())
     assert Decimal(str(response.json()["limit_amount"])) == Decimal("3000")
 
 

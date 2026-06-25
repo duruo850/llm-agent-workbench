@@ -8,6 +8,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 _DEFAULT_DATABASE_URL = "postgresql+asyncpg://billmind:billmind@localhost:5432/billmind"
+_DEFAULT_API_BASE_URL = "http://127.0.0.1:8000"
 _ENV_LOADED = False
 
 
@@ -23,3 +24,9 @@ def load_env() -> None:
 def get_database_url() -> str:
     load_env()
     return os.getenv("DATABASE_URL", _DEFAULT_DATABASE_URL)
+
+
+def get_api_base_url() -> str:
+    """BillMind REST API 根地址，供 agent tools 与集成测试复用。"""
+    load_env()
+    return os.getenv("API_BASE_URL", _DEFAULT_API_BASE_URL).rstrip("/")

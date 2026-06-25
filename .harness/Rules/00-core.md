@@ -28,10 +28,15 @@ BillMind 仓库内所有 Agent 与贡献者应遵守的通用约定。
 
 ## 路径约定
 
-- 服务端代码在 [`server/`](../../server/)
-- 共享 LLM / 环境在 [`common/`](../../common/)
-- 非 API 工具函数在 [`utils/`](../../utils/)
-- 示例在 [`examples/`](../../examples/)
+| 目录 | 用途 |
+|------|------|
+| [`server/`](../../server/) | FastAPI 业务 API、ORM、CRUD |
+| [`common/`](../../common/) | 环境变量、LLM 客户端等跨模块配置 |
+| [`utils/`](../../utils/) | **通用**纯函数（无业务域、可跨 server/agent 复用），如日期解析、`map_by_name` |
+| [`agent/`](../../agent/) | Agent 编排与领域工具（`runner`、`tools/`） |
+| [`examples/`](../../examples/) | 各阶段独立 demo |
+
+**代码归属**：可复用、与具体 API/Agent 流程无关的逻辑放 `utils/`；不要散落在 `server/api/`、`agent/` 内联实现。参考 [`utils/date_range.py`](../../utils/date_range.py)、[`utils/map_by_name.py`](../../utils/map_by_name.py)。
 
 ## 与 learning-plan 的关系
 
@@ -53,5 +58,6 @@ BillMind 仓库内所有 Agent 与贡献者应遵守的通用约定。
 ## 禁止
 
 - 不创建 `.cursor/rules` 或 `.cursor/skills`（规范仅 `.harness` + 根 [`AGENTS.md`](../../AGENTS.md)）
+- **不得修改** [Wiki/architecture.md](../Wiki/architecture.md)（整体架构由用户维护；实现细节写 [server.md](../Wiki/server.md) 或 [repo-layout.md](../Wiki/repo-layout.md)）
 - 不硬编码 API Key 或数据库密码
 - 不在 ORM 上恢复双向 `Relationship`

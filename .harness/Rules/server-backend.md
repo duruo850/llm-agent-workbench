@@ -1,4 +1,4 @@
-# server/ 后端分层与 FastCRUD 约定
+# server/ 后端分层与 Service 约定
 
 M1 服务端 (`server/`) 层职责
 
@@ -7,36 +7,46 @@ M1 服务端 (`server/`) 层职责
 | ORM + 表实体 | [`server/model/{entity}.py`](../../server/model/category.py) | SQLModel `table=True`，类名 `Category` / `Budget` / `Transaction`（**无 Table 后缀**） |
 | 请求体 | [`server/model/request/`](../../server/model/request/) | `*CreateRequest` / `*UpdateRequest` / `*QueryRequest` |
 | 响应体 | [`server/model/response/`](../../server/model/response/) | 标量字段 `*Response` / `*GetResponse`；**不继承**带 Relationship 的 ORM |
-| CRUD | [`server/crud/`](../../server/crud/) | FastCRUD 实例 + [`crud/routers.py`](../../server/crud/routers.py) 的 `crud_router` |
-| 自定义 API | [`server/api/`](../../server/api/) | 仅**非标准**查询（如按月列表、月度汇总） |
+| **Service** | [`server/service/{entity}.py`](../../server/service/category.py) | 每 model 一个 `{Entity}Service`，实现增删改查 + 领域查询 |
+| FastCRUD 实例 | [`server/service/enter.py`](../../server/service/enter.py) | `{entity}_crud`，**仅 Service 层调用** |
+| HTTP API | [`server/api/`](../../server/api/) | 只做 HTTP 编排：`Depends(get_db)` → 调 service → 返回 Response |
 | 数据库 | [`server/db/`](../../server/db/) | `session.py` + [`migrate.py`](../../server/db/migrate.py) 启动自动 `alembic upgrade head` |
-| 工具函数 | [`utils/`](../../utils/) | 非 API 专用逻辑不放 `server/api/` |
+| 工具函数 | [`utils/`](../../utils/) | **通用**可复用纯函数（日期、集合索引等） |
 | 迁移 | [`server/alembic/`](../../server/alembic/) | revision 文件放在 `versions/` |
 
-## FastCRUD 路由
+## 数据流
 
-标准 CRUD 由 [`server/crud/routers.py`](../../server/crud/routers.py) 的 `crud_router` 生成：
-
-```python
-category_router = crud_router(
-    session=get_db,
-    model=Category,
-    crud=category_crud,
-    create_schema=CategoryCreateRequest,
-    update_schema=CategoryUpdateRequest,
-    select_schema=CategoryGetResponse,
-    path="/categories",
-    tags=["categories"],
-)
+```
+HTTP 请求 → server/api/{entity}.py → server/service/{entity}.py → service/enter.py → PostgreSQL
+Agent 工具 → server/service/{entity}.py（注入 AsyncSession，不经 HTTP）
 ```
 
-- `select_schema` 用 `*GetResponse`（如 `CategoryGetResponse`），避免返回 ORM 全字段 + 关联
-- 自定义路由在 [`server/api/`](../../server/api/) 并在 [`main.py`](../../server/main.py) `include_router`
+## Service 层（参照 Gin-Vue-Admin `ClassService` 模式）
 
-## 自定义 API 示例
+每个实体一个 Service 类 + 模块级单例 `{entity}_service`：
 
-[`server/api/transactions.py`](../../server/api/transactions.py) — `GET /transactions?month=YYYY-MM` 按月过滤  
-[`server/api/summary.py`](../../server/api/summary.py) — `GET /summary/monthly?month=YYYY-MM` 月度汇总
+| 方法 | 说明 |
+|------|------|
+| `create_{entity}` | 创建记录 |
+| `get_{entity}` | 按 id 查询，不存在返回 `None` |
+| `list_{entities}` | 列表（标准实体返回 `PaginatedList`） |
+| `update_{entity}` | 部分更新 |
+| `delete_{entity}` | 删除，返回是否成功 |
+
+示例：[`server/service/category.py`](../../server/service/category.py)
+
+- Service **接收** `db: AsyncSession` 为第一参数，由 API `Depends(get_db)` 或 Agent 调用方注入
+- 复杂查询（按月列表、月度汇总）放在对应 Service 的额外方法中
+- **禁止**在 `server/api/` 写 SQL / 直接调 FastCRUD
+
+## API 层
+
+[`server/api/categories.py`](../../server/api/categories.py) — 标准 CRUD 模板  
+[`server/api/transactions.py`](../../server/api/transactions.py) — 含自定义 `GET ?month=`  
+[`server/api/summary.py`](../../server/api/summary.py) — 跨实体汇总
+
+- 404：`service` 返回 `None` 时 `raise HTTPException(404)`
+- 列表分页：Query `offset` / `limit`，响应 `PaginatedList[{Entity}ListResponse]`
 
 ## 数据库 session
 
@@ -58,29 +68,20 @@ category_router = crud_router(
 
 ## 禁止
 
-- **禁止**在 ORM 模型上恢复 SQLAlchemy 2 双向 `Relationship`（曾导致 SQLAlchemy 2 映射 500
+- **禁止**在 ORM 模型上恢复 SQLAlchemy 2 双向 `Relationship`
 - 需要关联用 `category_id` 外键 + 查询 join，不用 ORM `Relationship`
 - 禁止在 `server/model/` 放 SQLAlchemy 裸 `Column` 定义而不用 SQLModel Field
-- 禁止把 CRUD 逻辑塞进 `server/api/`（应用层只做 HTTP 编排）
-
-## 与 learning-plan 差异
-
-| learning-plan | 实际 |
-|---------------|------|
-| `backend/` | [`server/`](../../server/) |
-| MySQL | PostgreSQL + `asyncpg` |
-| `schemas/` | `server/model/request/` + `response/` |
-| `TransactionTable` | `Transaction`（SQLModel table=True） |
-| 手动迁移 | 启动 `main` 自动迁移（仍可用 `alembic -c server/alembic.ini upgrade head`） |
+- **禁止**在 `server/api/` 直接调 FastCRUD 或写 SQL（必须经 Service）
 
 ## 新增实体检查清单
 
 1. `server/model/{entity}.py` — SQLModel 表
 2. `server/alembic/versions/` — 新 revision
-3. `server/model/response/{entity}.py` — `*GetResponse`
+3. `server/model/response/{entity}.py` — `*GetResponse` / `*ListResponse`
 4. `server/model/request/{entity}.py` — Create / Update / Query
-5. `server/crud/instances.py` + `routers.py`
-6. 若为核心表，更新 [`migrate.py`](../../server/db/migrate.py) 的 `_REQUIRED_TABLES`
-7. 需要自定义查询时再加 `server/api/`
+5. `server/service/enter.py` — 注册 `{entity}_crud = FastCRUD({Entity})`
+6. **`server/service/{entity}.py`** — `{Entity}Service` 增删改查
+7. **`server/api/{entities}.py`** — HTTP 路由调 service
+8. 若为核心表，更新 [`migrate.py`](../../server/db/migrate.py) 的 `_REQUIRED_TABLES`
 
-详见 [Skills/add-server-model/SKILL.md](../Skills/add-server-model/SKILL.md)。
+详见 [Skills/entity-service/SKILL.md](../Skills/entity-service/SKILL.md)。

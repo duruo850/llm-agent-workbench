@@ -1,21 +1,20 @@
-"""HTTP 集成测试共用 fixture。
+"""HTTP 集成测试共用 fixture（与 API 路由同目录）。
 
 需先手动启动 API（``python server/main.py``），再运行::
 
-    pytest server/test -v
+    pytest server/api -v
 
 单独调试某个文件（须先启动 API）::
 
-    pytest server/test/test_budget.py -v
-    # 或只跑一个用例
-    pytest server/test/test_budget.py::test_get_budget -v
+    pytest server/api/categories_test.py -v
+    pytest server/api/categories_test.py::test_get_category -v
 
-Cursor：打开测试文件 → 运行和调试 → **Debug pytest (current file)**；
-或在测试函数上方点击 **Debug Test**。
+Cursor：打开测试文件 → **Debug pytest (current file)**。
 """
 
 from __future__ import annotations
 
+import asyncio
 import os
 import uuid
 from collections.abc import Generator
@@ -24,8 +23,17 @@ from typing import Any
 import httpx
 import pytest
 
+from server.db.session import engine
+
 DEFAULT_API_BASE_URL = "http://127.0.0.1:8000"
 TEST_MONTH = "2025-06"
+
+
+@pytest.fixture(autouse=True)
+def _reset_async_engine_pool() -> None:
+    """避免多个 ``asyncio.run`` 测试复用连接池时 event loop 不一致。"""
+    yield
+    asyncio.run(engine.dispose())
 
 
 @pytest.fixture(scope="session")

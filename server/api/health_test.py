@@ -1,4 +1,4 @@
-"""健康检查。"""
+"""健康检查 API 集成测试。"""
 
 from __future__ import annotations
 

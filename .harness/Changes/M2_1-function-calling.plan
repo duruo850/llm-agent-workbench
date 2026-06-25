@@ -1,0 +1,88 @@
+---
+milestone: M2
+seq: 1
+slug: function-calling
+status: done
+skills:
+  - add-api-endpoint
+  - http-integration-test
+  - local-dev
+depends_on: []
+---
+
+# M2 Function Calling 记一笔 / 查账
+
+## 里程碑
+
+**M2** — LLM 通过 Function Calling 调用 M1 REST API，完成自然语言记一笔与查账。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [add-api-endpoint](../Skills/add-api-endpoint/SKILL.md) | `POST /agent/chat` |
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | `server/test/test_agent.py` |
+| [local-dev](../Skills/local-dev/SKILL.md) | 本地启动与验收 |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `common/env.py` | `get_api_base_url()` |
+| `agent/runner.py` | `bind_tools` + tool-call 循环 |
+| `agent/tools/db_tools.py` | 3 个 `@tool`，httpx 调 M1 API |
+| `examples/02_function_calling_agent.py` | demo + `--repl` |
+| `server/api/agent.py` | `POST /agent/chat` |
+| `server/model/request/agent.py` | 请求 schema |
+| `server/model/response/agent.py` | 响应 schema |
+| `server/test/test_agent.py` | tools 直测 + mock LLM HTTP 测试 |
+
+### 不在范围内
+
+- LangGraph StateGraph（M4）
+- 聊天前端（M3）
+- 多轮 Memory / HITL（M9）
+- 改 M1 表结构或新实体
+
+## 步骤清单
+
+- [x] 1. `common/env.py` 新增 `get_api_base_url()`
+- [x] 2. 实现 `agent/tools/db_tools.py`（3 个 `@tool`）
+- [x] 3. 实现 `agent/runner.py`（tool-call 循环）
+- [x] 4. `examples/02_function_calling_agent.py`（demo + `--repl`）
+- [x] 5. `server/api/agent.py` + schema + `main.py` 注册
+- [x] 6. `server/test/test_agent.py`
+- [x] 7. 更新 architecture.md、milestones、README
+
+## 运行命令
+
+```bash
+# 终端 1
+docker compose up -d
+python server/main.py
+
+# 终端 2 — demo
+.venv/bin/python examples/02_function_calling_agent.py
+
+# 交互
+.venv/bin/python examples/02_function_calling_agent.py --repl
+
+# HTTP
+curl -X POST http://127.0.0.1:8000/agent/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"message":"刚才地铁花了6块，交通"}'
+
+# 测试
+pytest server/test/test_agent.py -v
+pytest server/test -v
+```
+
+## 验收标准
+
+- [x] `examples/02_function_calling_agent.py` demo 模式可完成记一笔与查账
+- [x] `POST /agent/chat` 返回 `{ "reply": "..." }`
+- [x] `pytest server/test/test_agent.py -v` 全部通过
+- [x] `pytest server/test -v` M1 无回归
+- [x] agent 代码含 Function Calling 与 AI 关系的详细说明

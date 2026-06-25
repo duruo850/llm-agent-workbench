@@ -13,12 +13,13 @@
 
 ## 📚 学习路线
 
-详细增量计划见 [docs/learning-plan.md](docs/learning-plan.md)。
+详细增量计划见 [docs/learning-plan.md](docs/learning-plan.md)。各主题本质讲解见 [docs/knowledge/](docs/knowledge/README.md)。
 
 **第 1 周**
 - [x] M0 LangChain 解析记账意图
 - [x] M1 FastAPI + PostgreSQL
-- [ ] M2-M4 Function Calling + LangGraph Agent + 聊天前端
+- [x] M2 Function Calling 记一笔 / 查账
+- [ ] M3-M4 LangGraph Agent + 聊天前端
 
 **第 2 周**
 - [ ] M5-M6 文件导入 + RAG 知识库
@@ -64,6 +65,22 @@ curl http://localhost:8000/health
 
 启动时自动执行 Alembic 迁移。详见 [server/README.md](server/README.md) 与 [.harness/Skills/local-dev/SKILL.md](.harness/Skills/local-dev/SKILL.md)。
 
+### M2 Agent（Function Calling）
+
+```bash
+docker compose up -d
+
+# CLI（直连 PostgreSQL，无需单独起 API）
+.venv/bin/python3.14 examples/02_function_calling_agent.py
+.venv/bin/python3.14 examples/02_function_calling_agent.py --repl
+
+# HTTP（Server 注入 db session）
+python server/main.py
+curl -X POST http://127.0.0.1:8000/agent/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"message":"刚才地铁花了6块，交通"}'
+```
+
 ## 📖 项目结构
 
 ```
@@ -74,9 +91,9 @@ llm-agent-workbench/
 ├── frontend/                # 聊天 + 仪表盘
 ├── common/                  # LLM 平台抽象 + DeepSeek / Ollama 封装
 ├── examples/                # 各阶段独立 demo
-├── docs/                    # 学习计划
+├── docs/                    # 学习计划 + knowledge/ 知识点深度文档
 ├── .harness/                # Agent 编码规范（Rules / Skills / Wiki / Changes）
-└── server/test/             # HTTP 集成测试
+└── server/api/              # HTTP 路由 + *_test.py 集成测试
 ```
 
 Agent 实现功能前请读 [AGENTS.md](AGENTS.md) 与 [.harness/](.harness/)。里程碑交付单见 [.harness/Changes/](.harness/Changes/)。
