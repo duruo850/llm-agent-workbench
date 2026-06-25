@@ -1,5 +1,11 @@
 ---
+milestone: M0
+seq: 1
+slug: langchain-text
 status: done
+skills:
+  - local-dev
+depends_on: []
 ---
 
 # Day 0 / M0：LangChain 基础 + 记账意图解析链

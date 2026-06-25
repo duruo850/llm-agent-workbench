@@ -13,6 +13,7 @@
 | 写 HTTP 集成测试 | [Skills/http-integration-test/SKILL.md](.harness/Skills/http-integration-test/SKILL.md) |
 | 数据库迁移 | [Skills/db-migrate/SKILL.md](.harness/Skills/db-migrate/SKILL.md) |
 | 本地开发 / 调试 | [Skills/local-dev/SKILL.md](.harness/Skills/local-dev/SKILL.md) |
+| **定 plan 并实现功能** | [Skills/implement-plan/SKILL.md](.harness/Skills/implement-plan/SKILL.md) |
 
 ## 禁止
 

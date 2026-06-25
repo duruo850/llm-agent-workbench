@@ -29,11 +29,13 @@ Agent 实现 BillMind 功能前的**必读入口**。本目录沉淀目录结构
 | 写 HTTP 集成测试 | [Skills/http-integration-test/SKILL.md](Skills/http-integration-test/SKILL.md) |
 | 数据库迁移 | [Skills/db-migrate/SKILL.md](Skills/db-migrate/SKILL.md) |
 | 本地开发 / 调试 | [Skills/local-dev/SKILL.md](Skills/local-dev/SKILL.md) |
+| **定 plan 并实现功能**（Changes + milestones 同步） | [Skills/implement-plan/SKILL.md](Skills/implement-plan/SKILL.md) |
 
 ### Skill 选择（30 秒）
 
 ```
-新实体（像 Category/Budget/Transaction）→ entity-service（首选）
+实现某个功能 / 里程碑           → implement-plan（先写 M{n}_{seq}.plan）
+新实体（像 Category/...）       → entity-service（首选）
   ├─ 仅改表结构                    → db-migrate
   ├─ 实体已有，加自定义查询         → add-api-endpoint
   └─ 补测试                        → http-integration-test

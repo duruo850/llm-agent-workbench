@@ -48,7 +48,7 @@ BillMind 仓库内所有 Agent 与贡献者应遵守的通用约定。
 2. 对照 [Rules/server-backend.md](server-backend.md) 确认分层
 3. 按 Skill「验收」运行 pytest 或 curl
 4. 若新增核心表，更新 [`migrate.py`](../../server/db/migrate.py) 的 `_REQUIRED_TABLES`
-5. 若涉及新里程碑，在 [Changes/](../Changes/) 创建或更新交付单
+5. 若涉及新里程碑，用 [implement-plan](Skills/implement-plan/SKILL.md) 创建 `M{n}_{seq}-*.plan`
 
 ## 禁止
 

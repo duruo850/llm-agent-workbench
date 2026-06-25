@@ -1,5 +1,12 @@
 ---
+milestone: M0
+seq: 2
+slug: ollama-vision
 status: done
+skills:
+  - local-dev
+depends_on:
+  - M0_1-langchain-text
 ---
 
 # Day 1 扩展：Ollama 图片入账

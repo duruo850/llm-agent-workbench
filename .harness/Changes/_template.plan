@@ -1,0 +1,48 @@
+---
+milestone: M2
+seq: 1
+slug: example-slug
+status: draft
+skills: []
+depends_on: []
+---
+
+# {标题}
+
+## 里程碑
+
+**M{n}** — {一句话目标}
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [entity-service](../Skills/entity-service/SKILL.md) | 按需填写 |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `path/to/file` | 说明 |
+
+### 不在范围内
+
+- …
+
+## 步骤清单
+
+- [ ] 1. …
+- [ ] 2. …
+
+## 运行命令
+
+```bash
+# 验收命令
+```
+
+## 验收标准
+
+- [ ] …
+- [ ] …
