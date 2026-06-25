@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from common.env import get_database_url, load_env
-from server.db.base import Base
+from sqlmodel import SQLModel
 import server.model.budget  # noqa: F401
 import server.model.category  # noqa: F401
 import server.model.transaction  # noqa: F401
@@ -25,8 +25,6 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = Base.metadata
-
 database_url = get_database_url()
 config.set_main_option("sqlalchemy.url", database_url)
 
@@ -35,7 +33,7 @@ def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
-        target_metadata=target_metadata,
+        target_metadata=SQLModel.metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
