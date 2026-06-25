@@ -2,14 +2,16 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "BillMind API (server/main.py)",
+      "name": "Python: Current File",
       "type": "debugpy",
       "request": "launch",
+      "purpose": ["debug-in-terminal"],
       "python": "${workspaceFolder}/.venv/bin/python3.14",
-      "program": "${workspaceFolder}/server/main.py",
+      "program": "${file}",
       "cwd": "${workspaceFolder}",
       "envFile": "${workspaceFolder}/.env",
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "justMyCode": false
     },
     {
       "name": "BillMind API (uvicorn reload)",

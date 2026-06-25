@@ -23,8 +23,11 @@ if str(_ROOT) not in sys.path:
 
 from sqlalchemy import text
 
+from common.env import get_database_url
 from agent.runner import invoke_agent
-from server.db.session import async_session_factory
+from server.db.session import Database
+
+Database.init(get_database_url())
 
 DEMO_CASES = [
     "刚才 Starbucks 花了 38，算餐饮",
@@ -34,7 +37,7 @@ DEMO_CASES = [
 
 async def check_db() -> None:
     try:
-        async with async_session_factory() as db:
+        async with Database.get().async_session_factory() as db:
             await db.execute(text("SELECT 1"))
     except Exception as exc:
         print(
@@ -49,7 +52,7 @@ async def run_demo(*, debug: bool = False) -> None:
     print("M2 Function Calling Agent — Demo")
     print("=" * 60)
 
-    async with async_session_factory() as db:
+    async with Database.get().async_session_factory() as db:
         for i, message in enumerate(DEMO_CASES, start=1):
             print(f"\n[{i}] 用户: {message}")
             try:
@@ -65,7 +68,7 @@ async def run_demo(*, debug: bool = False) -> None:
 
 async def run_repl(*, debug: bool = False) -> None:
     print("M2 Agent 交互模式（输入 quit 退出）")
-    async with async_session_factory() as db:
+    async with Database.get().async_session_factory() as db:
         while True:
             try:
                 message = input("\n你: ").strip()

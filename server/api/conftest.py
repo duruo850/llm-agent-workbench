@@ -14,7 +14,6 @@ Cursor：打开测试文件 → **Debug pytest (current file)**。
 
 from __future__ import annotations
 
-import asyncio
 import os
 import uuid
 from collections.abc import Generator
@@ -23,17 +22,8 @@ from typing import Any
 import httpx
 import pytest
 
-from server.db.session import engine
-
 DEFAULT_API_BASE_URL = "http://127.0.0.1:8000"
 TEST_MONTH = "2025-06"
-
-
-@pytest.fixture(autouse=True)
-def _reset_async_engine_pool() -> None:
-    """避免多个 ``asyncio.run`` 测试复用连接池时 event loop 不一致。"""
-    yield
-    asyncio.run(engine.dispose())
 
 
 @pytest.fixture(scope="session")

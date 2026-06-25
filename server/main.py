@@ -15,9 +15,12 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
+from common.env import get_database_url
 from server.db.migrate import migrate_on_startup
-from server.db.session import engine
+from server.db.session import Database
 from server.routers import register_routers
+
+Database.init(get_database_url())
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,7 +32,7 @@ request_logger = logging.getLogger("billmind.request")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    await migrate_on_startup(engine)
+    await migrate_on_startup(Database.get().engine)
     yield
 
 
