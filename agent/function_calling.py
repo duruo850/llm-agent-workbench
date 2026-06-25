@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.tools import BaseTool
+
+logger = logging.getLogger("billmind.agent")
 
 
 async def execute_tool_calls(
@@ -20,6 +23,7 @@ async def execute_tool_calls(
         name = tool_call["name"]
         args: dict[str, Any] = tool_call["args"]
         tool_call_id = tool_call["id"]
+        logger.info("tool invoke: %s(%s)", name, args)
         if debug:
             print(f"  ▸ 工具调用: {name}({args})")
         tool = tools_map.get(name)
@@ -27,7 +31,9 @@ async def execute_tool_calls(
             content = f'{{"error": true, "detail": "未知工具: {name}"}}'
         else:
             content = await tool.ainvoke(args)
+        preview = content[:200] + ("..." if len(content) > 200 else "")
+        logger.info("tool result: %s", preview)
         if debug:
-            print(f"    返回: {content[:200]}{'...' if len(content) > 200 else ''}")
+            print(f"    返回: {preview}")
         tool_messages.append(ToolMessage(content=content, tool_call_id=tool_call_id))
     return tool_messages

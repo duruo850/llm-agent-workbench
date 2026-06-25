@@ -1,12 +1,18 @@
 """LangChain ChatOpenAI 统一工厂：按平台 + 能力路由到 DeepSeek / Ollama。"""
 
 from __future__ import annotations
+
+import os
+
 import httpx
 from langchain_openai import ChatOpenAI
 
 from common.llm.types import LLMCapability, LLMProvider
 from common.llm.spec import resolve_spec
 from common.llm.setting import OLLAMA_BASE_URL, use_system_proxy
+
+# 避免 langchain-openai 注入自定义 httpx transport 时的代理警告
+os.environ.setdefault("LANGCHAIN_OPENAI_TCP_KEEPALIVE", "0")
 
 def get_openai_chat_llm(
     provider: LLMProvider = LLMProvider.DEEPSEEK,

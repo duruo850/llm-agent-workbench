@@ -24,6 +24,7 @@ if str(_ROOT) not in sys.path:
 from sqlalchemy import text
 
 from common.env import get_database_url
+from common.logging_config import configure_app_logging
 from agent.runner import invoke_agent
 from server.db.session import Database
 
@@ -97,6 +98,7 @@ async def async_main(*, repl: bool, debug: bool) -> None:
 
 
 def main() -> None:
+    configure_app_logging()
     parser = argparse.ArgumentParser(description="M2 Function Calling 记账 Agent")
     parser.add_argument("--repl", "--interactive", action="store_true", help="交互模式")
     parser.add_argument("--debug", action="store_true", help="打印 tool 调用链")

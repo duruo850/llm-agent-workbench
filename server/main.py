@@ -16,17 +16,14 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
 from common.env import get_database_url
+from common.logging_config import configure_app_logging
 from server.db.migrate import migrate_on_startup
 from server.db.session import Database
 from server.routers import register_routers
 
 Database.init(get_database_url())
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-    datefmt="%H:%M:%S",
-)
+configure_app_logging()
 request_logger = logging.getLogger("billmind.request")
 
 
