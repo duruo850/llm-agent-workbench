@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: billmind-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: billmind
+      POSTGRES_PASSWORD: billmind
+      POSTGRES_DB: billmind
+    ports:
+      - "5432:5432"
+    volumes:
+      - billmind_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U billmind -d billmind"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  billmind_pg_data:

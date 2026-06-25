@@ -5,10 +5,10 @@ from __future__ import annotations
 import httpx
 from openai import OpenAI
 
-from src.common.llm.openai_chat_llm import check_ollama_health
-from src.common.llm.setting import use_system_proxy
-from src.common.llm.spec import resolve_spec
-from src.common.llm.types import LLMCapability, LLMProvider
+from common.llm.openai_chat_llm import check_ollama_health
+from common.llm.setting import use_system_proxy
+from common.llm.spec import resolve_spec
+from common.llm.types import LLMCapability, LLMProvider
 
 
 def get_openai_client(

@@ -17,7 +17,7 @@
 
 **第 1 周**
 - [x] M0 LangChain 解析记账意图
-- [ ] M1 FastAPI + MySQL
+- [x] M1 FastAPI + PostgreSQL
 - [ ] M2-M4 Function Calling + LangGraph Agent + 聊天前端
 
 **第 2 周**
@@ -54,11 +54,22 @@ python examples/01_image_ollama_chain.py
 
 图片入账详见 [examples/README.md](examples/README.md)。
 
+### M1 服务端（PostgreSQL）
+
+```bash
+docker compose -f server/docker-compose.yml up -d
+alembic -c server/alembic.ini upgrade head
+uvicorn server.main:app --reload --port 8000
+curl http://localhost:8000/health
+```
+
+详见 [server/README.md](server/README.md)。
+
 ## 📖 项目结构
 
 ```
 llm-agent-workbench/
-├── backend/                 # FastAPI + MySQL
+├── server/                  # FastAPI + PostgreSQL
 ├── agent/                   # LangGraph Agent + Tools + Skills
 ├── indexer/                 # LlamaIndex RAG + Embeddings
 ├── frontend/                # 聊天 + 仪表盘

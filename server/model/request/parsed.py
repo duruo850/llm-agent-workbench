@@ -1,17 +1,18 @@
-"""记账领域模型与字段校验。"""
+"""LLM 解析结果（无数据库表，M0/M2 输入）。"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 from pydantic import Field
-from src.common.llm import format_json
+
+from common.llm import format_json
 
 REQUIRED_FIELDS = ("amount", "category", "merchant", "note")
 
 
 @dataclass
-class Transaction:
+class ParsedTransaction:
     """LLM 解析后的记账记录。"""
 
     amount: float = Field(description="金额，收入为正数，支出也为正数（由 category 区分收支）")
@@ -20,28 +21,22 @@ class Transaction:
     note: str = Field(description="补充说明，没有则用空字符串")
 
 
-def LoadTransaction(data: dict) -> Transaction:
-    """校验 LLM 返回的 JSON 是否包含所需字段且类型正确。
+# 向后兼容 M0 示例中的 Transaction 名称
+Transaction = ParsedTransaction
 
-    Args:
-        data: ``format_json`` 的返回值。示例：
-            ``{"amount": 38.0, "category": "餐饮", "merchant": "Starbucks", "note": ""}``
 
-    Returns:
-        校验通过的 ``Transaction``。示例：
-            ``Transaction(amount=38.0, category="餐饮", merchant="Starbucks", note="")``
-    """
+def LoadTransaction(data: dict) -> ParsedTransaction:
+    """校验 LLM 返回的 JSON 是否包含所需字段且类型正确。"""
     if missing := [f for f in REQUIRED_FIELDS if f not in data]:
         raise ValueError(f"JSON 缺少字段: {missing}")
-    
-    # 清理 markdown 代码块并解析 LLM 输出的 JSON 字符串。
+
     data = format_json(data)
 
     amount = data["amount"]
     if not isinstance(amount, (int, float)):
         raise ValueError(f"amount 应为数字，实际为 {type(amount).__name__}")
 
-    return Transaction(
+    return ParsedTransaction(
         amount=float(amount),
         category=str(data["category"]),
         merchant=str(data["merchant"]),

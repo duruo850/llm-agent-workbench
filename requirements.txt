@@ -3,3 +3,12 @@ python-dotenv>=1.0.0
 httpx[socks]>=0.27.0
 langchain-core>=0.3.0
 langchain-openai>=0.2.0
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]>=2.0
+sqlmodel>=0.0.22
+asyncpg
+alembic
+pydantic>=2.0
+fastcrud
+pytest>=8.0

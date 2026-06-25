@@ -21,9 +21,9 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from examples.common.chain_debug import trace_runnable
-from src.common.llm import LLMCapability, LLMProvider, get_openai_chat_llm
-from src.common.llm import LLMCapability, LLMProvider, format_json, get_openai_chat_llm
-from src.model.Transaction import Transaction, LoadTransaction
+from common.llm import LLMCapability, LLMProvider, get_openai_chat_llm
+from common.llm import LLMCapability, LLMProvider, format_json, get_openai_chat_llm
+from server.model.request.parsed import Transaction, LoadTransaction
 
 _IMAGE_SYSTEM_PROMPT = """\
 你是一个个人记账助手。从微信/支付宝等支付或转账截图中提取记账信息，只输出 JSON，不要任何额外文字。

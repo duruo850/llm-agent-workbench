@@ -1,16 +1,16 @@
 """LLM 平台抽象：DeepSeek / Ollama 统一经 OpenAI 兼容接口对接。"""
 
-from src.common.llm.formatter import format_json
-from src.common.llm.openai_chat_llm import check_ollama_health, get_openai_chat_llm
-from src.common.llm.openai_client import get_openai_client
-from src.common.llm.setting import (
+from common.llm.formatter import format_json
+from common.llm.openai_chat_llm import check_ollama_health, get_openai_chat_llm
+from common.llm.openai_client import get_openai_client
+from common.llm.setting import (
     DEEPSEEK_BASE_URL,
     DEEPSEEK_MODEL,
     OLLAMA_BASE_URL,
     OLLAMA_TEXT_MODEL,
     OLLAMA_VISION_MODEL,
 )
-from src.common.llm.types import LLMCapability, LLMProvider, ProviderSpec
+from common.llm.types import LLMCapability, LLMProvider, ProviderSpec
 
 __all__ = [
     "DEEPSEEK_BASE_URL",

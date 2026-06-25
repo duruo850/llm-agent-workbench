@@ -4,9 +4,9 @@ from __future__ import annotations
 import httpx
 from langchain_openai import ChatOpenAI
 
-from src.common.llm.types import LLMCapability, LLMProvider
-from src.common.llm.spec import resolve_spec
-from src.common.llm.setting import OLLAMA_BASE_URL, use_system_proxy
+from common.llm.types import LLMCapability, LLMProvider
+from common.llm.spec import resolve_spec
+from common.llm.setting import OLLAMA_BASE_URL, use_system_proxy
 
 def get_openai_chat_llm(
     provider: LLMProvider = LLMProvider.DEEPSEEK,

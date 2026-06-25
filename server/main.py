@@ -1,0 +1,79 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+_root = Path(__file__).resolve().parents[1]
+if str(_root) not in sys.path:
+    sys.path.insert(0, str(_root))
+
+import logging
+import time
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
+
+from server.api import summary, transactions
+from server.crud.routers import budget_router, category_router, transaction_router
+from server.db.migrate import migrate_on_startup
+from server.db.session import engine
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
+request_logger = logging.getLogger("billmind.request")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    await migrate_on_startup(engine)
+    yield
+
+
+app = FastAPI(title="BillMind API", version="0.1.0", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = (time.perf_counter() - start) * 1000
+    query = request.url.query
+    path = request.url.path + (f"?{query}" if query else "")
+    request_logger.info("%s %s -> %s (%.1fms)", request.method, path, response.status_code, duration_ms)
+    return response
+
+
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(_request: Request, exc: IntegrityError) -> JSONResponse:
+    detail = "Database constraint violation"
+    message = str(exc.orig).lower() if exc.orig else ""
+    if "unique" in message:
+        detail = "Record already exists or unique constraint violated"
+    elif "foreign key" in message:
+        detail = "Referenced record not found"
+    return JSONResponse(status_code=409, detail=detail)
+
+
+app.include_router(category_router)
+app.include_router(budget_router)
+app.include_router(transaction_router)
+app.include_router(transactions.router)
+app.include_router(summary.router)
+
+
+@app.get("/health")
+async def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    # reload=False 便于断点调试；改代码后手动重启即可
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=False)

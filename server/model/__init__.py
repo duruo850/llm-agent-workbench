@@ -1,0 +1,67 @@
+"""领域模型：SQLModel（ORM + 序列化合一）。"""
+
+from server.model.budget import Budget
+from server.model.category import Category
+from server.model.request import (
+    BudgetCreateRequest,
+    BudgetListQueryRequest,
+    BudgetUpdateRequest,
+    CategoryCreateRequest,
+    CategoryListQueryRequest,
+    CategoryUpdateRequest,
+    LoadTransaction,
+    MonthlySummaryQueryRequest,
+    ParsedTransaction,
+    TransactionCreateRequest,
+    TransactionListQueryRequest,
+    TransactionUpdateRequest,
+)
+from server.model.response import (
+    BudgetCreateResponse,
+    BudgetGetResponse,
+    BudgetListResponse,
+    BudgetUpdateResponse,
+    CategoryCreateResponse,
+    CategoryGetResponse,
+    CategoryListResponse,
+    CategoryUpdateResponse,
+    CategorySummaryResponse,
+    MonthlySummaryResponse,
+    TransactionCreateResponse,
+    TransactionGetResponse,
+    TransactionListResponse,
+    TransactionUpdateResponse,
+)
+from server.model.transaction import Transaction
+
+__all__ = [
+    "BudgetCreateRequest",
+    "BudgetCreateResponse",
+    "BudgetGetResponse",
+    "BudgetListQueryRequest",
+    "BudgetListResponse",
+    "Budget",
+    "BudgetUpdateRequest",
+    "BudgetUpdateResponse",
+    "CategoryCreateRequest",
+    "CategoryCreateResponse",
+    "CategoryGetResponse",
+    "CategoryListQueryRequest",
+    "CategoryListResponse",
+    "CategorySummaryResponse",
+    "Category",
+    "CategoryUpdateRequest",
+    "CategoryUpdateResponse",
+    "LoadTransaction",
+    "MonthlySummaryQueryRequest",
+    "MonthlySummaryResponse",
+    "ParsedTransaction",
+    "TransactionCreateRequest",
+    "TransactionCreateResponse",
+    "TransactionGetResponse",
+    "TransactionListQueryRequest",
+    "TransactionListResponse",
+    "Transaction",
+    "TransactionUpdateRequest",
+    "TransactionUpdateResponse",
+]

@@ -4,8 +4,8 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from src.common.llm.types import LLMCapability, LLMProvider, ProviderSpec
-from src.common.llm.setting import DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, OLLAMA_BASE_URL, OLLAMA_VISION_MODEL, OLLAMA_TEXT_MODEL
+from common.llm.types import LLMCapability, LLMProvider, ProviderSpec
+from common.llm.setting import DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, OLLAMA_BASE_URL, OLLAMA_VISION_MODEL, OLLAMA_TEXT_MODEL
 
 _env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
 load_dotenv(_env_path)
