@@ -33,7 +33,8 @@ BillMind 仓库内所有 Agent 与贡献者应遵守的通用约定。
 | [`server/`](../../server/) | FastAPI 业务 API、ORM、CRUD |
 | [`common/`](../../common/) | 环境变量、LLM 客户端等跨模块配置 |
 | [`utils/`](../../utils/) | **通用**纯函数（无业务域、可跨 server/agent 复用），如日期解析、`map_by_name` |
-| [`agent/`](../../agent/) | Agent 编排与领域工具（`runner`、`tools/`） |
+| [`agent/`](../../agent/) | Agent 编排与领域工具（`agent.py`、`graph.py`、`skills/`） |
+| [`docs/knowledge/`](../../docs/knowledge/) | AI 里程碑知识点沉淀（见下方「AI 知识点」） |
 | [`examples/`](../../examples/) | 各阶段独立 demo |
 
 **代码归属**：可复用、与具体 API/Agent 流程无关的逻辑放 `utils/`；不要散落在 `server/api/`、`agent/` 内联实现。参考 [`utils/date_range.py`](../../utils/date_range.py)、[`utils/map_by_name.py`](../../utils/map_by_name.py)。
@@ -47,6 +48,14 @@ BillMind 仓库内所有 Agent 与贡献者应遵守的通用约定。
 
 实现任何功能前必须先读 [`.harness/README.md`](../README.md)。
 
+## AI 知识点
+
+凡 **AI 里程碑**（M0、M2、M4、M6–M12；涉及 `agent/`、`common/llm/`、`indexer/`、`examples/` 中 Agent 类 demo）引入的新概念，实现完成时**必须**沉淀到 [`docs/knowledge/{slug}.md`](../../docs/knowledge/)，并更新 [`docs/knowledge/README.md`](../../docs/knowledge/README.md) 索引为 `done`。
+
+- 执行流程：与 [implement-plan](Skills/implement-plan/SKILL.md) 阶段 B 同步，按 [extract-ai-knowledge](Skills/extract-ai-knowledge/SKILL.md) 撰写
+- plan frontmatter `skills` 须含 `extract-ai-knowledge`；plan 正文须有「知识点文档」章节
+- 无对应 slug 时，先在 `docs/knowledge/README.md` 索引中新增行再写正文
+
 ## 新任务检查清单
 
 1. 读对应 Skill 的「步骤清单」
@@ -54,6 +63,7 @@ BillMind 仓库内所有 Agent 与贡献者应遵守的通用约定。
 3. 按 Skill「验收」运行 pytest 或 curl
 4. 若新增核心表，更新 [`migrate.py`](../../server/db/migrate.py) 的 `_REQUIRED_TABLES`
 5. 若涉及新里程碑，用 [implement-plan](Skills/implement-plan/SKILL.md) 创建 `M{n}_{seq}-*.plan`
+6. 若为 AI 里程碑：按 [extract-ai-knowledge](Skills/extract-ai-knowledge/SKILL.md) 更新 `docs/knowledge/`，并在 plan 阶段 C 验收
 
 ## 禁止
 

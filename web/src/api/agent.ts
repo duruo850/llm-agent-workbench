@@ -5,6 +5,7 @@ const API_BASE = (import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000").repl
 
 export interface AgentChatResponse {
   reply: string;
+  thread_id: string;
 }
 
 export class AgentApiError extends Error {
@@ -17,6 +18,7 @@ export class AgentApiError extends Error {
 export async function postAgentChat(params: {
   message: string;
   imageDataUrl?: string | null;
+  threadId?: string | null;
 }): Promise<AgentChatResponse> {
   let response: Response;
   try {
@@ -26,6 +28,7 @@ export async function postAgentChat(params: {
       body: JSON.stringify({
         message: params.message,
         image_data_url: params.imageDataUrl ?? null,
+        thread_id: params.threadId ?? null,
       }),
     });
   } catch {

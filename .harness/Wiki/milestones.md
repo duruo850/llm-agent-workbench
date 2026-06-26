@@ -12,7 +12,7 @@
 | **M1** | ✅ 完成 | FastAPI + PostgreSQL CRUD | —（完成于 harness 前，无编号 plan） |
 | **M2** | ✅ 完成 | Function Calling 记一笔 / 查账 | [M2_1-function-calling](../Changes/M2_1-function-calling.plan) |
 | **M3** | ✅ 完成 | 聊天前端 | [M3_1-chat-frontend](../Changes/M3_1-chat-frontend.plan) |
-| **M4** | ⬜ 待做 | LangGraph Agent | — |
+| **M4** | ✅ 完成 | LangGraph Agent + 跨轮记忆 | [M4_1-langgraph-agent](../Changes/M4_1-langgraph-agent.plan) |
 | **M5** | ⬜ 待做 | 文件导入 | — |
 | **M6** | ⬜ 待做 | RAG 知识库 | — |
 | **M7** | ⬜ 待做 | Embeddings 语义搜账 | — |
@@ -46,9 +46,18 @@
 
 ## M2 要点
 
-- Agent 层：[`agent/`](../../agent/)（`runner.py` + `tools/db_tools.py`）
+- Agent 层：[`agent/agent.py`](../../agent/agent.py) + [`agent/skills/`](../../agent/skills/)
 - CLI demo：[`examples/02_function_calling_agent.py`](../../examples/02_function_calling_agent.py)
 - HTTP：`POST /agent/chat`
+- 测试：[`server/api/agent_test.py`](../../server/api/agent_test.py)
+
+## M4 要点
+
+- Agent 层：[`graph/`](../../graph/)（LangGraph）；对照学习见 [`agent/agent.py`](../../agent/agent.py)（M2 for 循环）
+- 跨轮记忆：`thread_id` 经 API / Web 透传
+- 知识点：[`docs/knowledge/langgraph.md`](../../docs/knowledge/langgraph.md)
+- CLI demo：[`examples/02_function_calling_agent.py`](../../examples/02_function_calling_agent.py)（`--repl` 复用 thread_id）
+- HTTP：`POST /agent/chat`（request/response 含 `thread_id`）
 - 测试：[`server/api/agent_test.py`](../../server/api/agent_test.py)
 
 ## M2+ 启动前

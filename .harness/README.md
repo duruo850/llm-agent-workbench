@@ -36,6 +36,7 @@ Agent 实现 BillMind 功能前的**必读入口**。本目录沉淀目录结构
 
 ```
 实现某个功能 / 里程碑           → implement-plan（先写 M{n}_{seq}.plan）
+实现 AI 里程碑（M0/M2/M4/…）    → implement-plan + extract-ai-knowledge（验收含 docs/knowledge/）
 新实体（像 Category/...）       → entity-service（首选）
   ├─ 仅改表结构                    → db-migrate
   ├─ 实体已有，加自定义查询         → add-api-endpoint

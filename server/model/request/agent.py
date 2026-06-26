@@ -12,6 +12,7 @@ class AgentChatRequest(RequestBase):
 
     message: str = Field(default="", max_length=2000)
     image_data_url: str | None = Field(default=None, max_length=10_000_000)
+    thread_id: str | None = Field(default=None, max_length=128)
 
     @model_validator(mode="after")
     def message_or_image_required(self) -> Self:

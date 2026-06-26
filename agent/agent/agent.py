@@ -39,9 +39,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import BaseTool
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from agent.promt.image import IMAGE_SYSTEM_PROMPT
-from agent.promt.system import system_prompt
-from agent.skills import SKILL_TOOLS, SKILL_TOOLS_MAP, discover_skill_modules
+from agent.agent.promt.image import IMAGE_SYSTEM_PROMPT
+from agent.agent.promt.system import system_prompt
+from agent.agent.skills import SKILL_TOOLS, SKILL_TOOLS_MAP, discover_skill_modules
 from common.llm import LLMCapability, LLMProvider, get_openai_chat_llm
 from server.db.session import Database
 from server.model.request.parsed import LoadTransaction

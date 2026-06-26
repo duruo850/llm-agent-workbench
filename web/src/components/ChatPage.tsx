@@ -11,59 +11,82 @@ function createId(): string {
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [threadId, setThreadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSend = useCallback(async (text: string, imageDataUrl?: string | null) => {
-    const trimmed = text.trim();
-    if (!trimmed && !imageDataUrl) {
-      return;
-    }
-
-    const userMessage: ChatMessage = {
-      id: createId(),
-      role: "user",
-      content: trimmed || "（上传了支付截图）",
-      imageDataUrl: imageDataUrl ?? undefined,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setLoading(true);
-
-    try {
-      const { reply } = await postAgentChat({
-        message: trimmed,
-        imageDataUrl,
-      });
-      setMessages((prev) => [
-        ...prev,
-        { id: createId(), role: "assistant", content: reply },
-      ]);
-    } catch (error) {
-      const detail =
-        error instanceof AgentApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "未知错误";
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: createId(),
-          role: "assistant",
-          content: detail,
-          isError: true,
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+  const handleNewChat = useCallback(() => {
+    setMessages([]);
+    setThreadId(null);
   }, []);
+
+  const handleSend = useCallback(
+    async (text: string, imageDataUrl?: string | null) => {
+      const trimmed = text.trim();
+      if (!trimmed && !imageDataUrl) {
+        return;
+      }
+
+      const userMessage: ChatMessage = {
+        id: createId(),
+        role: "user",
+        content: trimmed || "（上传了支付截图）",
+        imageDataUrl: imageDataUrl ?? undefined,
+      };
+
+      setMessages((prev) => [...prev, userMessage]);
+      setLoading(true);
+
+      try {
+        const { reply, thread_id } = await postAgentChat({
+          message: trimmed,
+          imageDataUrl,
+          threadId,
+        });
+        setThreadId(thread_id);
+        setMessages((prev) => [
+          ...prev,
+          { id: createId(), role: "assistant", content: reply },
+        ]);
+      } catch (error) {
+        const detail =
+          error instanceof AgentApiError
+            ? error.message
+            : error instanceof Error
+              ? error.message
+              : "未知错误";
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: createId(),
+            role: "assistant",
+            content: detail,
+            isError: true,
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [threadId],
+  );
 
   return (
     <div className="chat-app">
       <header className="chat-header">
-        <h1>BillMind</h1>
-        <p>记账 · 查账</p>
+        <div className="chat-header-row">
+          <div>
+            <h1>BillMind</h1>
+            <p>记账 · 查账</p>
+          </div>
+          <button
+            type="button"
+            className="chat-new-button"
+            disabled={loading}
+            onClick={handleNewChat}
+          >
+            新对话
+          </button>
+        </div>
       </header>
       <main className="chat-main">
         <MessageList messages={messages} loading={loading} />

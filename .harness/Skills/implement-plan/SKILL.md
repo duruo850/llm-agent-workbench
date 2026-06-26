@@ -91,6 +91,7 @@ stateDiagram-v2
 - [ ] 2. 分配 `M{n}_{seq}` 顺序号（见上）
 - [ ] 3. 从 `_template.plan` 复制，填入 frontmatter + 各章节
 - [ ] 4. 填写**关联 Skill**（见下方映射表）
+- [ ] 4b. 若为 **AI 里程碑**（见下方判定）：frontmatter `skills` **必含** `extract-ai-knowledge`；plan 正文须有「知识点文档」章节（slug、验收）
 - [ ] 5. 写清：交付文件、步骤清单、验收标准、运行命令、**不在范围内**
 - [ ] 6. 更新 [Changes/README.md](../../Changes/README.md) 索引表（新增一行）
 - [ ] 7. 若对应 milestones 条目：更新 [milestones.md](../../Wiki/milestones.md)
@@ -109,8 +110,17 @@ stateDiagram-v2
 | 集成测试 | `http-integration-test` |
 | 改表结构 | `db-migrate` |
 | 搭环境/调试 | `local-dev` |
+| **AI 里程碑**（`agent/`、`common/llm/`、`indexer/`、Agent 类 `examples/`） | `extract-ai-knowledge` |
 
 可组合多个；写入 frontmatter `skills` 数组。
+
+### AI 里程碑判定
+
+| 维度 | 规则 |
+|------|------|
+| **目录** | `agent/`、`common/llm/`、`indexer/`、Agent 类 `examples/` |
+| **编号** | M0、M2、M4、M6、M7、M8、M9、M10、M11、M12（M1/M5/M13 纯 CRUD 除外） |
+| **slug** | 见 [extract-ai-knowledge](../extract-ai-knowledge/SKILL.md) 主题表；无则先扩 README 索引 |
 
 ## 阶段 B — 按 Plan 实现
 
@@ -131,6 +141,15 @@ stateDiagram-v2
   - 若仍有未 done 的 plan → 保持 `🔄 进行中`
 - [ ] 5. 若里程碑首次完成：可选更新根 [README.md](../../../README.md) 对应 `- [x]` 勾选
 - [ ] 6. 若目录或 API 有变：按需更新 [repo-layout.md](../../Wiki/repo-layout.md) 或 [server.md](../../Wiki/server.md)（**不得**改 [architecture.md](../../Wiki/architecture.md)）
+- [ ] 7. 若为 AI 里程碑：验收 `docs/knowledge/{slug}.md` 存在且 README 索引为 `done`（见下方命令）
+
+### AI 里程碑 knowledge 验收
+
+```bash
+grep -q "docs/knowledge" .harness/Changes/M{n}_*.plan
+ls docs/knowledge/{slug}.md
+grep "done" docs/knowledge/README.md | grep {slug}
+```
 
 ### milestones 状态符号
 
@@ -171,6 +190,7 @@ grep "M2_1" .harness/Wiki/milestones.md .harness/Changes/README.md
 - 不要忘记同步 Changes/README 与 milestones
 - 不要验收未通过就标 `status: done`
 - 不要改 `.cursor/plans/` 下的外部 plan
+- 不要 AI 里程碑标 `done` 但未写 `docs/knowledge/{slug}.md`
 
 ## 拆分建议
 

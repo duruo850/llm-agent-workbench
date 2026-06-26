@@ -3,7 +3,8 @@ milestone: M2
 seq: 1
 slug: example-slug
 status: draft
-skills: []
+skills:
+  - extract-ai-knowledge  # AI 里程碑（M0/M2/M4/M6–M12）必填；纯 CRUD 里程碑删除此行
 depends_on: []
 ---
 
@@ -30,6 +31,15 @@ depends_on: []
 ### 不在范围内
 
 - …
+
+## 知识点文档
+
+| slug | 文件 | 验收 |
+|------|------|------|
+| `{slug}` | `docs/knowledge/{slug}.md` | README 索引 status → done |
+
+- [ ] 按 [extract-ai-knowledge](../Skills/extract-ai-knowledge/SKILL.md) 撰写
+- [ ] 更新 [docs/knowledge/README.md](../../docs/knowledge/README.md)
 
 ## 步骤清单
 

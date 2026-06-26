@@ -8,8 +8,7 @@ import pkgutil
 from langchain_core.tools import BaseTool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-import agent.skills as _skills_pkg
-from agent.promt.policy import ToolPromptPolicy
+from agent.agent.promt.policy import ToolPromptPolicy
 
 SKILL_TOOLS: dict[str, BaseTool] = {}
 SKILL_TOOLS_MAP: dict[str, BaseTool] = {}
@@ -21,8 +20,8 @@ def discover_skill_modules(session_factory: async_sessionmaker[AsyncSession]) ->
     if SKILL_TOOLS:
         return
 
-    prefix = f"{_skills_pkg.__name__}."
-    for module_info in pkgutil.iter_modules(_skills_pkg.__path__, prefix):
+    prefix = f"{__name__}."
+    for module_info in pkgutil.iter_modules(__path__, prefix):
         short_name = module_info.name.removeprefix(prefix)
         if short_name.startswith("_"):
             continue

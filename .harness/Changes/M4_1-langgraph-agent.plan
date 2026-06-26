@@ -1,0 +1,93 @@
+---
+milestone: M4
+seq: 1
+slug: langgraph-agent
+status: done
+skills:
+  - add-api-endpoint
+  - http-integration-test
+  - local-dev
+  - extract-ai-knowledge
+depends_on: []
+---
+
+# M4 LangGraph Agent + 跨轮记忆
+
+## 里程碑
+
+**M4** — 用 LangGraph StateGraph 替代 M2 for 循环，MemorySaver + `thread_id` 实现跨轮对话记忆。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [add-api-endpoint](../Skills/add-api-endpoint/SKILL.md) | `thread_id` 透传 |
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | 跨轮记忆集成测试 |
+| [local-dev](../Skills/local-dev/SKILL.md) | 本地启动与验收 |
+| [extract-ai-knowledge](../Skills/extract-ai-knowledge/SKILL.md) | `docs/knowledge/langgraph.md` |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `requirements.txt` | `langgraph>=0.2.0` |
+| `agent/graph.py` | StateGraph + ToolNode + MemorySaver |
+| `agent/agent.py` | invoke 走图；删除 for 循环 / function_calling |
+| `server/model/request/agent.py` | `thread_id` |
+| `server/model/response/agent.py` | `thread_id` |
+| `server/api/agent.py` | 透传 thread_id |
+| `web/src/api/agent.ts` | thread_id |
+| `web/src/components/ChatPage.tsx` | 保存/回传 thread_id |
+| `server/api/agent_test.py` | 跨轮记忆用例 |
+| `examples/02_function_calling_agent.py` | REPL 复用 thread_id |
+| `docs/knowledge/langgraph.md` | LangChain vs LangGraph 对比 |
+| `docs/knowledge/README.md` | langgraph → done |
+| `docs/knowledge/function-calling.md` | 修正过时代码路径 |
+
+### 不在范围内
+
+- Postgres 持久化 checkpointer（M9）
+- HITL 断点（M9）
+- SSE 流式输出
+- 改 M1 表结构 / 新 skill 模块
+- 修改 architecture.md
+
+## 知识点文档
+
+| slug | 文件 | 验收 |
+|------|------|------|
+| `langgraph` | `docs/knowledge/langgraph.md` | README 索引 status → done；含 LangChain vs LangGraph 对比表 + mermaid |
+
+- [x] 按 [extract-ai-knowledge](../Skills/extract-ai-knowledge/SKILL.md) 撰写
+- [x] 同步修复 [function-calling.md](../../docs/knowledge/function-calling.md) 代码入口
+- [x] 更新 [docs/knowledge/README.md](../../docs/knowledge/README.md)
+
+## 步骤清单
+
+- [x] 1. `requirements.txt` 添加 langgraph
+- [x] 2. 实现 `agent/graph.py`
+- [x] 3. 重构 `agent/agent.py`
+- [x] 4. API / Web 扩展 `thread_id`
+- [x] 5. 集成测试 + CLI REPL
+- [x] 6. 撰写 `docs/knowledge/langgraph.md`
+
+## 运行命令
+
+```bash
+docker compose up -d
+.venv/bin/pip install -r requirements.txt
+python server/main.py
+pytest server/api/agent_test.py -v
+.venv/bin/python examples/02_function_calling_agent.py --repl
+```
+
+## 验收标准
+
+- [x] 单轮记一笔 / 查账与 M2 一致
+- [x] 同 `thread_id` 两轮对话可引用上文
+- [x] 新 `thread_id` 不携带旧上下文
+- [x] `Agent.init()` 启动时编译图
+- [x] `docs/knowledge/langgraph.md` 存在且 README 为 done
+- [x] `function-calling.md` 代码入口与当前仓库一致

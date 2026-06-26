@@ -16,6 +16,8 @@
 | **定 plan 并实现功能** | [Skills/implement-plan/SKILL.md](.harness/Skills/implement-plan/SKILL.md) |
 | **提取 AI 知识点 / 写 docs/knowledge** | [Skills/extract-ai-knowledge/SKILL.md](.harness/Skills/extract-ai-knowledge/SKILL.md) |
 
+**AI 里程碑**（M0/M2/M4/M6–M12）实现时须同步沉淀 `docs/knowledge/{slug}.md`（见 implement-plan + extract-ai-knowledge）。
+
 ## 禁止
 
 - 绕过 harness 自创目录或命名（如 `backend/schemas/`、`CategoryTable`）

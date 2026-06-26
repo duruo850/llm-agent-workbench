@@ -5,7 +5,7 @@ from __future__ import annotations
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from agent.promt.policy import tool_policy
+from agent.agent.promt.policy import tool_policy
 from common.format import format_db_error, format_tool_result
 from server.service import transaction_service
 

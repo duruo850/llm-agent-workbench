@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from agent.agent import Agent
+from agent import Agent
 from server.db.session import get_db
 from server.model.request.agent import AgentChatRequest
 from server.model.response.agent import AgentChatResponse
@@ -31,5 +31,7 @@ async def agent_chat(
     else:
         message = body.message
 
-    reply = await Agent.invoke(message, db=db)
-    return AgentChatResponse(reply=reply)
+    reply, thread_id = await Agent.invoke(
+        message, db=db, thread_id=body.thread_id
+    )
+    return AgentChatResponse(reply=reply, thread_id=thread_id)

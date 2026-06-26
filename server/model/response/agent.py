@@ -9,3 +9,4 @@ class AgentChatResponse(ResponseBase):
     """POST /agent/chat — Agent 自然语言回复。"""
 
     reply: str = Field(min_length=1)
+    thread_id: str = Field(min_length=1)

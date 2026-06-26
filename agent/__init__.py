@@ -1,5 +1,5 @@
-"""BillMind Agent 层 — M2 Function Calling。"""
+"""BillMind Agent 层 — 默认导出 LangGraph Agent（M4）。"""
 
-from agent.agent import Agent
+from agent.graph.agent import Agent
 
 __all__ = ["Agent"]

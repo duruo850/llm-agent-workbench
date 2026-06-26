@@ -39,7 +39,7 @@ def _skill_module_globals() -> dict[str, Any]:
     current = frame.f_back
     while current is not None:
         name = current.f_globals.get("__name__", "")
-        if name.startswith("agent.skills.") and not name.endswith(".__init__"):
+        if name.startswith("agent.agent.skills.") and not name.endswith(".__init__"):
             return current.f_globals
         current = current.f_back
     raise RuntimeError("tool_policy 无法定位 agent.skills 模块")

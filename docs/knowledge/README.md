@@ -5,8 +5,8 @@
 | 主题 | 里程碑 | 文档 | 代码入口 | 状态 |
 |------|--------|------|----------|------|
 | LangChain 基础（LCEL / Prompt / Chain） | M0 | [langchain-basics.md](langchain-basics.md) | `examples/00_hello_chain.py`, `common/llm/` | 待提取 |
-| Function Calling | M2 | [function-calling.md](function-calling.md) | `agent/runner.py`, `agent/tools/` | done |
-| LangGraph 状态图 Agent | M4 | [langgraph.md](langgraph.md) | `agent/graph.py`（待建） | 待提取 |
+| Function Calling | M2 | [function-calling.md](function-calling.md) | `agent/agent.py`, `agent/skills/` | done |
+| LangGraph 状态图 Agent | M4 | [langgraph.md](langgraph.md) | `graph/graph.py`, `graph/agent.py` | done |
 | RAG / LlamaIndex | M6 | [rag.md](rag.md) | `indexer/`（待建） | 待提取 |
 | Embeddings 语义检索 | M7 | [embeddings.md](embeddings.md) | 待建 | 待提取 |
 | Memory + Human-in-the-loop | M9 | [memory-hitl.md](memory-hitl.md) | 待建 | 待提取 |

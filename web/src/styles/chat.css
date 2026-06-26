@@ -27,10 +27,37 @@ body {
 }
 
 .chat-header {
-  text-align: center;
   padding: 1.25rem 1rem 0.75rem;
   border-bottom: 1px solid #e8e8e8;
   background: #fafafa;
+}
+
+.chat-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.chat-header-row > div {
+  text-align: center;
+  flex: 1;
+}
+
+.chat-new-button {
+  flex-shrink: 0;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #d9d9d9;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.chat-new-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .chat-header h1 {

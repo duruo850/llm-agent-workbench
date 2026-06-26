@@ -58,11 +58,12 @@ async def run_demo(*, debug: bool = False) -> None:
         for i, message in enumerate(DEMO_CASES, start=1):
             print(f"\n[{i}] 用户: {message}")
             try:
-                reply = (
+                result = (
                     await Agent.invoke(message, db=db, debug=True)
                     if debug
                     else await Agent.invoke(message, db=db)
                 )
+                reply = result[0] if isinstance(result, tuple) else result
                 print(f"    助手: {reply}")
             except ValueError as exc:
                 print(f"    失败: {exc}")
@@ -80,11 +81,12 @@ async def run_repl(*, debug: bool = False) -> None:
             if not message or message.lower() in {"quit", "exit", "q"}:
                 break
             try:
-                reply = (
+                result = (
                     await Agent.invoke(message, db=db, debug=True)
                     if debug
                     else await Agent.invoke(message, db=db)
                 )
+                reply = result[0] if isinstance(result, tuple) else result
                 print(f"助手: {reply}")
             except ValueError as exc:
                 print(f"错误: {exc}")

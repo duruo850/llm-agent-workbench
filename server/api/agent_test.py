@@ -20,14 +20,40 @@ def _post_agent_chat(
     message: str,
     *,
     image_data_url: str | None = None,
+    thread_id: str | None = None,
     timeout: float = AGENT_CHAT_TIMEOUT,
-) -> str:
+) -> dict[str, Any]:
     payload: dict[str, Any] = {"message": message}
     if image_data_url is not None:
         payload["image_data_url"] = image_data_url
+    if thread_id is not None:
+        payload["thread_id"] = thread_id
     response = http_client.post("/agent/chat", json=payload, timeout=timeout)
     response.raise_for_status()
-    return response.json()["reply"]
+    return response.json()
+
+
+def _assert_cross_turn_memory_reply(
+    http_client: httpx.Client,
+    *,
+    merchant: str,
+    thread_id: str,
+    category_name: str,
+    txn_id: int,
+) -> None:
+    try:
+        turn2 = _post_agent_chat(
+            http_client,
+            f"刚才在{merchant}记的那笔，金额是多少？分类是什么？",
+            thread_id=thread_id,
+        )
+        reply = turn2["reply"]
+        assert turn2["thread_id"] == thread_id
+        assert reply
+        assert merchant in reply or "15.5" in reply or "15.50" in reply
+        assert category_name in reply
+    finally:
+        http_client.delete(f"/transactions/{txn_id}")
 
 
 def test_agent_chat_add_transaction(
@@ -43,7 +69,7 @@ def test_agent_chat_add_transaction(
         http_client,
         f"刚才在{merchant}花了12.5块，算{category['name']}",
     )
-    assert response
+    assert response["reply"]
 
     list_response = http_client.get("/transactions", params={"month": month}, timeout=15.0)
     list_response.raise_for_status()
@@ -69,7 +95,7 @@ def test_agent_chat_query_transactions(
             f"查一下{TEST_MONTH}月份分类「{category['name']}」的消费记录，"
             f"有没有商户「{transaction['merchant']}」"
         ),
-    )
+    )["reply"]
     assert reply
     assert (
         str(transaction["merchant"]) in reply
@@ -100,7 +126,7 @@ def test_agent_chat_daily_spending(
     txn_id = create.json()["id"]
 
     try:
-        reply = _post_agent_chat(http_client, "我今天用了多少钱")
+        reply = _post_agent_chat(http_client, "我今天用了多少钱")["reply"]
         assert reply
         assert "今天" in reply or "今日" in reply or today in reply
         assert "7.9" in reply or "7.90" in reply
@@ -112,6 +138,44 @@ def test_agent_chat_out_of_scope(
     http_client: httpx.Client,
     require_llm: None,
 ) -> None:
-    reply = _post_agent_chat(http_client, "今天天气怎么样")
+    reply = _post_agent_chat(http_client, "今天天气怎么样")["reply"]
     assert reply
     assert "账单" in reply or "记账" in reply
+
+
+def test_agent_chat_cross_turn_memory(
+    http_client: httpx.Client,
+    category: dict[str, Any],
+    unique_suffix: str,
+    require_llm: None,
+    require_graph_backend: None,
+) -> None:
+    merchant = f"跨轮记忆-{unique_suffix}"
+    thread_id = f"test-thread-{unique_suffix}"
+    month = datetime.now().strftime("%Y-%m")
+
+    turn1 = _post_agent_chat(
+        http_client,
+        f"刚才在{merchant}花了15.5块，算{category['name']}",
+        thread_id=thread_id,
+    )
+    assert turn1["reply"]
+    assert turn1["thread_id"] == thread_id
+
+    list_response = http_client.get("/transactions", params={"month": month}, timeout=15.0)
+    list_response.raise_for_status()
+    created = [
+        row
+        for row in list_response.json()
+        if row.get("merchant") == merchant and float(row["amount"]) == 15.5
+    ]
+    assert created, f"未找到首轮创建的交易（merchant={merchant}）"
+    txn_id = created[0]["id"]
+
+    _assert_cross_turn_memory_reply(
+        http_client,
+        merchant=merchant,
+        thread_id=thread_id,
+        category_name=category["name"],
+        txn_id=txn_id,
+    )

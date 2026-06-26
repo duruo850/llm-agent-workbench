@@ -14,7 +14,8 @@
 | `server/docker-compose.yml` | 根 [`docker-compose.yml`](../../docker-compose.yml) | PostgreSQL 16 |
 | 手动 alembic | 启动 `main` 自动迁移 | CLI 仍可用 |
 | `tests/` | [`server/api/*_test.py`](../../server/api/) | HTTP 集成测试（与路由同目录） |
-| `agent/` | [`agent/`](../../agent/) | M2 Runner + tools |
+| `agent/` | [`agent/`](../../agent/) | M2 for 循环 Agent |
+| `graph/` | [`graph/`](../../graph/) | M4 LangGraph Agent |
 | `web/` | [`web/`](../../web/) | M3 聊天页 |
 | `indexer/` | 未创建 | M6+ |
 
@@ -27,7 +28,8 @@ llm-agent-workbench/
 ├── server/             # M1 FastAPI + PostgreSQL
 ├── common/             # 共享 env + LLM
 ├── utils/              # 通用纯函数（date_range、map_by_name 等）
-├── agent/              # M2 Agent Runner + tools
+├── agent/              # M2 Agent（for 循环 + function_calling）
+├── graph/              # M4 LangGraph Agent（与 agent/ 并列对比）
 ├── examples/           # M0 LangChain demo
 ├── web/                # M3 React 聊天页
 ├── docs/               # learning-plan 课表
