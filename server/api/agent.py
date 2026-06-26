@@ -1,12 +1,11 @@
-"""Agent HTTP API — 注入 db session 后转发给 ``agent.runner``。"""
+"""Agent HTTP API — 注入 db session 后转发给 ``Agent``。"""
 
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from agent.runner import invoke_agent
-from agent.vision import parse_receipt_image
+from agent.agent import Agent
 from server.db.session import get_db
 from server.model.request.agent import AgentChatRequest
 from server.model.response.agent import AgentChatResponse
@@ -21,7 +20,7 @@ async def agent_chat(
 ) -> AgentChatResponse:
     if body.image_data_url:
         try:
-            vision_text = await parse_receipt_image(body.image_data_url)
+            vision_text = await Agent.parse_image(body.image_data_url)
         except ValueError as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         message = (
@@ -32,5 +31,5 @@ async def agent_chat(
     else:
         message = body.message
 
-    reply = await invoke_agent(message, db=db)
+    reply = await Agent.invoke(message, db=db)
     return AgentChatResponse(reply=reply)

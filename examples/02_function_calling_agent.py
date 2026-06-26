@@ -1,6 +1,6 @@
 """M2 Function Calling Agent CLI Demo。
 
-演示 LLM 如何通过 tool_calls 驱动 ``agent/tools/db_tools`` 直连 PostgreSQL 记一笔与查账。
+演示 LLM 如何通过 tool_calls 驱动 ``agent/skills`` 直连 PostgreSQL 记一笔与查账。
 
 用法::
 
@@ -25,10 +25,11 @@ from sqlalchemy import text
 
 from common.env import get_database_url
 from common.logging_config import configure_app_logging
-from agent.runner import invoke_agent
+from agent import Agent
 from server.db.session import Database
 
 Database.init(get_database_url())
+Agent.init()
 
 DEMO_CASES = [
     "刚才 Starbucks 花了 38，算餐饮",
@@ -58,9 +59,9 @@ async def run_demo(*, debug: bool = False) -> None:
             print(f"\n[{i}] 用户: {message}")
             try:
                 reply = (
-                    await invoke_agent(message, db=db, debug=True)
+                    await Agent.invoke(message, db=db, debug=True)
                     if debug
-                    else await invoke_agent(message, db=db)
+                    else await Agent.invoke(message, db=db)
                 )
                 print(f"    助手: {reply}")
             except ValueError as exc:
@@ -80,9 +81,9 @@ async def run_repl(*, debug: bool = False) -> None:
                 break
             try:
                 reply = (
-                    await invoke_agent(message, db=db, debug=True)
+                    await Agent.invoke(message, db=db, debug=True)
                     if debug
-                    else await invoke_agent(message, db=db)
+                    else await Agent.invoke(message, db=db)
                 )
                 print(f"助手: {reply}")
             except ValueError as exc:
