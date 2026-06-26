@@ -63,6 +63,29 @@ def _format_time_range_rules(tools: list[BaseTool], today_date: str, month: str)
     return "\n".join(lines) if lines else "- （当前无时间范围相关工具）"
 
 
+def _format_intent_rules(tools: list[BaseTool], today_date: str) -> str:
+    """单日查询意图分流 — 汇总 vs 最接近某金额。"""
+    tool_names = {t.name for t in tools}
+    lines: list[str] = []
+    if "get_daily_summary" in tool_names:
+        lines.append(
+            f"- 「今天/今日花了多少」、总支出、分类汇总 → get_daily_summary，date={today_date}"
+        )
+    if "find_closest_transaction" in tool_names:
+        lines.append(
+            f"- 「最接近 X 元/块的是哪一笔」「哪笔离 X 最近」→ find_closest_transaction，"
+            f"date={today_date}，target_amount=X；不要用 get_daily_summary 或 query_transactions"
+        )
+    return "\n".join(lines) if lines else "- （当前无单日意图分流规则）"
+
+
+def _format_response_rules() -> str:
+    return """\
+- 用户明确要求「只要…」「只返回…」「不需要总数/全部/其他」时，严格按要求的粒度回复
+- find_closest_transaction 只返回一笔时：只描述该笔（金额、分类、商户或备注），不要列举当天其他交易、不要报总笔数
+- 工具已精确返回用户所需数据时，不要自行补充列表、表格或对比信息"""
+
+
 def _format_business_scope(tools: list[BaseTool]) -> str:
     """从各 tool 的 ToolPromptPolicy.scope 汇总业务范围。"""
     scopes: list[str] = []
@@ -87,6 +110,8 @@ def system_prompt(tools: list[BaseTool]) -> str:
     tools_section = _format_tools_section(tools)
     # 自动生成时间范围规则
     time_range_section = _format_time_range_rules(tools, today_date, month)
+    intent_section = _format_intent_rules(tools, today_date)
+    response_section = _format_response_rules()
     # 自动生成业务范围
     business_scope_section = _format_business_scope(tools)
     return f"""\
@@ -100,11 +125,17 @@ def system_prompt(tools: list[BaseTool]) -> str:
 时间范围规则（必须遵守）：
 {time_range_section}
 
+单日查询意图（必须遵守）：
+{intent_section}
+
+回复格式（必须遵守）：
+{response_section}
+
 业务范围（必须遵守）：
 {business_scope_section}
 
 规则：
 - 记一笔时从用户话里提取 amount、category、merchant、note
 - 若消息中含「从支付截图识别：」段落，将其视为已解析的记账信息，可据此记一笔或向用户确认
-- 工具返回 JSON 后，用简洁中文回复用户，说明结果
+- 工具返回 JSON 后，用简洁中文回复用户；遵守上方「回复格式」
 """

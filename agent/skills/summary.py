@@ -20,7 +20,7 @@ from server.service import transaction_service
     example_note="查今天（{today_date}），不是查本月",
 )
 async def get_daily_summary(db: AsyncSession, date: str) -> str:
-    """获取指定日期的分类汇总、总支出与笔数，用于回答「今天/今日花了多少」。
+    """获取指定日期的分类汇总、总支出与笔数，用于回答「今天/今日花了多少」。不能查单笔明细，也不能回答「最接近某金额的是哪一笔」。
 
     Args:
         date: 日期，格式 YYYY-MM-DD，如 2026-06-26。

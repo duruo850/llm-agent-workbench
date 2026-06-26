@@ -100,6 +100,20 @@ class TransactionService:
             rows = [row for row in rows if row.category == category]
         return rows
 
+    async def find_closest_transaction(
+        self,
+        db: AsyncSession,
+        *,
+        date: str,
+        target_amount: float,
+    ) -> TransactionListResponse | None:
+        """返回指定日期内与目标金额最接近的单笔交易。"""
+        rows = await self.list_transactions(db, date=date)
+        if not rows:
+            return None
+        target = Decimal(str(target_amount))
+        return min(rows, key=lambda row: abs(row.amount - target))
+
     async def get_monthly_summary(self, db: AsyncSession, *, month: str) -> MonthlySummaryResponse:
         """按月聚合交易，并关联预算对比（无独立 summary 表）。"""
         start, end = month_range(month)
