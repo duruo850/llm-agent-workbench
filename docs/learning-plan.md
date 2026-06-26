@@ -35,7 +35,7 @@ Fine-tuning / Skills (分类微调 / 可插拔技能模块)
 | **M0** | `examples/00_hello_chain.py` | LangChain + DeepSeek 跑通 |
 | **M1** | `backend/` + MySQL schema | 交易 CRUD API |
 | **M2** | `agent/tools/db_tools.py` | Function Calling 记一笔 / 查账 |
-| **M3** | `frontend/` 聊天页 | 流式对话 UI |
+| **M3** | `web/` 聊天页 | 流式对话 UI |
 | **M4** | `agent/graph.py` | LangGraph 多步 Agent |
 | **M5** | `agent/tools/file_tools.py` | CSV / 账单文件导入 |
 | **M6** | `indexer/` + RAG 工具 | 记账规则 / 知识库问答 |
@@ -68,7 +68,7 @@ billmind/
 ├── indexer/
 │   ├── llama_indexer.py     # LlamaIndex 文档索引
 │   └── embeddings.py        # 交易向量索引
-├── frontend/
+├── web/
 │   ├── src/                 # React / Vue 聊天 + 仪表盘
 │   └── ...
 ├── data/

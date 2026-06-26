@@ -13,3 +13,11 @@ def month_range(month: str) -> tuple[datetime, datetime]:
     else:
         end = datetime(start.year, start.month + 1, 1)
     return start, end
+
+
+def day_range(date: str) -> tuple[datetime, datetime]:
+    """将 ``YYYY-MM-DD`` 解析为半开区间 ``[start, end)``，用于 ``transacted_at`` 过滤。"""
+    from datetime import timedelta
+
+    start = datetime.strptime(date, "%Y-%m-%d")
+    return start, start + timedelta(days=1)

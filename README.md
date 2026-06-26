@@ -88,7 +88,7 @@ llm-agent-workbench/
 ├── server/                  # FastAPI + PostgreSQL
 ├── agent/                   # LangGraph Agent + Tools + Skills
 ├── indexer/                 # LlamaIndex RAG + Embeddings
-├── frontend/                # 聊天 + 仪表盘
+├── web/                     # 聊天 + 仪表盘
 ├── common/                  # LLM 平台抽象 + DeepSeek / Ollama 封装
 ├── examples/                # 各阶段独立 demo
 ├── docs/                    # 学习计划 + knowledge/ 知识点深度文档

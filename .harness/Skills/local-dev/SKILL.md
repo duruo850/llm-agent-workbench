@@ -24,6 +24,7 @@ description: 本地开发 SOP：docker、main、pytest、F5 调试
 - [ ] 5. `curl http://127.0.0.1:8000/health` 验收
 - [ ] 6. 测试：`pytest server/api -v`（须 API 已启动）
 - [ ] 7. F5 调试：选 `.vscode/launch.json` 配置
+- [ ] 8. M3 Web：`cd web && npm install && npm run serve` → 打开 http://127.0.0.1:5173
 
 ## 文件清单
 
@@ -34,6 +35,7 @@ description: 本地开发 SOP：docker、main、pytest、F5 调试
 | `server/main.py` | API 入口 |
 | `.vscode/launch.json` | 调试配置 |
 | `pytest.ini` | 测试配置 |
+| `web/` | M3 React 聊天页（`npm run serve`） |
 
 ## Launch 配置
 
@@ -51,6 +53,22 @@ python examples/00_hello_chain.py
 ./examples/01_image_ollama_chain/setup-ollama.sh
 python examples/01_image_ollama_chain/01_image_ollama_chain.py
 ```
+
+## M3 Web
+
+```bash
+# 终端 1：API（见上）
+python server/main.py
+
+# 终端 2：图片识别需 Ollama
+./examples/01_image_ollama_chain/setup-ollama.sh
+
+# 终端 3：聊天页
+cd web && npm install && npm run serve
+# 浏览器打开 http://127.0.0.1:5173
+```
+
+Web 默认直连 `http://127.0.0.1:8000`（CORS 已配置）；可通过 `VITE_API_BASE` 覆盖。
 
 ## 验收
 

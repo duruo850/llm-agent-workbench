@@ -22,3 +22,12 @@ class MonthlySummaryResponse(ResponseBase):
     categories: list[CategorySummaryResponse]
     total_amount: Decimal
     total_count: int
+
+
+class DailySummaryResponse(ResponseBase):
+    """按日汇总 — Agent 工具 ``get_daily_summary`` 响应。"""
+
+    date: str
+    categories: list[CategorySummaryResponse]
+    total_amount: Decimal
+    total_count: int

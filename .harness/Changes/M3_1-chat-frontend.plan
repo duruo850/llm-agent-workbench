@@ -1,0 +1,85 @@
+---
+milestone: M3
+seq: 1
+slug: chat-frontend
+status: done
+skills:
+  - add-api-endpoint
+  - http-integration-test
+  - local-dev
+depends_on:
+  - M2_1-function-calling
+---
+
+# M3 聊天前端
+
+## 里程碑
+
+**M3** — 交付可演示的 BillMind 聊天页：文本 + 图片记账/查账，非账单问题统一拒答。非流式（沿用 `POST /agent/chat` 一次性 `reply`）。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [add-api-endpoint](../Skills/add-api-endpoint/SKILL.md) | CORS、扩展 `/agent/chat`、图片编排 |
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | `agent_test.py` + `require_ollama` |
+| [local-dev](../Skills/local-dev/SKILL.md) | 前后端联调步骤 |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `server/main.py` | CORSMiddleware |
+| `common/env.py` | `get_web_origins()` |
+| `server/model/request/agent.py` | `image_data_url` + 校验 |
+| `agent/vision.py` | Ollama 视觉识别摘要 |
+| `agent/runner.py` | 业务范围 system prompt |
+| `server/api/agent.py` | 图片编排 + 503 |
+| `server/api/conftest.py` | `require_llm` + `require_ollama` |
+| `server/api/agent_test.py` | 文本 + 可选图片用例 |
+| `web/` | Vite + React + TS 聊天页 |
+| `.gitignore` | `web/node_modules`、`web/dist` |
+
+### 不在范围内
+
+- SSE 流式输出
+- LangGraph（M4）、仪表盘（M13）
+- 用户登录 / 多会话持久化
+- 修改 `architecture.md`
+
+## 步骤清单
+
+- [x] 1. 创建本 plan，更新 milestones / repo-layout / Changes README
+- [x] 2. CORS + `AgentChatRequest` + `agent/vision.py` + `agent.py` 编排
+- [x] 3. `runner.py` 业务范围 prompt
+- [x] 4. 初始化 `web/` ChatPage（文本 + 图片）
+- [x] 5. 扩展测试 + local-dev + `.gitignore`
+- [x] 6. 验收联调
+
+## 运行命令
+
+```bash
+# 终端 1
+docker compose up -d
+python server/main.py
+
+# 终端 2（图片功能）
+./examples/01_image_ollama_chain/setup-ollama.sh
+
+# 终端 3
+cd web && npm install && npm run serve
+# 打开 http://127.0.0.1:5173
+
+pytest server/api/agent_test.py -v
+```
+
+## 验收标准
+
+- [x] 文本：「刚才 Starbucks 花了 38，算餐饮」→ 记账成功并有助手确认（`test_agent_chat_add_transaction`）
+- [x] 文本：「查一下本月餐饮花了多少」→ 返回汇总类回复（`test_agent_chat_query_transactions`）
+- [ ] 图片：上传支付截图 → 识别后记账或提示用户确认信息（需 Ollama，`test_agent_chat_with_image`）
+- [x] 越界：「今天天气怎么样」→ 不调工具，提示仅支持账单业务（`test_agent_chat_out_of_scope`）
+- [x] `pytest server/api/agent_test.py -v` 文本用例通过；无 Key/Ollama 时相关用例 skip
+- [x] milestones M3 标记完成，Changes 链接更新

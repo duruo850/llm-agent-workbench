@@ -7,12 +7,13 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from utils.date_range import month_range
+from utils.date_range import day_range, month_range
 from server.model.budget import Budget
 from server.model.category import Category
 from server.model.request import TransactionCreateRequest, TransactionUpdateRequest
 from server.model.response import (
     CategorySummaryResponse,
+    DailySummaryResponse,
     MonthlySummaryResponse,
     TransactionCreateResponse,
     TransactionGetResponse,
@@ -73,6 +74,7 @@ class TransactionService:
         db: AsyncSession,
         *,
         month: str | None = None,
+        date: str | None = None,
         category: str | None = None,
     ) -> list[TransactionListResponse]:
         stmt = await transaction_crud.select(
@@ -80,7 +82,13 @@ class TransactionService:
             sort_columns="transacted_at",
             sort_orders="desc",
         )
-        if month:
+        if date:
+            start, end = day_range(date)
+            stmt = stmt.where(
+                Transaction.transacted_at >= start,
+                Transaction.transacted_at < end,
+            )
+        elif month:
             start, end = month_range(month)
             stmt = stmt.where(
                 Transaction.transacted_at >= start,
@@ -145,6 +153,50 @@ class TransactionService:
 
         return MonthlySummaryResponse(
             month=month,
+            categories=categories,
+            total_amount=total_amount,
+            total_count=total_count,
+        )
+
+    async def get_daily_summary(self, db: AsyncSession, *, date: str) -> DailySummaryResponse:
+        """按日聚合交易。"""
+        start, end = day_range(date)
+
+        txn_stmt = (
+            select(
+                Transaction.category,
+                func.sum(Transaction.amount).label("total_amount"),
+                func.count().label("transaction_count"),
+            )
+            .where(
+                Transaction.transacted_at >= start,
+                Transaction.transacted_at < end,
+            )
+            .group_by(Transaction.category)
+            .order_by(Transaction.category)
+        )
+        txn_result = await db.execute(txn_stmt)
+        txn_rows = txn_result.all()
+
+        categories: list[CategorySummaryResponse] = []
+        total_amount = Decimal("0")
+        total_count = 0
+
+        for category_name, amount, count in txn_rows:
+            amount = amount or Decimal("0")
+            count = int(count)
+            total_amount += amount
+            total_count += count
+            categories.append(
+                CategorySummaryResponse(
+                    category=category_name,
+                    total_amount=amount,
+                    transaction_count=count,
+                )
+            )
+
+        return DailySummaryResponse(
+            date=date,
             categories=categories,
             total_amount=total_amount,
             total_count=total_count,

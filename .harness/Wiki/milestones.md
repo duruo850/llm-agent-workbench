@@ -11,7 +11,7 @@
 | **M0** | ✅ 完成 | LangChain 文本入账 + Ollama 视觉 | [M0_1-langchain-text](../Changes/M0_1-langchain-text.plan)、[M0_2-ollama-vision](../Changes/M0_2-ollama-vision.plan) |
 | **M1** | ✅ 完成 | FastAPI + PostgreSQL CRUD | —（完成于 harness 前，无编号 plan） |
 | **M2** | ✅ 完成 | Function Calling 记一笔 / 查账 | [M2_1-function-calling](../Changes/M2_1-function-calling.plan) |
-| **M3** | ⬜ 待做 | 聊天前端 | — |
+| **M3** | ✅ 完成 | 聊天前端 | [M3_1-chat-frontend](../Changes/M3_1-chat-frontend.plan) |
 | **M4** | ⬜ 待做 | LangGraph Agent | — |
 | **M5** | ⬜ 待做 | 文件导入 | — |
 | **M6** | ⬜ 待做 | RAG 知识库 | — |

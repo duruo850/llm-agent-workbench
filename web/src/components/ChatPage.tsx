@@ -1,0 +1,76 @@
+import { useCallback, useState } from "react";
+
+import { AgentApiError, postAgentChat } from "../api/agent";
+import type { ChatMessage } from "../types/chat";
+import ChatInput from "./ChatInput";
+import MessageList from "./MessageList";
+
+function createId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+export default function ChatPage() {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleSend = useCallback(async (text: string, imageDataUrl?: string | null) => {
+    const trimmed = text.trim();
+    if (!trimmed && !imageDataUrl) {
+      return;
+    }
+
+    const userMessage: ChatMessage = {
+      id: createId(),
+      role: "user",
+      content: trimmed || "（上传了支付截图）",
+      imageDataUrl: imageDataUrl ?? undefined,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setLoading(true);
+
+    try {
+      const { reply } = await postAgentChat({
+        message: trimmed,
+        imageDataUrl,
+      });
+      setMessages((prev) => [
+        ...prev,
+        { id: createId(), role: "assistant", content: reply },
+      ]);
+    } catch (error) {
+      const detail =
+        error instanceof AgentApiError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "未知错误";
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: createId(),
+          role: "assistant",
+          content: detail,
+          isError: true,
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return (
+    <div className="chat-app">
+      <header className="chat-header">
+        <h1>BillMind</h1>
+        <p>记账 · 查账</p>
+      </header>
+      <main className="chat-main">
+        <MessageList messages={messages} loading={loading} />
+      </main>
+      <footer className="chat-footer">
+        <ChatInput disabled={loading} onSend={handleSend} />
+      </footer>
+    </div>
+  );
+}

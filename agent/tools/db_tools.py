@@ -11,6 +11,8 @@ Function Calling 与 AI 的关系（本模块在整条链路中的位置）：
 
 因此：``db_tools`` 是 AI「手脚」与业务 API「身体」之间的适配层；LLM 负责理解与决策，
 工具负责确定性 I/O。
+
+``_TOOL_POLICIES`` 与 docstring 一并维护：runner 自动生成功能说明、时间范围与业务范围。
 """
 
 from __future__ import annotations
@@ -22,7 +24,35 @@ from langchain_core.tools import BaseTool, tool
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from agent.tools.policy import ToolPromptPolicy
 from server.service import transaction_service
+
+_TOOL_POLICIES: dict[str, ToolPromptPolicy] = {
+    "add_transaction": ToolPromptPolicy(scope="记一笔"),
+    "query_transactions": ToolPromptPolicy(
+        scope="查交易",
+        time_scope="month",
+        time_param="month",
+    ),
+    "get_daily_summary": ToolPromptPolicy(
+        scope="查日汇总",
+        time_scope="day",
+        user_triggers=("今天", "今日", "当天"),
+        time_param="date",
+        forbid_tools=("get_monthly_summary",),
+        example_queries=("我今天用了多少钱",),
+        example_note="查今天（{today_date}），不是查本月",
+    ),
+    "get_monthly_summary": ToolPromptPolicy(
+        scope="查月汇总",
+        time_scope="month",
+        time_param="month",
+    ),
+}
+
+
+def get_tool_policy(tool: BaseTool) -> ToolPromptPolicy | None:
+    return _TOOL_POLICIES.get(tool.name)
 
 
 def _format_result(data: Any) -> str:
@@ -70,7 +100,7 @@ def get_db_tools(db: AsyncSession) -> list[BaseTool]:
 
     @tool
     async def query_transactions(month: str, category: str | None = None) -> str:
-        """查询指定月份的交易记录，可选按分类过滤。
+        """查询指定月份的交易记录，可选按分类过滤。仅用于「某月」明细，不要用于「今天/今日」。
 
         Args:
             month: 月份，格式 YYYY-MM，如 2025-06。
@@ -83,8 +113,21 @@ def get_db_tools(db: AsyncSession) -> list[BaseTool]:
             return _format_db_error(exc)
 
     @tool
+    async def get_daily_summary(date: str) -> str:
+        """获取指定日期的分类汇总、总支出与笔数，用于回答「今天/今日花了多少」。
+
+        Args:
+            date: 日期，格式 YYYY-MM-DD，如 2026-06-26。
+        """
+        try:
+            summary = await transaction_service.get_daily_summary(db, date=date)
+            return _format_result(summary)
+        except SQLAlchemyError as exc:
+            return _format_db_error(exc)
+
+    @tool
     async def get_monthly_summary(month: str) -> str:
-        """获取指定月份的分类汇总、总支出与笔数，可回答「本月餐饮花了多少」。
+        """获取指定月份的分类汇总、总支出与笔数，用于回答「本月/这个月花了多少」。不要用于「今天/今日」。
 
         Args:
             month: 月份，格式 YYYY-MM，如 2025-06。
@@ -95,4 +138,4 @@ def get_db_tools(db: AsyncSession) -> list[BaseTool]:
         except SQLAlchemyError as exc:
             return _format_db_error(exc)
 
-    return [add_transaction, query_transactions, get_monthly_summary]
+    return [add_transaction, query_transactions, get_daily_summary, get_monthly_summary]
