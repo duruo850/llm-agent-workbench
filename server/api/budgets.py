@@ -8,6 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.db.session import get_db
+from server.service.account import get_current_account
+from server.model.account import Account
 from server.model.request import BudgetCreateRequest, BudgetUpdateRequest
 from server.model.response import (
     BudgetCreateResponse,
@@ -25,16 +27,18 @@ router = APIRouter(prefix="/budgets", tags=["budgets"])
 async def create_budget(
     body: BudgetCreateRequest,
     db: AsyncSession = Depends(get_db),
+    account: Account = Depends(get_current_account),
 ) -> BudgetCreateResponse:
-    return await budget_service.create_budget(db, body)
+    return await budget_service.create_budget(db, body, account_id=account.id)
 
 
 @router.get("/{budget_id}", response_model=BudgetGetResponse)
 async def get_budget(
     budget_id: int,
     db: AsyncSession = Depends(get_db),
+    account: Account = Depends(get_current_account),
 ) -> BudgetGetResponse:
-    row = await budget_service.get_budget(db, budget_id)
+    row = await budget_service.get_budget(db, budget_id, account_id=account.id)
     if row is None:
         raise HTTPException(status_code=404, detail="Budget not found")
     return row
@@ -43,10 +47,13 @@ async def get_budget(
 @router.get("", response_model=PaginatedList[BudgetListResponse])
 async def list_budgets(
     db: AsyncSession = Depends(get_db),
+    account: Account = Depends(get_current_account),
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int | None, Query(ge=1, le=1000)] = 100,
 ) -> PaginatedList[BudgetListResponse]:
-    return await budget_service.list_budgets(db, offset=offset, limit=limit)
+    return await budget_service.list_budgets(
+        db, account_id=account.id, offset=offset, limit=limit
+    )
 
 
 @router.patch("/{budget_id}", response_model=BudgetUpdateResponse)
@@ -54,8 +61,11 @@ async def update_budget(
     budget_id: int,
     body: BudgetUpdateRequest,
     db: AsyncSession = Depends(get_db),
+    account: Account = Depends(get_current_account),
 ) -> BudgetUpdateResponse:
-    row = await budget_service.update_budget(db, budget_id, body)
+    row = await budget_service.update_budget(
+        db, budget_id, body, account_id=account.id
+    )
     if row is None:
         raise HTTPException(status_code=404, detail="Budget not found")
     return row
@@ -65,7 +75,8 @@ async def update_budget(
 async def delete_budget(
     budget_id: int,
     db: AsyncSession = Depends(get_db),
+    account: Account = Depends(get_current_account),
 ) -> None:
-    deleted = await budget_service.delete_budget(db, budget_id)
+    deleted = await budget_service.delete_budget(db, budget_id, account_id=account.id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Budget not found")

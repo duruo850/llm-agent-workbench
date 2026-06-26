@@ -12,7 +12,7 @@
 | **M1** | ✅ 完成 | FastAPI + PostgreSQL CRUD | —（完成于 harness 前，无编号 plan） |
 | **M2** | ✅ 完成 | Function Calling 记一笔 / 查账 | [M2_1-function-calling](../Changes/M2_1-function-calling.plan) |
 | **M3** | ✅ 完成 | 聊天前端 | [M3_1-chat-frontend](../Changes/M3_1-chat-frontend.plan) |
-| **M4** | ✅ 完成 | LangGraph Agent + 跨轮记忆 | [M4_1-langgraph-agent](../Changes/M4_1-langgraph-agent.plan) |
+| **M4** | ✅ 完成 | LangGraph Agent + 多账号鉴权 | [M4_1-langgraph-agent](../Changes/M4_1-langgraph-agent.plan)、[M4_2-accounts-auth](../Changes/M4_2-accounts-auth.plan) |
 | **M5** | ⬜ 待做 | 文件导入 | — |
 | **M6** | ⬜ 待做 | RAG 知识库 | — |
 | **M7** | ⬜ 待做 | Embeddings 语义搜账 | — |
@@ -53,12 +53,13 @@
 
 ## M4 要点
 
-- Agent 层：[`graph/`](../../graph/)（LangGraph）；对照学习见 [`agent/agent.py`](../../agent/agent.py)（M2 for 循环）
+- Agent 层：[`agent/graph/`](../../agent/graph/)（LangGraph）；对照学习见 [`agent/agent/`](../../agent/agent/)（M2 for 循环）
 - 跨轮记忆：`thread_id` 经 API / Web 透传
+- 多账号：`POST /auth/login` + Bearer 鉴权；Agent skill 显式 `account_id` 参数
 - 知识点：[`docs/knowledge/langgraph.md`](../../docs/knowledge/langgraph.md)
 - CLI demo：[`examples/02_function_calling_agent.py`](../../examples/02_function_calling_agent.py)（`--repl` 复用 thread_id）
 - HTTP：`POST /agent/chat`（request/response 含 `thread_id`）
-- 测试：[`server/api/agent_test.py`](../../server/api/agent_test.py)
+- 测试：[`server/api/agent_test.py`](../../server/api/agent_test.py)、[`server/api/auth_test.py`](../../server/api/auth_test.py)
 
 ## M2+ 启动前
 

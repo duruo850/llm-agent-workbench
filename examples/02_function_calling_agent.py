@@ -27,9 +27,12 @@ from common.env import get_database_url
 from common.logging_config import configure_app_logging
 from agent import Agent
 from server.db.session import Database
+from server.service.account import account_service
 
 Database.init(get_database_url())
 Agent.init()
+
+CLI_ACCOUNT_NAME = "cli-demo"
 
 DEMO_CASES = [
     "刚才 Starbucks 花了 38，算餐饮",
@@ -55,13 +58,16 @@ async def run_demo(*, debug: bool = False) -> None:
     print("=" * 60)
 
     async with Database.get().async_session_factory() as db:
+        account = await account_service.login_or_register(db, CLI_ACCOUNT_NAME)
         for i, message in enumerate(DEMO_CASES, start=1):
             print(f"\n[{i}] 用户: {message}")
             try:
                 result = (
-                    await Agent.invoke(message, db=db, debug=True)
+                    await Agent.invoke(
+                        message, account_id=account.id, debug=True
+                    )
                     if debug
-                    else await Agent.invoke(message, db=db)
+                    else await Agent.invoke(message, account_id=account.id)
                 )
                 reply = result[0] if isinstance(result, tuple) else result
                 print(f"    助手: {reply}")
@@ -72,6 +78,7 @@ async def run_demo(*, debug: bool = False) -> None:
 async def run_repl(*, debug: bool = False) -> None:
     print("M2 Agent 交互模式（输入 quit 退出）")
     async with Database.get().async_session_factory() as db:
+        account = await account_service.login_or_register(db, CLI_ACCOUNT_NAME)
         while True:
             try:
                 message = input("\n你: ").strip()
@@ -82,9 +89,11 @@ async def run_repl(*, debug: bool = False) -> None:
                 break
             try:
                 result = (
-                    await Agent.invoke(message, db=db, debug=True)
+                    await Agent.invoke(
+                        message, account_id=account.id, debug=True
+                    )
                     if debug
-                    else await Agent.invoke(message, db=db)
+                    else await Agent.invoke(message, account_id=account.id)
                 )
                 reply = result[0] if isinstance(result, tuple) else result
                 print(f"助手: {reply}")

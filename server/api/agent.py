@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent import Agent
 from server.db.session import get_db
+from server.service.account import get_current_account
+from server.model.account import Account
 from server.model.request.agent import AgentChatRequest
 from server.model.response.agent import AgentChatResponse
 
@@ -17,6 +19,7 @@ router = APIRouter(prefix="/agent", tags=["agent"])
 async def agent_chat(
     body: AgentChatRequest,
     db: AsyncSession = Depends(get_db),
+    account: Account = Depends(get_current_account),
 ) -> AgentChatResponse:
     if body.image_data_url:
         try:
@@ -32,6 +35,6 @@ async def agent_chat(
         message = body.message
 
     reply, thread_id = await Agent.invoke(
-        message, db=db, thread_id=body.thread_id
+        message, db=db,account_id=account.id, thread_id=body.thread_id
     )
     return AgentChatResponse(reply=reply, thread_id=thread_id)

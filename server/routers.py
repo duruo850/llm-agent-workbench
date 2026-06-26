@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
-from server.api import agent, budgets, categories, summary, transactions
+from server.api import account, agent, budgets, categories, summary, transactions
+from server.service.account import get_current_account
+
+protected = [Depends(get_current_account)]
 
 
 def register_routers(app: FastAPI) -> None:
-    app.include_router(categories.router)
-    app.include_router(budgets.router)
-    app.include_router(transactions.router)
-    app.include_router(summary.router)
-    app.include_router(agent.router)
+    app.include_router(account.router)
+    app.include_router(categories.router, dependencies=protected)
+    app.include_router(budgets.router, dependencies=protected)
+    app.include_router(transactions.router, dependencies=protected)
+    app.include_router(summary.router, dependencies=protected)
+    app.include_router(agent.router, dependencies=protected)

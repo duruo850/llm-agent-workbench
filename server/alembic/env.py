@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from common.env import get_database_url, load_env
 from sqlmodel import SQLModel
+import server.model.account  # noqa: F401
 import server.model.budget  # noqa: F401
 import server.model.category  # noqa: F401
 import server.model.transaction  # noqa: F401
@@ -43,7 +44,7 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(connection=connection, target_metadata=SQLModel.metadata)
 
     with context.begin_transaction():
         context.run_migrations()

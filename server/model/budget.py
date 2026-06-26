@@ -13,9 +13,11 @@ class Budget(SQLModel, table=True):
     __table_args__ = (
         UniqueConstraint("category_id", "month", name="uq_budgets_category_month"),
         Index("ix_budgets_month", "month"),
+        Index("ix_budgets_account_id", "account_id"),
     )
 
     id: int | None = Field(default=None, primary_key=True)
+    account_id: int = Field(foreign_key="accounts.id")
     category_id: int = Field(foreign_key="categories.id")
     month: str = Field(max_length=7)
     limit_amount: Decimal = Field(max_digits=12, decimal_places=2)

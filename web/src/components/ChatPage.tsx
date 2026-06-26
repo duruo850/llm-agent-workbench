@@ -9,7 +9,12 @@ function createId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export default function ChatPage() {
+interface ChatPageProps {
+  accountName: string;
+  onLogout: () => void;
+}
+
+export default function ChatPage({ accountName, onLogout }: ChatPageProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -76,16 +81,26 @@ export default function ChatPage() {
         <div className="chat-header-row">
           <div>
             <h1>BillMind</h1>
-            <p>记账 · 查账</p>
+            <p>{accountName} · 记账 · 查账</p>
           </div>
-          <button
-            type="button"
-            className="chat-new-button"
-            disabled={loading}
-            onClick={handleNewChat}
-          >
-            新对话
-          </button>
+          <div className="chat-header-actions">
+            <button
+              type="button"
+              className="chat-new-button"
+              disabled={loading}
+              onClick={handleNewChat}
+            >
+              新对话
+            </button>
+            <button
+              type="button"
+              className="chat-logout-button"
+              disabled={loading}
+              onClick={onLogout}
+            >
+              退出
+            </button>
+          </div>
         </div>
       </header>
       <main className="chat-main">

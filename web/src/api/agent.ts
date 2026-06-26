@@ -1,7 +1,4 @@
-const API_BASE = (import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000").replace(
-  /\/$/,
-  "",
-);
+import { authFetch } from "./client";
 
 export interface AgentChatResponse {
   reply: string;
@@ -22,19 +19,19 @@ export async function postAgentChat(params: {
 }): Promise<AgentChatResponse> {
   let response: Response;
   try {
-    response = await fetch(`${API_BASE}/agent/chat`, {
+    response = await authFetch("/agent/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: params.message,
         image_data_url: params.imageDataUrl ?? null,
         thread_id: params.threadId ?? null,
       }),
     });
-  } catch {
-    throw new AgentApiError(
-      `无法连接后端 API（${API_BASE}）。请先运行：python server/main.py`,
-    );
+  } catch (error) {
+    if (error instanceof Error && error.name === "ApiError") {
+      throw new AgentApiError(error.message);
+    }
+    throw new AgentApiError("无法连接后端 API。请先运行：python server/main.py");
   }
 
   if (!response.ok) {

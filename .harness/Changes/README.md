@@ -31,6 +31,7 @@ M{n}_{seq}-{slug}.plan
 | [M2_1-function-calling.plan](M2_1-function-calling.plan) | M2 | 1 | done |
 | [M3_1-chat-frontend.plan](M3_1-chat-frontend.plan) | M3 | 1 | done |
 | [M4_1-langgraph-agent.plan](M4_1-langgraph-agent.plan) | M4 | 1 | done |
+| [M4_2-accounts-auth.plan](M4_2-accounts-auth.plan) | M4 | 2 | done |
 
 > M1 已在 harness 建立前完成，无编号 plan；后续 M1 补丁可用 `M1_1-*.plan`。
 

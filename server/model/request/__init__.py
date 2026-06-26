@@ -1,3 +1,9 @@
+from server.model.request.account import (
+    AccountCreateRequest,
+    AccountListQueryRequest,
+    AccountLoginRequest,
+    AccountUpdateRequest,
+)
 from server.model.request.agent import AgentChatRequest
 from server.model.request.budget import (
     BudgetCreateRequest,
@@ -18,6 +24,10 @@ from server.model.request.transaction import (
 )
 
 __all__ = [
+    "AccountCreateRequest",
+    "AccountListQueryRequest",
+    "AccountLoginRequest",
+    "AccountUpdateRequest",
     "AgentChatRequest",
     "BudgetCreateRequest",
     "BudgetListQueryRequest",

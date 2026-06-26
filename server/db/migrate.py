@@ -16,7 +16,7 @@ from common.env import get_database_url, load_env
 logger = logging.getLogger("billmind.db")
 
 _ALEMBIC_INI = Path(__file__).resolve().parents[1] / "alembic.ini"
-_REQUIRED_TABLES = ("categories", "budgets", "transactions")
+_REQUIRED_TABLES = ("accounts", "categories", "budgets", "transactions")
 
 
 def _alembic_config() -> Config:
@@ -47,6 +47,7 @@ def migrate() -> None:
 
 async def migrate_on_startup(engine: AsyncEngine) -> None:
     """应用启动时调用：库不可达则失败；表未就绪则自动迁移。"""
+    import server.model.account  # noqa: F401
     import server.model.budget  # noqa: F401
     import server.model.category  # noqa: F401
     import server.model.transaction  # noqa: F401

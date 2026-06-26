@@ -6,9 +6,10 @@ import inspect
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from langchain_core.tools import BaseTool, tool
+from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import BaseTool, InjectedToolArg, tool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 SessionFactory = async_sessionmaker[AsyncSession]
@@ -16,6 +17,9 @@ SessionFactory = async_sessionmaker[AsyncSession]
 OUT_OF_SCOPE_REPLY = "抱歉，BillMind 仅支持账单记账与查询相关业务。"
 
 SkillToolFn = Callable[..., Awaitable[str]]
+
+# 注入的参数，db: AsyncSession, config: RunnableConfig
+INJECTED_PARAMS = frozenset({"db", "config"})
 
 
 @dataclass(frozen=True)
@@ -32,6 +36,14 @@ class ToolPromptPolicy:
     example_note: str = ""
 
 
+def account_id_from_config(config: RunnableConfig) -> int:
+    """从 RunnableConfig.configurable 读取当前登录账号 ID。"""
+    account_id = config.get("configurable", {}).get("account_id")
+    if account_id is None:
+        raise RuntimeError("RunnableConfig.configurable 缺少 account_id")
+    return int(account_id)
+
+
 def _skill_module_globals() -> dict[str, Any]:
     frame = inspect.currentframe()
     if frame is None or frame.f_back is None:
@@ -46,9 +58,12 @@ def _skill_module_globals() -> dict[str, Any]:
 
 
 def _register_skill_tool(fn: SkillToolFn, policy: ToolPromptPolicy) -> SkillToolFn:
-    params = list(inspect.signature(fn).parameters)
+    sig = inspect.signature(fn)
+    params = list(sig.parameters)
     if not params or params[0] != "db":
-        raise TypeError(f"{fn.__name__} 首个参数必须是 db: AsyncSession")
+        raise TypeError(f"{fn.__name__} 首参必须是 db: AsyncSession")
+    if "config" not in sig.parameters:
+        raise TypeError(f"{fn.__name__} 须包含 config: RunnableConfig 参数")
 
     module_globals = _skill_module_globals()
     policies: dict[str, ToolPromptPolicy] = module_globals.setdefault("POLICIES", {})
@@ -59,8 +74,10 @@ def _register_skill_tool(fn: SkillToolFn, policy: ToolPromptPolicy) -> SkillTool
     policies[fn.__name__] = policy
 
     def build(session_factory: SessionFactory) -> BaseTool:
-        sig = inspect.signature(fn)
-        llm_sig = sig.replace(parameters=[p for n, p in sig.parameters.items() if n != "db"])
+        # 移除注入的参数，只保留 LLM 可见参数
+        llm_sig = sig.replace(
+            parameters=[p for n, p in sig.parameters.items() if n not in INJECTED_PARAMS]
+        )
 
         @wraps(fn)
         async def llm_tool(*args: Any, **kwargs: Any) -> str:
@@ -68,6 +85,8 @@ def _register_skill_tool(fn: SkillToolFn, policy: ToolPromptPolicy) -> SkillTool
                 return await fn(db, *args, **kwargs)
 
         llm_tool.__signature__ = llm_sig
+        
+        # tool装饰器调用，返回langchain的tool对象，增加参数config: RunnableConfig
         return tool(llm_tool)
 
     builders.append(build)
@@ -85,7 +104,7 @@ def tool_policy(
     example_queries: tuple[str, ...] = (),
     example_note: str = "",
 ) -> Callable[[SkillToolFn], SkillToolFn]:
-    """装饰 skill 实现函数：首参为 ``db``，``Agent.init`` 时绑定为 LangChain @tool。"""
+    """装饰 skill：首参 ``db``，末参 ``config: RunnableConfig``；``Agent.init`` 时绑定为 LangChain @tool。"""
     policy = ToolPromptPolicy(
         scope=scope,
         time_scope=time_scope,

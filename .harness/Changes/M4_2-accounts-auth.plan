@@ -1,0 +1,87 @@
+---
+milestone: M4
+seq: 2
+slug: accounts-auth
+status: done
+skills:
+  - entity-service
+  - add-api-endpoint
+  - db-migrate
+  - http-integration-test
+depends_on:
+  - M4_1-langgraph-agent
+---
+
+# M4.2 多账号登录与 Token 鉴权
+
+## 里程碑
+
+**M4 扩展** — Web 输入账号名登录；`accounts` 表 + 业务表 `account_id` 隔离；全接口 Bearer 鉴权（除 `/health`、`POST /auth/login`）。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [entity-service](../Skills/entity-service/SKILL.md) | Account ORM + service |
+| [add-api-endpoint](../Skills/add-api-endpoint/SKILL.md) | `POST /auth/login`、router 鉴权 |
+| [db-migrate](../Skills/db-migrate/SKILL.md) | `002_accounts_multi_tenant` |
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | auth_test + conftest |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `server/model/account.py` | Account ORM |
+| `server/alembic/versions/002_accounts_multi_tenant.py` | 迁移 + legacy 回填 |
+| `server/service/account.py` | login_or_register / get_by_token |
+| `server/api/auth.py` | POST /auth/login |
+| `utils/bearer_token.py` | parse_bearer_token 纯函数 |
+| `server/deps/auth.py` | get_current_account |
+| `common/account_context.py` | ContextVar + account_scope |
+| `server/routers.py` | 业务 router 统一鉴权 |
+| `server/service/{category,budget,transaction}.py` | account_id 过滤 |
+| `server/api/agent.py` | account_scope 包裹 invoke |
+| `web/src/api/auth.ts` | postLogin + localStorage |
+| `web/src/api/client.ts` | authFetch |
+| `web/src/components/LoginPage.tsx` | 登录页 |
+| `web/src/App.tsx` | 无 token 显示登录 |
+| `server/api/auth_test.py` | 登录与 401 用例 |
+| `server/api/conftest.py` | auth_token + require_llm |
+
+### 不在范围内
+
+- 密码、OAuth、Token 过期
+- Postgres LangGraph checkpointer（M9）
+- 修改 architecture.md
+
+## 步骤清单
+
+- [x] 1. Account ORM + 002 迁移；categories/budgets/transactions 加 account_id
+- [x] 2. account service、POST /auth/login、bearer_token + get_current_account
+- [x] 3. routers 统一鉴权；service 按 account_id 过滤
+- [x] 4. account_context + agent_chat scope
+- [x] 5. Web LoginPage、authFetch、ChatPage 退出
+- [x] 6. conftest + auth_test；各 API 测试适配
+
+## 运行命令
+
+```bash
+docker compose up -d
+python server/main.py
+
+curl -X POST http://127.0.0.1:8000/auth/login -H 'Content-Type: application/json' -d '{"name":"test"}'
+curl -H "Authorization: Bearer <token>" http://127.0.0.1:8000/categories
+
+pytest server/api -v
+cd web && npm run serve
+```
+
+## 验收标准
+
+- [x] A/B 两账号各自记账，互不可见
+- [x] 无 token 访问 `/transactions` → 401
+- [x] Agent「我今天花了多少」只统计当前账号（account_scope + resolve_account_id）
+- [x] Web 登录后聊天，换账号数据隔离
+- [x] `pytest server/api -v` 通过（Agent 测试需 DEEPSEEK_API_KEY）

@@ -8,6 +8,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.db.session import get_db
+from server.service.account import get_current_account
+from server.model.account import Account
 from server.model.request import MonthlySummaryQueryRequest
 from server.model.response import MonthlySummaryResponse
 from server.service import transaction_service
@@ -19,5 +21,8 @@ router = APIRouter(prefix="/summary", tags=["summary"])
 async def monthly_summary(
     query: Annotated[MonthlySummaryQueryRequest, Depends()],
     db: AsyncSession = Depends(get_db),
+    account: Account = Depends(get_current_account),
 ) -> MonthlySummaryResponse:
-    return await transaction_service.get_monthly_summary(db, month=query.month)
+    return await transaction_service.get_monthly_summary(
+        db, account_id=account.id, month=query.month
+    )

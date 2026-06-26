@@ -1,4 +1,4 @@
-"""Transaction 业务服务 — 增删改查、按月列表与月度汇总。"""
+"""Transaction 业务服务 — 增删改查、按月列表与月度汇总（按 account 隔离）。"""
 
 from __future__ import annotations
 
@@ -29,10 +29,13 @@ class TransactionService:
         self,
         db: AsyncSession,
         body: TransactionCreateRequest,
+        *,
+        account_id: int,
     ) -> TransactionCreateResponse:
+        payload = Transaction(**body.model_dump(), account_id=account_id)
         created = await transaction_crud.create(
             db,
-            object=body,
+            object=payload,
             schema_to_select=TransactionCreateResponse,
             return_as_model=True,
         )
@@ -44,6 +47,7 @@ class TransactionService:
         self,
         db: AsyncSession,
         *,
+        account_id: int,
         amount: float,
         category: str,
         merchant: str = "",
@@ -56,14 +60,15 @@ class TransactionService:
             merchant=merchant,
             note=note,
         )
-        return await self.create_transaction(db, body)
+        return await self.create_transaction(db, body, account_id=account_id)
 
     async def get_transaction(
-        self, db: AsyncSession, transaction_id: int
+        self, db: AsyncSession, transaction_id: int, *, account_id: int
     ) -> TransactionGetResponse | None:
         return await transaction_crud.get(
             db,
             id=transaction_id,
+            account_id=account_id,
             schema_to_select=TransactionGetResponse,
             return_as_model=True,
             one_or_none=True,
@@ -73,6 +78,7 @@ class TransactionService:
         self,
         db: AsyncSession,
         *,
+        account_id: int,
         month: str | None = None,
         date: str | None = None,
         category: str | None = None,
@@ -82,6 +88,7 @@ class TransactionService:
             sort_columns="transacted_at",
             sort_orders="desc",
         )
+        stmt = stmt.where(Transaction.account_id == account_id)
         if date:
             start, end = day_range(date)
             stmt = stmt.where(
@@ -104,17 +111,22 @@ class TransactionService:
         self,
         db: AsyncSession,
         *,
+        account_id: int,
         date: str,
         target_amount: float,
     ) -> TransactionListResponse | None:
         """返回指定日期内与目标金额最接近的单笔交易。"""
-        rows = await self.list_transactions(db, date=date)
+        rows = await self.list_transactions(
+            db, account_id=account_id, date=date
+        )
         if not rows:
             return None
         target = Decimal(str(target_amount))
         return min(rows, key=lambda row: abs(row.amount - target))
 
-    async def get_monthly_summary(self, db: AsyncSession, *, month: str) -> MonthlySummaryResponse:
+    async def get_monthly_summary(
+        self, db: AsyncSession, *, account_id: int, month: str
+    ) -> MonthlySummaryResponse:
         """按月聚合交易，并关联预算对比（无独立 summary 表）。"""
         start, end = month_range(month)
 
@@ -125,6 +137,7 @@ class TransactionService:
                 func.count().label("transaction_count"),
             )
             .where(
+                Transaction.account_id == account_id,
                 Transaction.transacted_at >= start,
                 Transaction.transacted_at < end,
             )
@@ -137,7 +150,11 @@ class TransactionService:
         budget_stmt = (
             select(Category.name, Budget.limit_amount)
             .join(Budget, Budget.category_id == Category.id)
-            .where(Budget.month == month)
+            .where(
+                Category.account_id == account_id,
+                Budget.account_id == account_id,
+                Budget.month == month,
+            )
         )
         budget_result = await db.execute(budget_stmt)
         budget_by_category = {name: limit for name, limit in budget_result.all()}
@@ -172,7 +189,9 @@ class TransactionService:
             total_count=total_count,
         )
 
-    async def get_daily_summary(self, db: AsyncSession, *, date: str) -> DailySummaryResponse:
+    async def get_daily_summary(
+        self, db: AsyncSession, *, account_id: int, date: str
+    ) -> DailySummaryResponse:
         """按日聚合交易。"""
         start, end = day_range(date)
 
@@ -183,6 +202,7 @@ class TransactionService:
                 func.count().label("transaction_count"),
             )
             .where(
+                Transaction.account_id == account_id,
                 Transaction.transacted_at >= start,
                 Transaction.transacted_at < end,
             )
@@ -221,21 +241,28 @@ class TransactionService:
         db: AsyncSession,
         transaction_id: int,
         body: TransactionUpdateRequest,
+        *,
+        account_id: int,
     ) -> TransactionUpdateResponse | None:
         return await transaction_crud.update(
             db,
             object=body,
             id=transaction_id,
+            account_id=account_id,
             schema_to_select=TransactionUpdateResponse,
             return_as_model=True,
             one_or_none=True,
         )
 
-    async def delete_transaction(self, db: AsyncSession, transaction_id: int) -> bool:
-        existing = await transaction_crud.get(db, id=transaction_id)
+    async def delete_transaction(
+        self, db: AsyncSession, transaction_id: int, *, account_id: int
+    ) -> bool:
+        existing = await transaction_crud.get(
+            db, id=transaction_id, account_id=account_id
+        )
         if existing is None:
             return False
-        await transaction_crud.delete(db, id=transaction_id)
+        await transaction_crud.delete(db, id=transaction_id, account_id=account_id)
         return True
 
 

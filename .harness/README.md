@@ -26,7 +26,7 @@ Agent 实现 BillMind 功能前的**必读入口**。本目录沉淀目录结构
 | **新增完整实体服务**（model→service→db→test 全流程） | [Skills/entity-service/SKILL.md](Skills/entity-service/SKILL.md) |
 | 新增数据库表 + CRUD（精简 checklist） | [Skills/add-server-model/SKILL.md](Skills/add-server-model/SKILL.md) |
 | 加自定义 API 路由 | [Skills/add-api-endpoint/SKILL.md](Skills/add-api-endpoint/SKILL.md) |
-| 写 HTTP 集成测试 | [Skills/http-integration-test/SKILL.md](Skills/http-integration-test/SKILL.md) |
+| 写 / 跑 HTTP 集成测试 | [Skills/http-integration-test/SKILL.md](Skills/http-integration-test/SKILL.md) |
 | 数据库迁移 | [Skills/db-migrate/SKILL.md](Skills/db-migrate/SKILL.md) |
 | 本地开发 / 调试 | [Skills/local-dev/SKILL.md](Skills/local-dev/SKILL.md) |
 | **定 plan 并实现功能**（Changes + milestones 同步） | [Skills/implement-plan/SKILL.md](Skills/implement-plan/SKILL.md) |
@@ -40,7 +40,7 @@ Agent 实现 BillMind 功能前的**必读入口**。本目录沉淀目录结构
 新实体（像 Category/...）       → entity-service（首选）
   ├─ 仅改表结构                    → db-migrate
   ├─ 实体已有，加自定义查询         → add-api-endpoint
-  └─ 补测试                        → http-integration-test
+  └─ 补测试 / 跑测试 / 验收 API    → http-integration-test
 
 跑不起来 / 首次搭环境              → local-dev
 ```

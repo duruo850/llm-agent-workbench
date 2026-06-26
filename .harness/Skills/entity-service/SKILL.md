@@ -28,21 +28,24 @@ BillMind M1 每个实体（Category / Budget / Transaction）都遵循同一套*
 | **A 标准** | Category | 纯 FastCRUD，无自定义 API | 全层最简 |
 | **B 关联** | Budget | 外键 `category_id`、唯一约束、索引 | 有 FK 时参照 |
 | **C 扩展** | Transaction | 禁用 FastCRUD 列表 + 自定义 `GET /transactions?month=` | 需非标准查询时参照 |
+| **D 租户根** | Account | 无 `account_id` 自引用；HTTP 以 `/auth/login` 为主，**Service 仍须五件套 CRUD** | [`service/account.py`](../../../server/service/account.py) |
+
+> **强制**：新建任意实体时，`{Entity}Service` **必须**提供 `create_` / `get_` / `list_` / `update_` / `delete_`（FastCRUD + Request/Response），再叠加领域方法（如 `login_or_register`、`get_current_account`）。不得仅写裸 SQL 或单点方法而跳过 CRUD 基线。
 
 ### 各层文件对照
 
-| 层 | Category | Budget | Transaction |
-|----|----------|--------|-------------|
-| ORM | `model/category.py` | `model/budget.py` | `model/transaction.py` |
-| Request | `request/category.py` | `request/budget.py` | `request/transaction.py` |
-| Response | `response/category.py` | `response/budget.py` | `response/transaction.py` |
-| FastCRUD 实例 | `service/enter.py` | 同上 | 同上 |
-| Service | `service/category.py` | `service/budget.py` | `service/transaction.py` |
-| API Router | `api/categories.py` | `api/budgets.py` | `api/transactions.py` |
-| 路由注册 | `routers.py` | 同上 | 同上 |
-| 迁移 | `alembic/versions/001_*.py` | 同上 | 同上 |
-| 启动同步 | `db/migrate.py` `_REQUIRED_TABLES` | 同上 | 同上 |
-| 测试 | `api/{entities}_test.py` | `api/budgets_test.py` | `api/transactions_test.py` |
+| 层 | Category | Budget | Transaction | Account |
+|----|----------|--------|-------------|---------|
+| ORM | `model/category.py` | `model/budget.py` | `model/transaction.py` | `model/account.py` |
+| Request | `request/category.py` | `request/budget.py` | `request/transaction.py` | `request/account.py` + `request/auth.py`（Login） |
+| Response | `response/category.py` | `response/budget.py` | `response/transaction.py` | `response/account.py` + `response/auth.py`（Login） |
+| FastCRUD 实例 | `service/enter.py` | 同上 | 同上 | `account_crud` |
+| Service | `service/category.py` | `service/budget.py` | `service/transaction.py` | `service/account.py` |
+| API Router | `api/categories.py` | `api/budgets.py` | `api/transactions.py` | `api/auth.py`（登录；管理 CRUD 可后续加） |
+| 路由注册 | `routers.py` | 同上 | 同上 | `auth` 无 Bearer；业务 router 加 `protected` |
+| 迁移 | `alembic/versions/001_*.py` | 同上 | 同上 | `002_accounts_multi_tenant.py` |
+| 启动同步 | `db/migrate.py` `_REQUIRED_TABLES` | 同上 | 同上 | 含 `accounts` |
+| 测试 | `api/{entities}_test.py` | `api/budgets_test.py` | `api/transactions_test.py` | `api/auth_test.py` |
 
 ## 分层数据流
 
@@ -195,6 +198,9 @@ Transaction 示例：[`server/api/transactions.py`](../../../server/api/transact
     │
     └─ 列表或查询逻辑非默认分页？
             └─ 档位 C（参照 Transaction）= Service 额外方法 + 同一 api router
+    │
+    └─ 租户根 / 认证实体（无 account_id 自引用，HTTP 以 login 为主）？
+            └─ 档位 D（参照 Account）= **Service 仍须 CRUD 五件套** + 领域方法；敏感字段（token）不进 Get/List Response
 ```
 
 ## 整合点（勿漏）
@@ -253,6 +259,7 @@ curl -X POST http://127.0.0.1:8000/{entities} -H 'Content-Type: application/json
 - 不要跳过 Alembic 或 `_REQUIRED_TABLES`
 - 不要用 `TestClient`；必须真实 HTTP 集成测试
 - 不要 Response 继承带关联的 ORM 类
+- 不要因「只有 login 接口」而省略 Service 层 CRUD（见档位 D / Account）
 
 ## 相关 Skill
 

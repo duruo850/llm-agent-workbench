@@ -63,6 +63,7 @@ class Agent:
         cls,
         message: str,
         *,
+        account_id: int,
         db: AsyncSession | None = None,  # noqa: ARG003
         thread_id: str | None = None,
         debug: bool = False,
@@ -76,7 +77,11 @@ class Agent:
 
         effective_thread_id = thread_id or str(uuid4())
         config = {
-            "configurable": {"thread_id": effective_thread_id, "debug": debug},
+            "configurable": {
+                "thread_id": effective_thread_id,
+                "debug": debug,
+                "account_id": account_id,
+            },
             "recursion_limit": _RECURSION_LIMIT,
         }
 

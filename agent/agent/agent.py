@@ -65,6 +65,7 @@ class Agent:
         cls,
         message: str,
         *,
+        account_id: int,
         db: AsyncSession,
         debug: bool = False,
     ) -> str:
@@ -123,7 +124,10 @@ class Agent:
                 break
 
             tool_messages = await cls.function_calling(
-                response, SKILL_TOOLS_MAP, debug=debug
+                response,
+                SKILL_TOOLS_MAP,
+                account_id=account_id,
+                debug=debug,
             )
             messages.extend(tool_messages)
         else:
@@ -172,6 +176,7 @@ class Agent:
         ai_message: AIMessage,
         tools_map: dict[str, BaseTool],
         *,
+        account_id: int,
         debug: bool = False,
     ) -> list[ToolMessage]:
         """
@@ -194,7 +199,9 @@ class Agent:
                 content = f'{{"error": true, "detail": "未知工具: {name}"}}'
             else:
                 # 如果工具存在，调用工具，返回结果。
-                content = await tool.ainvoke(args)
+                content = await tool.ainvoke(
+                    args, config={"configurable": {"account_id": account_id}}
+                )
             preview = content[:200] + ("..." if len(content) > 200 else "")
             logger.info("tool result: %s", preview)
             if debug:

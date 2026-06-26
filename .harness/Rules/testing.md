@@ -13,12 +13,15 @@
 
 | 文件 | 覆盖 |
 |------|------|
+| `account_test.py` | 登录、401、账号隔离 |
 | `categories_test.py` | Category CRUD |
 | `budgets_test.py` | Budget CRUD |
 | `transactions_test.py` | Transaction + 按月列表 |
 | `agent_test.py` | Agent `/agent/chat`（真实 LLM） |
 | `health_test.py` | `/health` |
 | `conftest.py` | 共用 fixture |
+
+执行全量测试见 [Skills/http-integration-test/SKILL.md](../Skills/http-integration-test/SKILL.md) § B。
 
 ## conftest 链
 

@@ -22,6 +22,9 @@ from typing import Any
 import httpx
 import pytest
 
+from common.env import load_env
+from common.test.account import login_token
+
 DEFAULT_API_BASE_URL = "http://127.0.0.1:8000"
 TEST_MONTH = "2025-06"
 
@@ -45,8 +48,44 @@ def require_api(api_base_url: str) -> str:
 
 
 @pytest.fixture
-def http_client(require_api: str, api_base_url: str) -> Generator[httpx.Client, None, None]:
+def require_llm() -> None:
+    load_env()
+    if not os.getenv("DEEPSEEK_API_KEY"):
+        pytest.skip("未配置 DEEPSEEK_API_KEY，跳过 Agent 集成测试")
+
+
+@pytest.fixture
+def require_graph_backend() -> None:
+    try:
+        import langgraph  # noqa: F401
+    except ImportError:
+        pytest.skip("未安装 langgraph，跳过 LangGraph 集成测试")
+
+
+@pytest.fixture
+def http_client_no_auth(
+    require_api: str, api_base_url: str
+) -> Generator[httpx.Client, None, None]:
     with httpx.Client(base_url=api_base_url, timeout=15.0) as client:
+        yield client
+
+
+@pytest.fixture
+def auth_token(http_client_no_auth: httpx.Client, unique_suffix: str) -> str:
+    return login_token(http_client_no_auth, f"test-{unique_suffix}")
+
+
+@pytest.fixture
+def http_client(
+    require_api: str,
+    api_base_url: str,
+    auth_token: str,
+) -> Generator[httpx.Client, None, None]:
+    with httpx.Client(
+        base_url=api_base_url,
+        timeout=15.0,
+        headers={"Authorization": f"Bearer {auth_token}"},
+    ) as client:
         yield client
 
 

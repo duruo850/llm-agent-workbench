@@ -10,7 +10,7 @@
 | **新增完整实体服务**（参照 Category/Budget/Transaction） | [Skills/entity-service/SKILL.md](.harness/Skills/entity-service/SKILL.md) |
 | 新增数据库表 + CRUD（精简 checklist） | [Skills/add-server-model/SKILL.md](.harness/Skills/add-server-model/SKILL.md) |
 | 添加自定义 API | [Skills/add-api-endpoint/SKILL.md](.harness/Skills/add-api-endpoint/SKILL.md) |
-| 写 HTTP 集成测试 | [Skills/http-integration-test/SKILL.md](.harness/Skills/http-integration-test/SKILL.md) |
+| 写 / 跑 HTTP 集成测试 | [Skills/http-integration-test/SKILL.md](.harness/Skills/http-integration-test/SKILL.md) |
 | 数据库迁移 | [Skills/db-migrate/SKILL.md](.harness/Skills/db-migrate/SKILL.md) |
 | 本地开发 / 调试 | [Skills/local-dev/SKILL.md](.harness/Skills/local-dev/SKILL.md) |
 | **定 plan 并实现功能** | [Skills/implement-plan/SKILL.md](.harness/Skills/implement-plan/SKILL.md) |
