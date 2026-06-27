@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from agent.agent.common.parse_sentence import parse_sentence
+from common.csv_import import import_csv_transactions
 from server.db.session import get_db
 from server.service.account import get_current_account
 from server.model.account import Account
@@ -14,6 +16,8 @@ from server.model.request import TransactionCreateRequest, TransactionListQueryR
 from server.model.response import (
     TransactionCreateResponse,
     TransactionGetResponse,
+    TransactionImportCategorySummary,
+    TransactionImportResponse,
     TransactionListResponse,
     TransactionUpdateResponse,
 )
@@ -30,6 +34,43 @@ async def create_transaction(
 ) -> TransactionCreateResponse:
     return await transaction_service.create_transaction(
         db, body, account_id=account.id
+    )
+
+
+@router.post("/import", response_model=TransactionImportResponse)
+async def import_transactions_csv(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    account: Account = Depends(get_current_account),
+) -> TransactionImportResponse:
+    content = await file.read()
+    if not content.strip():
+        raise HTTPException(status_code=400, detail="empty file")
+
+    result = await import_csv_transactions(
+        db,
+        account_id=account.id,
+        content=content,
+        parse_sentence=parse_sentence,
+    )
+    if result.imported_count == 0:
+        raise HTTPException(
+            status_code=400,
+            detail={"errors": result.errors},
+        )
+
+    return TransactionImportResponse(
+        imported_count=result.imported_count,
+        skipped_count=result.skipped_count,
+        errors=result.errors,
+        categories=[
+            TransactionImportCategorySummary(
+                category=item.category,
+                count=item.count,
+                total_amount=item.total_amount,
+            )
+            for item in result.categories
+        ],
     )
 
 

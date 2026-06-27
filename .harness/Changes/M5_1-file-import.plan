@@ -1,0 +1,64 @@
+---
+milestone: M5
+seq: 1
+slug: file-import
+status: done
+skills:
+  - add-api-endpoint
+  - http-integration-test
+depends_on:
+  - M4_2-accounts-auth
+---
+
+# M5.1 CSV 文件导入
+
+## 里程碑
+
+**M5** — REST API + Agent skill 导入 CSV 银行流水，复用 `transaction_service.create_transaction`。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [add-api-endpoint](../Skills/add-api-endpoint/SKILL.md) | `POST /transactions/import` |
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | `transactions_test.py`（含 import 用例） |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `common/csv_import.py` | CSV 解析 + 批量编排 + `ImportResult` |
+| `server/model/response/transaction.py` | `TransactionImportResponse` 等 |
+| `server/api/transactions.py` | `POST /transactions/import` |
+| `agent/agent/skills/import_csv.py` | `import_bank_statement` skill |
+| `server/api/transactions_test.py` | CRUD + CSV 导入（成功 / 部分失败 / 401 / 空文件） |
+
+### 不在范围内
+
+- Excel / PDF、导入任务表、Web 导入页、幂等去重表
+
+## 步骤清单
+
+- [x] 1. `common/csv_import.py` — 解析 + `import_csv_transactions`
+- [x] 2. Response 模型 + `POST /transactions/import`
+- [x] 3. Agent skill `import_bank_statement`
+- [x] 4. HTTP 集成测试
+- [x] 5. `pytest server/api -v` 全量验收
+
+## 运行命令
+
+```bash
+docker compose up -d
+.venv/bin/python3.14 server/main.py
+.venv/bin/python3.14 -m pytest server/api/transactions_test.py -v
+.venv/bin/python3.14 -m pytest server/api -v
+```
+
+## 验收标准
+
+- [x] multipart 上传 2 行 CSV → `imported_count==2`、分类汇总正确
+- [x] 含非法行 → 部分成功 + `errors` 非空
+- [x] 无 Bearer → 401；空文件 → 400
+- [x] `pytest server/api -v` 通过

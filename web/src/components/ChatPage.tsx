@@ -25,16 +25,28 @@ export default function ChatPage({ accountName, onLogout }: ChatPageProps) {
   }, []);
 
   const handleSend = useCallback(
-    async (text: string, imageDataUrl?: string | null) => {
+    async (
+      text: string,
+      attachment?: {
+        imageDataUrl?: string | null;
+        fileName?: string | null;
+        fileText?: string | null;
+      },
+    ) => {
       const trimmed = text.trim();
-      if (!trimmed && !imageDataUrl) {
+      const imageDataUrl = attachment?.imageDataUrl ?? null;
+      const fileName = attachment?.fileName ?? null;
+      const fileText = attachment?.fileText ?? null;
+      if (!trimmed && !imageDataUrl && !fileName) {
         return;
       }
 
       const userMessage: ChatMessage = {
         id: createId(),
         role: "user",
-        content: trimmed || "（上传了支付截图）",
+        content:
+          trimmed ||
+          (fileName ? `（上传了文件 ${fileName}）` : "（上传了支付截图）"),
         imageDataUrl: imageDataUrl ?? undefined,
       };
 
@@ -45,6 +57,8 @@ export default function ChatPage({ accountName, onLogout }: ChatPageProps) {
         const { reply, thread_id } = await postAgentChat({
           message: trimmed,
           imageDataUrl,
+          fileName,
+          fileText,
           threadId,
         });
         setThreadId(thread_id);

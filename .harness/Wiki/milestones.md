@@ -13,7 +13,7 @@
 | **M2** | ✅ 完成 | Function Calling 记一笔 / 查账 | [M2_1-function-calling](../Changes/M2_1-function-calling.plan) |
 | **M3** | ✅ 完成 | 聊天前端 | [M3_1-chat-frontend](../Changes/M3_1-chat-frontend.plan) |
 | **M4** | ✅ 完成 | LangGraph Agent + 多账号鉴权 | [M4_1-langgraph-agent](../Changes/M4_1-langgraph-agent.plan)、[M4_2-accounts-auth](../Changes/M4_2-accounts-auth.plan) |
-| **M5** | ⬜ 待做 | 文件导入 | — |
+| **M5** | ✅ 完成 | 文件导入 | [M5_1-file-import](../Changes/M5_1-file-import.plan) |
 | **M6** | ⬜ 待做 | RAG 知识库 | — |
 | **M7** | ⬜ 待做 | Embeddings 语义搜账 | — |
 | **M8** | ⬜ 待做 | 月报工作流 | — |

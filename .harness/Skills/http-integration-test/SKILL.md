@@ -24,15 +24,16 @@ description: server/api HTTP 集成测试 SOP（编写 *_test.py + Agent 起 mai
 
 ### 命名与位置
 
-- 测试与 API **同目录**：`server/api/{feature}_test.py`
-- 示例：`categories.py` → `categories_test.py`，`account.py` → `account_test.py`
+- 测试与 API **同目录**：`server/api/{entity}_test.py`
+- **一 model、一 API、一 test**：`server/api/{entity}.py` 的全部路由（含 CRUD 与自定义端点如 `/import`）写入同一 `{entity}_test.py`；禁止为同一 API 模块再建 `{entity}_{feature}_test.py`
+- 示例：`categories.py` → `categories_test.py`；`transactions.py`（含 `/import`）→ `transactions_test.py`
 - 共用 fixture：`server/api/conftest.py`
 - 测试 helper（非 fixture）：`common/test/`（如 `common/test/account.py` 登录封装）
 
 ### 步骤清单
 
 - [ ] 1. 确认 `server/api/conftest.py` fixture 可用（`http_client`、`category` 等）
-- [ ] 2. 新建 `server/api/{entities}_test.py`（每路由模块一文件）
+- [ ] 2. 新建或扩展 `server/api/{entity}_test.py`（与 API 模块 1:1；每路由模块一文件）
 - [ ] 3. 实现五用例：create / get / list / update / delete（健康检查等例外见 `health_test.py`）
 - [ ] 4. 使用 `response.raise_for_status()` + 标准 `assert`
 - [ ] 5. PATCH 后用 GET 验证（PATCH 可能空 body）
@@ -45,7 +46,7 @@ description: server/api HTTP 集成测试 SOP（编写 *_test.py + Agent 起 mai
 | 路径 | 操作 |
 |------|------|
 | `server/api/conftest.py` | 按需扩展 fixture |
-| `server/api/{feature}_test.py` | 新建 |
+| `server/api/{entity}_test.py` | 新建或扩展（同一 API 模块勿拆多文件） |
 | `common/test/` | 共用 helper（登录、Bearer header 等） |
 | `pytest.ini` | `testpaths = server/api`，`python_files = *_test.py` |
 
@@ -118,7 +119,7 @@ curl -sf http://127.0.0.1:8000/health
 | `account_test.py` | 登录、401、账号隔离 | API 未起 |
 | `categories_test.py` | Category CRUD | API 未起 |
 | `budgets_test.py` | Budget CRUD | API 未起 |
-| `transactions_test.py` | Transaction CRUD + 按月 | API 未起 |
+| `transactions_test.py` | Transaction CRUD、按月、CSV 导入 | API 未起 |
 | `agent_test.py` | `/agent/chat` 真实 LLM | 无 `DEEPSEEK_API_KEY` 或 API 未起 |
 
 ### 环境变量
@@ -149,6 +150,7 @@ curl -sf http://127.0.0.1:8000/health
 
 - 不要用 `TestClient(app)`
 - 不要封装 `assert_status_200()` 等 helper
+- 不要为同一 `server/api/{entity}.py` 拆多个 `*_test.py`（如 `transactions_import_test.py`）
 - 不要在测试里启动 uvicorn（API 由 Agent / 开发者手动起 `main.py`）
 - 不要用硬编码 id（用 fixture 或 POST 创建）
 - 不要放回 `server/test/`（已废弃）

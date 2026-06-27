@@ -9,6 +9,8 @@
 
 ## 文件组织
 
+**一 model、一 API、一 test**：同一业务实体（或同一 API 路由模块）的 HTTP 集成测试合并到单个 `{entity}_test.py`，**不要**为同一 `server/api/{entity}.py` 再拆 `{feature}_test.py`（例如 `POST /transactions/import` 归入 `transactions_test.py`，而非 `transactions_import_test.py`）。
+
 每 API 模块独立测试文件：
 
 | 文件 | 覆盖 |
@@ -16,7 +18,7 @@
 | `account_test.py` | 登录、401、账号隔离 |
 | `categories_test.py` | Category CRUD |
 | `budgets_test.py` | Budget CRUD |
-| `transactions_test.py` | Transaction + 按月列表 |
+| `transactions_test.py` | Transaction CRUD、按月列表、CSV 导入 |
 | `agent_test.py` | Agent `/agent/chat`（真实 LLM） |
 | `health_test.py` | `/health` |
 | `conftest.py` | 共用 fixture |
@@ -58,8 +60,9 @@ assert body["name"] == expected
 
 ## 自定义 API 测试
 
+- 新增路由挂在已有 `server/api/{entity}.py` 时，**追加用例到** `{entity}_test.py`（见上方「一 model、一 API、一 test」）
 - `GET /transactions?month=2025-06` — 返回数组，非 `{data: ...}`
-- `GET /summary/monthly?month=2025-06` — 可在 `transactions_test.py` 或新建 `summary_test.py`
+- `GET /summary/monthly?month=2025-06` — 跨实体汇总，独立 `summary_test.py`（对应 `summary.py`，非 transaction 子路由）
 
 ## 调试
 

@@ -137,5 +137,7 @@ def system_prompt(tools: list[BaseTool]) -> str:
 规则：
 - 记一笔时从用户话里提取 amount、category、merchant、note
 - 若消息中含「从支付截图识别：」段落，将其视为已解析的记账信息，可据此记一笔或向用户确认
-- 工具返回 JSON 后，用简洁中文回复用户；遵守上方「回复格式」
+- 若消息中含「用户上传了 CSV 文件」及 csv_text 内容，按用户指令调用 import_csv_file（不要用图片 skill 处理 CSV）
+- 若消息中含「用户上传了图片」及 image_data_url 内容，按用户意图调用 recognize_image_file（多模态）
+- 工具返回 JSON 后，用简洁中文向用户说明处理结果；遵守上方「回复格式」
 """

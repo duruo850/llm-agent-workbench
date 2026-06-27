@@ -5,6 +5,7 @@ langchain-core>=0.3.0
 langchain-openai>=0.2.0
 langgraph>=0.2.0
 fastapi
+python-multipart
 uvicorn[standard]
 sqlalchemy[asyncio]>=2.0
 sqlmodel>=0.0.22

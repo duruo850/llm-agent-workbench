@@ -1,45 +1,97 @@
 import { useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 
+type AttachmentKind = "image" | "csv" | null;
+
+interface Attachment {
+  kind: AttachmentKind;
+  label: string;
+  imageDataUrl?: string;
+  fileName?: string;
+  fileText?: string;
+}
+
 interface ChatInputProps {
   disabled?: boolean;
-  onSend: (text: string, imageDataUrl?: string | null) => void;
+  onSend: (
+    text: string,
+    attachment?: {
+      imageDataUrl?: string | null;
+      fileName?: string | null;
+      fileText?: string | null;
+    },
+  ) => void;
+}
+
+function detectAttachmentKind(file: File): AttachmentKind {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".csv") || file.type === "text/csv") {
+    return "csv";
+  }
+  if (file.type.startsWith("image/")) {
+    return "image";
+  }
+  return null;
 }
 
 export default function ChatInput({ disabled = false, onSend }: ChatInputProps) {
   const [text, setText] = useState("");
-  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [attachment, setAttachment] = useState<Attachment | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setImageDataUrl(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    const kind = detectAttachmentKind(file);
+    if (kind === "csv") {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          setAttachment({
+            kind: "csv",
+            label: file.name,
+            fileName: file.name,
+            fileText: reader.result,
+          });
+        }
+      };
+      reader.readAsText(file);
+    } else if (kind === "image") {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          setAttachment({
+            kind: "image",
+            label: file.name,
+            imageDataUrl: reader.result,
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
     event.target.value = "";
   };
 
-  const clearImage = () => {
-    setImageDataUrl(null);
+  const clearAttachment = () => {
+    setAttachment(null);
   };
 
   const submit = () => {
     if (disabled) {
       return;
     }
-    if (!text.trim() && !imageDataUrl) {
+    if (!text.trim() && !attachment) {
       return;
     }
-    onSend(text, imageDataUrl);
+    onSend(text, {
+      imageDataUrl: attachment?.imageDataUrl ?? null,
+      fileName: attachment?.fileName ?? null,
+      fileText: attachment?.fileText ?? null,
+    });
     setText("");
-    setImageDataUrl(null);
+    setAttachment(null);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -51,10 +103,14 @@ export default function ChatInput({ disabled = false, onSend }: ChatInputProps) 
 
   return (
     <div className="chat-input">
-      {imageDataUrl && (
+      {attachment && (
         <div className="chat-input-preview">
-          <img src={imageDataUrl} alt="待发送截图预览" />
-          <button type="button" className="chat-input-remove" onClick={clearImage}>
+          {attachment.kind === "image" && attachment.imageDataUrl ? (
+            <img src={attachment.imageDataUrl} alt="待发送截图预览" />
+          ) : (
+            <span className="chat-input-file-label">📄 {attachment.label}</span>
+          )}
+          <button type="button" className="chat-input-remove" onClick={clearAttachment}>
             移除
           </button>
         </div>
@@ -65,16 +121,16 @@ export default function ChatInput({ disabled = false, onSend }: ChatInputProps) 
           className="chat-input-attach"
           disabled={disabled}
           onClick={() => fileInputRef.current?.click()}
-          aria-label="上传图片"
+          aria-label="上传文件"
         >
           📎
         </button>
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.csv,text/csv"
           hidden
-          onChange={handleImageChange}
+          onChange={handleFileChange}
         />
         <textarea
           className="chat-input-text"
@@ -88,7 +144,7 @@ export default function ChatInput({ disabled = false, onSend }: ChatInputProps) 
         <button
           type="button"
           className="chat-input-send"
-          disabled={disabled || (!text.trim() && !imageDataUrl)}
+          disabled={disabled || (!text.trim() && !attachment)}
           onClick={submit}
         >
           发送

@@ -28,6 +28,8 @@ from server.model.response.summary import (
 from server.model.response.transaction import (
     TransactionCreateResponse,
     TransactionGetResponse,
+    TransactionImportCategorySummary,
+    TransactionImportResponse,
     TransactionListResponse,
     TransactionUpdateResponse,
 )
@@ -52,6 +54,8 @@ __all__ = [
     "MonthlySummaryResponse",
     "TransactionCreateResponse",
     "TransactionGetResponse",
+    "TransactionImportCategorySummary",
+    "TransactionImportResponse",
     "TransactionListResponse",
     "TransactionUpdateResponse",
 ]

@@ -61,3 +61,20 @@ class TransactionListResponse(SQLModel):
     note: str
     transacted_at: datetime
     created_at: datetime | None
+
+
+class TransactionImportCategorySummary(SQLModel):
+    """CSV 导入按分类汇总。"""
+
+    category: str
+    count: int
+    total_amount: Decimal
+
+
+class TransactionImportResponse(SQLModel):
+    """POST /transactions/import 响应。"""
+
+    imported_count: int
+    skipped_count: int
+    errors: list[str]
+    categories: list[TransactionImportCategorySummary]

@@ -15,6 +15,8 @@ export class AgentApiError extends Error {
 export async function postAgentChat(params: {
   message: string;
   imageDataUrl?: string | null;
+  fileName?: string | null;
+  fileText?: string | null;
   threadId?: string | null;
 }): Promise<AgentChatResponse> {
   let response: Response;
@@ -24,6 +26,8 @@ export async function postAgentChat(params: {
       body: JSON.stringify({
         message: params.message,
         image_data_url: params.imageDataUrl ?? null,
+        file_name: params.fileName ?? null,
+        file_text: params.fileText ?? null,
         thread_id: params.threadId ?? null,
       }),
     });

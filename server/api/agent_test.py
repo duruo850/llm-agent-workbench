@@ -20,12 +20,18 @@ def _post_agent_chat(
     message: str,
     *,
     image_data_url: str | None = None,
+    file_name: str | None = None,
+    file_text: str | None = None,
     thread_id: str | None = None,
     timeout: float = AGENT_CHAT_TIMEOUT,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {"message": message}
     if image_data_url is not None:
         payload["image_data_url"] = image_data_url
+    if file_name is not None:
+        payload["file_name"] = file_name
+    if file_text is not None:
+        payload["file_text"] = file_text
     if thread_id is not None:
         payload["thread_id"] = thread_id
     response = http_client.post("/agent/chat", json=payload, timeout=timeout)
@@ -179,3 +185,35 @@ def test_agent_chat_cross_turn_memory(
         category_name=category["name"],
         txn_id=txn_id,
     )
+
+
+def test_agent_chat_csv_file(
+    http_client: httpx.Client,
+    unique_suffix: str,
+    require_llm: None,
+) -> None:
+    prefix = f"agent-csv-{unique_suffix}"
+    csv_text = (
+        f"在 {prefix}Starbucks 买咖啡花了 12.5 元，餐饮\n"
+        "今天天气不错\n"
+    )
+    try:
+        response = _post_agent_chat(
+            http_client,
+            "导入这份 CSV",
+            file_name="sample.csv",
+            file_text=csv_text,
+            timeout=90.0,
+        )
+        reply = response["reply"]
+        assert reply
+        assert "记录" in reply or "导入" in reply or "12.5" in reply
+    finally:
+        month = datetime.now().strftime("%Y-%m")
+        list_response = http_client.get("/transactions", params={"month": month}, timeout=15.0)
+        if list_response.is_success:
+            for row in list_response.json():
+                merchant = row.get("merchant") or ""
+                note = row.get("note") or ""
+                if prefix in merchant or prefix in note:
+                    http_client.delete(f"/transactions/{row['id']}")

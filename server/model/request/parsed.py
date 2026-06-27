@@ -25,12 +25,13 @@ class ParsedTransaction:
 Transaction = ParsedTransaction
 
 
-def LoadTransaction(data: dict) -> ParsedTransaction:
+def LoadTransaction(data: dict | str) -> ParsedTransaction:
     """校验 LLM 返回的 JSON 是否包含所需字段且类型正确。"""
+    if isinstance(data, str):
+        data = format_json(data)
+
     if missing := [f for f in REQUIRED_FIELDS if f not in data]:
         raise ValueError(f"JSON 缺少字段: {missing}")
-
-    data = format_json(data)
 
     amount = data["amount"]
     if not isinstance(amount, (int, float)):
