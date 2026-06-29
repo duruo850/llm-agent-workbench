@@ -1,4 +1,4 @@
-# 里程碑索引 M0–M13
+# 里程碑索引 M0–M14
 
 - **learning-plan** = 长期课表：[`docs/learning-plan.md`](../../docs/learning-plan.md)
 - **Changes** = 可执行交付单：[`.harness/Changes/`](../Changes/)
@@ -14,14 +14,15 @@
 | **M3** | ✅ 完成 | 聊天前端 | [M3_1-chat-frontend](../Changes/M3_1-chat-frontend.plan) |
 | **M4** | ✅ 完成 | LangGraph Agent + 多账号鉴权 | [M4_1-langgraph-agent](../Changes/M4_1-langgraph-agent.plan)、[M4_2-accounts-auth](../Changes/M4_2-accounts-auth.plan) |
 | **M5** | ✅ 完成 | 文件导入 | [M5_1-file-import](../Changes/M5_1-file-import.plan) |
-| **M6** | ⬜ 待做 | RAG 知识库 | — |
-| **M7** | ⬜ 待做 | Embeddings 语义搜账 | — |
-| **M8** | ⬜ 待做 | 月报工作流 | — |
-| **M9** | ⬜ 待做 | Memory + HITL | — |
-| **M10** | ⬜ 待做 | Eval + LangSmith | — |
-| **M11** | ⬜ 待做 | Skills 模块 | — |
-| **M12** | ⬜ 待做 | Fine-tuning | — |
-| **M13** | ⬜ 待做 | 前端仪表盘 | — |
+| **M6** | ⬜ 待做 | MCP 功能研究；高德 MCP 接入（IP → 城市 / 天气） | — |
+| **M7** | ⬜ 待做 | RAG 知识库 | — |
+| **M8** | ⬜ 待做 | Embeddings 语义搜账 | — |
+| **M9** | ⬜ 待做 | 月报工作流 | — |
+| **M10** | ⬜ 待做 | Memory + HITL | — |
+| **M11** | ⬜ 待做 | Eval + LangSmith | — |
+| **M12** | ⬜ 待做 | Skills 模块 | — |
+| **M13** | ⬜ 待做 | Fine-tuning | — |
+| **M14** | ⬜ 待做 | 前端仪表盘 | — |
 
 ### 状态符号
 
@@ -60,6 +61,12 @@
 - CLI demo：[`examples/02_function_calling_agent.py`](../../examples/02_function_calling_agent.py)（`--repl` 复用 thread_id）
 - HTTP：`POST /agent/chat`（request/response 含 `thread_id`）
 - 测试：[`server/api/agent_test.py`](../../server/api/agent_test.py)、[`server/api/auth_test.py`](../../server/api/auth_test.py)
+
+## M6 要点（规划）
+
+- **MCP 功能研究**：Model Context Protocol 接入方式、与 Agent skill / LangGraph 集成路径
+- **高德 MCP**：接入高德 MCP Server；通过客户端 IP 解析城市，并查询当地天气
+- 交付方向：MCP 工具注册 + Agent 可调用（或独立 demo）；具体 plan 待 `M6_1-*.plan`
 
 ## M2+ 启动前
 
