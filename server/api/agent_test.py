@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-import base64
-import mimetypes
-from datetime import datetime
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(next(p for p in Path(__file__).resolve().parents if (p / "pytest.ini").is_file())))
+
+from datetime import datetime
 from typing import Any
 
 import httpx
-import pytest
 
 TEST_MONTH = "2025-06"
 AGENT_CHAT_TIMEOUT = 60.0
@@ -144,7 +145,7 @@ def test_agent_chat_out_of_scope(
     http_client: httpx.Client,
     require_llm: None,
 ) -> None:
-    reply = _post_agent_chat(http_client, "今天天气怎么样")["reply"]
+    reply = _post_agent_chat(http_client, "帮我写一份个人所得税报税方案")["reply"]
     assert reply
     assert "账单" in reply or "记账" in reply
 

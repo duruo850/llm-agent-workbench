@@ -55,6 +55,13 @@ def require_llm() -> None:
 
 
 @pytest.fixture
+def require_amap() -> None:
+    load_env()
+    if not os.getenv("AMAP_MAPS_API_KEY"):
+        pytest.skip("未配置 AMAP_MAPS_API_KEY，跳过高德 MCP 集成测试")
+
+
+@pytest.fixture
 def require_graph_backend() -> None:
     try:
         import langgraph  # noqa: F401

@@ -44,6 +44,11 @@ body {
   flex: 1;
 }
 
+.chat-geo-subtitle {
+  font-size: 0.875rem;
+  color: #595959;
+}
+
 .chat-new-button {
   flex-shrink: 0;
   padding: 0.4rem 0.75rem;

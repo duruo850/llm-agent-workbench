@@ -7,6 +7,7 @@ from server.model.response.account import (
     AccountLoginResponse,
     AccountUpdateResponse,
 )
+from server.model.response.geo import GeoMeResponse
 from server.model.response.agent import AgentChatResponse
 from server.model.response.budget import (
     BudgetCreateResponse,
@@ -41,6 +42,7 @@ __all__ = [
     "AccountLoginResponse",
     "AccountUpdateResponse",
     "AgentChatResponse",
+    "GeoMeResponse",
     "BudgetCreateResponse",
     "BudgetGetResponse",
     "BudgetListResponse",

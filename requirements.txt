@@ -14,3 +14,5 @@ alembic
 pydantic>=2.0
 fastcrud
 pytest>=8.0
+langchain-mcp-adapters
+mcp

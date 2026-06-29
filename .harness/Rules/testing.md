@@ -2,10 +2,11 @@
 
 ## 目录与运行方式
 
-- 测试目录：[`server/api/`](../../server/api/)（与路由同目录，`*_test.py`）
+- **任意目录** 的 `*_test.py` 均可被 pytest / IDE 发现（[`pytest.ini`](../../pytest.ini)：`testpaths = .`）
+- HTTP 集成测试与路由同目录：[`server/api/`](../../server/api/)
+- 单元 / MCP 等：如 [`agent/mcp/gaode/*_test.py`](../../agent/mcp/gaode/)、[`utils/*_test.py`](../../utils/)
 - **真实 HTTP** 打已启动的 `main`（**不用** FastAPI `TestClient`）
-- 先起 `python server/main.py`，再 `pytest server/api -v`
-- [`pytest.ini`](../../pytest.ini)：`testpaths = server/api`，`python_files = *_test.py`
+- 全量：`pytest -v`；仅 API：`pytest server/api -v`（须先 `python server/main.py`）
 
 ## 文件组织
 

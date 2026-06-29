@@ -1,6 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { AgentApiError, postAgentChat } from "../api/agent";
+import { getGeoMe } from "../api/geo";
 import type { ChatMessage } from "../types/chat";
 import ChatInput from "./ChatInput";
 import MessageList from "./MessageList";
@@ -18,6 +19,26 @@ export default function ChatPage({ accountName, onLogout }: ChatPageProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [geoSubtitle, setGeoSubtitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getGeoMe().then((geo) => {
+      if (cancelled || !geo) {
+        return;
+      }
+      const city = geo.city || geo.province;
+      if (city && geo.weather) {
+        const temp = geo.temperature ? ` ${geo.temperature}°C` : "";
+        setGeoSubtitle(`${city} · ${geo.weather}${temp}`);
+      } else if (city) {
+        setGeoSubtitle(city);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleNewChat = useCallback(() => {
     setMessages([]);
@@ -95,7 +116,15 @@ export default function ChatPage({ accountName, onLogout }: ChatPageProps) {
         <div className="chat-header-row">
           <div>
             <h1>BillMind</h1>
-            <p>{accountName} · 记账 · 查账</p>
+            <p>
+              {accountName} · 记账 · 查账
+              {geoSubtitle ? (
+                <>
+                  <br />
+                  <span className="chat-geo-subtitle">{geoSubtitle}</span>
+                </>
+              ) : null}
+            </p>
           </div>
           <div className="chat-header-actions">
             <button

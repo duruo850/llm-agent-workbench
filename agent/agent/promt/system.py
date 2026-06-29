@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from langchain_core.tools import BaseTool
 from agent.agent.promt.policy import OUT_OF_SCOPE_REPLY
-from agent.agent.skills import SKILL_POLICYS
+from agent.skills import SKILL_POLICYS
 
 
 def _tool_summary(tool: BaseTool) -> str:

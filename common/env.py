@@ -42,3 +42,17 @@ def get_web_origins() -> list[str]:
     if custom := os.getenv("WEB_ORIGIN") or os.getenv("FRONTEND_ORIGIN"):
         return [stripped for origin in custom.split(",") if (stripped := origin.strip())]
     return list(_DEFAULT_WEB_ORIGINS)
+
+
+def get_amap_api_key() -> str | None:
+    """高德 MCP API Key；未配置时返回 None（便于 skip 测试）。"""
+    load_env()
+    value = os.getenv("AMAP_MAPS_API_KEY", "").strip()
+    return value or None
+
+
+def get_geo_default_ip() -> str | None:
+    """本地/调试固定 IP；未配置时返回 None，由请求解析用户真实 IP。"""
+    load_env()
+    value = os.getenv("GEO_DEFAULT_IP", "").strip()
+    return value or None

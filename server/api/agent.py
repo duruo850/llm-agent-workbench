@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent import Agent
@@ -12,6 +12,7 @@ from server.service.account import get_current_account
 from server.model.account import Account
 from server.model.request.agent import AgentChatRequest
 from server.model.response.agent import AgentChatResponse
+from utils.client_ip import get_client_ip
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -19,6 +20,7 @@ router = APIRouter(prefix="/agent", tags=["agent"])
 @router.post("/chat", response_model=AgentChatResponse)
 async def agent_chat(
     body: AgentChatRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
 ) -> AgentChatResponse:
@@ -47,6 +49,12 @@ async def agent_chat(
 
         if extra_blocks:
             message = "\n\n".join([message, *extra_blocks]) if message else "\n\n".join(extra_blocks)
+
+        client_ip = get_client_ip(request)
+        if message:
+            message = f"{message}\n\n用户当前 IP: {client_ip}"
+        else:
+            message = f"用户当前 IP: {client_ip}"
 
         reply, thread_id = await Agent.invoke(
             message,

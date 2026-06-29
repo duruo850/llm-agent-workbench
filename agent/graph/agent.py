@@ -1,8 +1,4 @@
-"""M4 LangGraph Agent — StateGraph + MemorySaver + 跨轮 thread_id。
-
-与 ``agent/agent.py``（M2 for 循环）并列，便于对比学习。
-工具与 prompt 仍复用 ``agent/skills``、``agent/promt``。
-"""
+"""M4 LangGraph Agent — ``create_react_agent`` + MCP tools + checkpointer。"""
 
 from __future__ import annotations
 
@@ -10,14 +6,14 @@ import logging
 from typing import Any
 from uuid import uuid4
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage,HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent.agent.agent import Agent as ClassicAgent
-from agent.agent.skills import SKILL_TOOLS, discover_skill_modules
+from agent.skills import SKILL_TOOLS
 from agent.graph.graph import build_agent_graph
-from server.db.session import Database
+from agent.mcp import MCP_TOOLS
 
 MAX_TOOL_ROUNDS = 5
 
@@ -45,18 +41,25 @@ class Agent:
 
     @classmethod
     def init(cls) -> None:
-        """加载 skills 并编译 LangGraph。"""
+        """skills + MCP tools → ``create_react_agent``。"""
         global _COMPILED_GRAPH, _RECURSION_LIMIT
 
-        discover_skill_modules(Database.get().async_session_factory)
+        # 聚合所有工具:skill tools + mcp tools
         tools = list(SKILL_TOOLS.values())
+        tools.extend(MCP_TOOLS)
         checkpointer = MemorySaver()
         _COMPILED_GRAPH, _RECURSION_LIMIT = build_agent_graph(
             tools,
             checkpointer,
             max_tool_rounds=MAX_TOOL_ROUNDS,
         )
-        logger.info("graph agent skills loaded: %s", ", ".join(SKILL_TOOLS))
+        skill_names = ", ".join(SKILL_TOOLS)
+        mcp_names = ", ".join(tool.name for tool in MCP_TOOLS)
+        logger.info(
+            "graph agent skills loaded: skill_tools: %s; mcp tools: %s",
+            skill_names,
+            mcp_names,
+        )
 
     @classmethod
     async def invoke(
@@ -73,7 +76,7 @@ class Agent:
         logger.info("input: %s", message)
 
         if _COMPILED_GRAPH is None:
-            raise RuntimeError("Graph Agent 未初始化，请先调用 Agent.init()")
+            raise RuntimeError("Graph Agent 未初始化，请先调用 Agent.init_async()")
 
         effective_thread_id = thread_id or str(uuid4())
         config = {

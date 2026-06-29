@@ -48,7 +48,7 @@ description: server/api HTTP 集成测试 SOP（编写 *_test.py + Agent 起 mai
 | `server/api/conftest.py` | 按需扩展 fixture |
 | `server/api/{entity}_test.py` | 新建或扩展（同一 API 模块勿拆多文件） |
 | `common/test/` | 共用 helper（登录、Bearer header 等） |
-| `pytest.ini` | `testpaths = server/api`，`python_files = *_test.py` |
+| `pytest.ini` | 全仓库 `*_test.py`（`testpaths = .`）；API 子集：`pytest server/api` |
 
 ### 模板
 
@@ -96,7 +96,7 @@ curl -sf http://127.0.0.1:8000/health
 .venv/bin/python3.14 -m pytest server/api -v
 ```
 
-- 默认 `pytest.ini` 已限定 `testpaths = server/api`、`*_test.py`
+- 默认 `pytest -v` 收集全仓库 `*_test.py`；仅 API 集成时可用 `pytest server/api -v`
 - **不要**只跑单个文件，除非用户明确指定
 
 - [ ] **4. 汇报结果**

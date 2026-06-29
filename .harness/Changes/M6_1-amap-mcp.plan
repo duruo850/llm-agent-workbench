@@ -1,0 +1,98 @@
+---
+milestone: M6
+seq: 1
+slug: amap-mcp
+status: in_progress
+skills:
+  - add-api-endpoint
+  - http-integration-test
+  - local-dev
+  - extract-ai-knowledge
+depends_on: []
+---
+
+# M6 高德 MCP：IP 定位 + 天气 + Web 展示
+
+## 里程碑
+
+**M6** — MCP 功能研究；接入高德 MCP Server，通过 IP 解析城市并查询天气；Agent 与 REST API 共用 MCP 客户端。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [add-api-endpoint](../Skills/add-api-endpoint/SKILL.md) | `GET /geo/me` |
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | geo_test |
+| [local-dev](../Skills/local-dev/SKILL.md) | 本地启动与验收 |
+| [extract-ai-knowledge](../Skills/extract-ai-knowledge/SKILL.md) | `docs/knowledge/mcp-amap.md` |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `requirements.txt` | `langchain-mcp-adapters`、`mcp` |
+| `common/env.py` | `get_amap_api_key()` |
+| `.env.example` | `AMAP_MAPS_API_KEY` 占位 |
+| `agent/mcp/gaode/mcp_client.py` | `AmapMCPClient` 单例 |
+| `agent/mcp/gaode/geo.py` | `resolve_ip_weather` |
+| `utils/client_ip.py` | 从 Request 取客户端 IP |
+| `server/api/geo.py` | `GET /geo/me` |
+| `server/model/response/geo.py` | `GeoMeResponse` |
+| `server/routers.py` | 注册 geo router |
+| `agent/graph/agent.py` | `init_async` 合并 MCP tools |
+| `server/main.py` | lifespan `await Agent.init_async()` |
+| `agent/agent/promt/system.py` | 天气/本地城市走 MCP 工具 |
+| `server/api/agent.py` | 注入用户 IP 上下文 |
+| `web/src/api/geo.ts` | `getGeoMe()` |
+| `web/src/components/ChatPage.tsx` | header 展示城市/天气 |
+| `server/api/geo_test.py` | 集成测试 |
+| `server/api/conftest.py` | `require_amap` fixture |
+| `examples/03_amap_mcp_demo.py` | 独立 MCP demo |
+| `docs/knowledge/mcp-amap.md` | MCP + 高德知识点 |
+| `docs/knowledge/README.md` | M6 行更新 |
+
+### 不在范围内
+
+- 高德 MCP 全部 12 个 tool
+- npx stdio 方式
+- 修改 architecture.md
+
+## 知识点文档
+
+| slug | 文件 | 验收 |
+|------|------|------|
+| `mcp-amap` | `docs/knowledge/mcp-amap.md` | README 索引 status → done |
+
+- [ ] 按 [extract-ai-knowledge](../Skills/extract-ai-knowledge/SKILL.md) 撰写
+- [ ] 更新 [docs/knowledge/README.md](../../docs/knowledge/README.md)
+
+## 步骤清单
+
+- [x] 1. Harness 交付单 + milestones 链接
+- [ ] 2. 依赖 + env + MCP 客户端 + geo 编排
+- [ ] 3. `GET /geo/me` + client_ip
+- [ ] 4. Agent init_async + system prompt + IP 上下文
+- [ ] 5. Web header 城市/天气
+- [ ] 6. 测试 + demo + knowledge 文档
+
+## 运行命令
+
+```bash
+# .env 配置 AMAP_MAPS_API_KEY 后
+docker compose up -d
+.venv/bin/python3.14 server/main.py
+
+curl -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:8000/geo/me?ip=114.114.114.114"
+.venv/bin/python3.14 -m pytest server/api/geo_test.py -v
+.venv/bin/python3.14 -m pytest server/api -v
+.venv/bin/python3.14 examples/03_amap_mcp_demo.py
+```
+
+## 验收标准
+
+- [ ] `GET /geo/me` 返回 IP 对应省/市/天气
+- [ ] Agent 可调用 `maps_ip_location` + `maps_weather`
+- [ ] Web 登录后 header 显示城市/天气
+- [ ] `docs/knowledge/mcp-amap.md` 存在且 README 为 done

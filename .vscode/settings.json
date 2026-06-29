@@ -6,8 +6,7 @@
   "python.testing.unittestEnabled": false,
   "python.testing.cwd": "${workspaceFolder}",
   "python.testing.pytestArgs": [
-    "--rootdir=${workspaceFolder}",
-    "server/api"
+    "--rootdir=${workspaceFolder}"
   ],
   "python.testing.autoTestDiscoverOnSaveEnabled": true,
   "pythonTestExplorer.testFramework": "pytest"

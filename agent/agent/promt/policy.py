@@ -51,7 +51,7 @@ def _skill_module_globals() -> dict[str, Any]:
     current = frame.f_back
     while current is not None:
         name = current.f_globals.get("__name__", "")
-        if name.startswith("agent.agent.skills.") and not name.endswith(".__init__"):
+        if name.startswith("agent.skills.") and not name.endswith(".__init__"):
             return current.f_globals
         current = current.f_back
     raise RuntimeError("tool_policy 无法定位 agent.skills 模块")
@@ -73,7 +73,7 @@ def _register_skill_tool(fn: SkillToolFn, policy: ToolPromptPolicy) -> SkillTool
 
     policies[fn.__name__] = policy
 
-    def build(session_factory: SessionFactory) -> BaseTool:
+    def build(db_session_factory: SessionFactory) -> BaseTool:
         # 移除注入的参数，只保留 LLM 可见参数
         llm_sig = sig.replace(
             parameters=[p for n, p in sig.parameters.items() if n not in INJECTED_PARAMS]
@@ -81,7 +81,7 @@ def _register_skill_tool(fn: SkillToolFn, policy: ToolPromptPolicy) -> SkillTool
 
         @wraps(fn)
         async def llm_tool(*args: Any, **kwargs: Any) -> str:
-            async with session_factory() as db:
+            async with db_session_factory() as db:
                 return await fn(db, *args, **kwargs)
 
         llm_tool.__signature__ = llm_sig
