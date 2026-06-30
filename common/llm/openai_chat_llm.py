@@ -53,6 +53,6 @@ def check_ollama_health(base_url: str | None = None) -> None:
         response.raise_for_status()
     except httpx.HTTPError as exc:
         raise ValueError(
-            "Ollama 服务未就绪。请先运行 ./examples/setup-ollama.sh 或 "
-            "docker compose -f examples/docker-compose.yml up -d"
+            "Ollama 服务未就绪。请先运行 ./examples/01_image_ollama_chain/setup-ollama.sh 或 "
+            "docker compose up -d ollama"
         ) from exc

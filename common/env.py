@@ -56,3 +56,37 @@ def get_geo_default_ip() -> str | None:
     load_env()
     value = os.getenv("GEO_DEFAULT_IP", "").strip()
     return value or None
+
+
+def get_milvus_uri() -> str:
+    """Milvus gRPC/HTTP 地址，供 RAG 向量库使用。"""
+    load_env()
+    return os.getenv("MILVUS_URI", "http://127.0.0.1:19530").strip()
+
+
+def get_ollama_embedding_model() -> str:
+    """Ollama embedding 模型名。"""
+    load_env()
+    return os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text").strip()
+
+
+def get_ollama_uri() -> str:
+    """Ollama 原生 API 根地址（Embedding 等，非 Chat 用的 OpenAI 兼容 /v1）。
+
+    优先读 ``OLLAMA_URI``；未配置时从 ``OLLAMA_BASE_URL`` 去掉 ``/v1`` 后缀推导。
+    """
+    load_env()
+    explicit = os.getenv("OLLAMA_URI", "").strip().rstrip("/")
+    if explicit:
+        return explicit
+    raw = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1").strip().rstrip("/")
+    return raw[:-3] if raw.endswith("/v1") else raw
+
+
+def get_rag_top_k() -> int:
+    load_env()
+    raw = os.getenv("RAG_TOP_K", "4").strip()
+    try:
+        return max(1, int(raw))
+    except ValueError:
+        return 4

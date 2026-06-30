@@ -16,3 +16,7 @@ fastcrud
 pytest>=8.0
 langchain-mcp-adapters
 mcp
+pymilvus>=2.4.0
+langchain-milvus>=0.1.6
+langchain-ollama>=0.2.0
+langchain-text-splitters>=0.3.0

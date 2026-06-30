@@ -55,9 +55,9 @@
 ## 一键安装
 
 ```bash
-./examples/setup-ollama.sh          # Docker 启动 + pull 模型
-docker compose -f examples/docker-compose.yml ps   # 查看状态
-docker compose -f examples/docker-compose.yml logs # 查看日志
+./examples/01_image_ollama_chain/setup-ollama.sh   # Docker 启动 + pull 视觉模型
+docker compose ps ollama                           # 查看状态
+docker compose logs ollama                       # 查看日志
 ```
 
 ## 运行示例
@@ -100,7 +100,7 @@ examples/01_image_ollama_chain.py ──► get_langchain_chat_llm() ──► L
 |------|------|
 | Docker 未启动 | 启动 Docker Desktop |
 | 11434 端口占用 | `lsof -i :11434`，停止冲突进程或改端口 |
-| 模型未 pull | `docker compose -f examples/docker-compose.yml exec ollama ollama list` |
+| 模型未 pull | `docker compose exec ollama ollama list` |
 | Intel Mac 推理超时 | 正常现象，耐心等待 30s+ |
 | 想更快 | `.env` 改 `OLLAMA_VISION_MODEL=qwen2.5vl:3b` |
 

@@ -117,7 +117,7 @@ export default function ChatPage({ accountName, onLogout }: ChatPageProps) {
           <div>
             <h1>BillMind</h1>
             <p>
-              {accountName} · 记账 · 查账
+              {accountName} · 记账 · 查账 · 理财知识
               {geoSubtitle ? (
                 <>
                   <br />

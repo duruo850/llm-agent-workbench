@@ -16,6 +16,7 @@ async def init_agent():
     # 初始化 MCP
     await init_mcp()
     print("mcp initialized")
+    
     # 初始化 Agent
     await init_agent_graph()
     print("agent initialized")

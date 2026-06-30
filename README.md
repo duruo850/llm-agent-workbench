@@ -48,12 +48,12 @@ cp .env.example .env
 # 填入 DEEPSEEK_API_KEY 后运行 M0 文本入账示例
 python examples/00_hello_chain.py
 
-# 图片入账（Ollama 本地视觉模型，见 examples/README.md）
-./examples/setup-ollama.sh
-python examples/01_image_ollama_chain.py
+# 图片入账（Ollama 本地视觉模型，见 examples/01_image_ollama_chain/README.md）
+./examples/01_image_ollama_chain/setup-ollama.sh
+python examples/01_image_ollama_chain/01_image_ollama_chain.py
 ```
 
-图片入账详见 [examples/README.md](examples/README.md)。
+图片入账详见 [examples/01_image_ollama_chain/README.md](examples/01_image_ollama_chain/README.md)。
 
 ### M1 服务端（PostgreSQL）
 

@@ -19,7 +19,7 @@ description: 本地开发 SOP：docker、main、pytest、F5 调试
 
 - [ ] 1. `pip install -r requirements.txt`（在 `.venv` 内）
 - [ ] 2. `cp .env.example .env`，填入 `DEEPSEEK_API_KEY`（M0）与 `DATABASE_URL`（M1）
-- [ ] 3. `docker compose up -d` — 启动 PostgreSQL（根目录 compose）
+- [ ] 3. `docker compose up -d` — 启动 PostgreSQL（根目录 compose）；RAG 一键入库：`.venv/bin/python3.14 -m agent.rag.index`
 - [ ] 4. `python server/main.py` — 自动迁移 + 启动 API `:8000`
 - [ ] 5. `curl http://127.0.0.1:8000/health` 验收
 - [ ] 6. 测试：见 [http-integration-test](../Skills/http-integration-test/SKILL.md) § B（Agent 起 API + `pytest server/api -v`）
@@ -30,7 +30,7 @@ description: 本地开发 SOP：docker、main、pytest、F5 调试
 
 | 路径 | 说明 |
 |------|------|
-| `docker-compose.yml` | PostgreSQL 16 |
+| `docker-compose.yml` | PostgreSQL、Ollama、Milvus（etcd/minio） |
 | `.env` | 环境变量 |
 | `server/main.py` | API 入口 |
 | `.vscode/launch.json` | 调试配置 |

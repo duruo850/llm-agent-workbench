@@ -1,0 +1,67 @@
+---
+milestone: M7
+seq: 1
+slug: rag-knowledge
+status: done
+skills:
+  - add-api-endpoint
+  - http-integration-test
+  - local-dev
+  - extract-ai-knowledge
+depends_on: []
+---
+
+# M7 RAG 知识库：Milvus + Ollama Embedding
+
+## 里程碑
+
+**M7** — 理财静态知识库（`agent/knowledge/finance/`）向量化存入 Milvus；Agent `search_knowledge` + REST 检索接入。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [add-api-endpoint](../Skills/add-api-endpoint/SKILL.md) | `GET /knowledge/search` |
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | knowledge_test |
+| [local-dev](../Skills/local-dev/SKILL.md) | Milvus + Ollama 本地验收 |
+| [extract-ai-knowledge](../Skills/extract-ai-knowledge/SKILL.md) | `docs/knowledge/rag.md` |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `agent/knowledge/finance/` | 理财知识 10 篇 Markdown |
+| `agent/rag/` | embedding / indexer / milvus / retriever |
+| `agent/skills/knowledge.py` | `search_knowledge` skill |
+| `docker-compose.yml` | Milvus standalone |
+| `common/env.py` | MILVUS_URI、OLLAMA_EMBEDDING_MODEL、RAG_TOP_K |
+| `server/api/knowledge.py` | REST 检索 |
+| `examples/04_rag_knowledge_demo.py` | 独立 demo |
+| `docs/knowledge/rag.md` | 知识点（含 Embedding 定义与使用场景） |
+
+## 知识点文档
+
+| slug | 文件 | 验收 |
+|------|------|------|
+| `rag` | `docs/knowledge/rag.md` | README 索引 status → done |
+
+## 运行命令
+
+```bash
+docker compose up -d
+ollama pull nomic-embed-text
+.venv/bin/python3.14 -m agent.rag.index
+.venv/bin/python3.14 server/main.py
+curl -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:8000/knowledge/search?q=备用金"
+.venv/bin/python3.14 -m pytest agent/rag/indexer_test.py server/api/knowledge_test.py -v
+```
+
+## 验收标准
+
+- [x] `agent/knowledge/finance/` 10 篇理财知识文档
+- [x] Milvus docker-compose 可起
+- [x] 索引 + 检索 API 可用
+- [x] Agent 注册 `search_knowledge`
+- [x] `docs/knowledge/rag.md` 存在

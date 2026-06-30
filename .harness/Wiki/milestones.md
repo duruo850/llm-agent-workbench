@@ -16,7 +16,7 @@
 | **M4**  | ✅ 完成 | LangGraph Agent + 多账号鉴权          | [M4_1-langgraph-agent](../Changes/M4_1-langgraph-agent.plan)、[M4_2-accounts-auth](../Changes/M4_2-accounts-auth.plan) |
 | **M5**  | ✅ 完成 | 文件导入                             | [M5_1-file-import](../Changes/M5_1-file-import.plan)                                                                  |
 | **M6**  | ✅ 完成 | MCP 功能研究；高德 MCP 接入（IP → 城市 / 天气） | [M6_1-amap-mcp](../Changes/M6_1-amap-mcp.plan)                                                                        |
-| **M7**  | ⬜ 待做 | RAG 知识库                          | —                                                                                                                     |
+| **M7**  | ✅ 完成 | RAG 知识库（Milvus + Ollama）          | [M7_1-rag-knowledge](../Changes/M7_1-rag-knowledge.plan)                                                                        |
 | **M8**  | ⬜ 待做 | Embeddings 语义搜账                  | —                                                                                                                     |
 | **M9**  | ⬜ 待做 | 月报工作流                            | —                                                                                                                     |
 | **M10** | ⬜ 待做 | Memory + HITL                    | —                                                                                                                     |
@@ -75,6 +75,17 @@
 - 知识点：`[docs/knowledge/mcp-amap.md](../../docs/knowledge/mcp-amap.md)`
 - CLI demo：`[examples/03_amap_mcp_demo.py](../../examples/03_amap_mcp_demo.py)`
 - 测试：`[server/api/geo_test.py](../../server/api/geo_test.py)`
+
+## M7 要点
+
+- **知识源**：[`agent/knowledge/finance/`](../../agent/knowledge/finance/) — 理财知识 10 篇 Markdown
+- **RAG 层**：[`agent/rag/`](../../agent/rag/) — Ollama `nomic-embed-text` → Milvus `billmind_knowledge`
+- **Agent**：`search_knowledge` skill（[`agent/skills/knowledge.py`](../../agent/skills/knowledge.py)）
+- **REST**：`GET /knowledge/search?q=...&kb=...`
+- **基础设施**：根目录 `docker-compose.yml`（`milvus` + `ollama`）
+- 知识点：[`docs/knowledge/rag.md`](../../docs/knowledge/rag.md)
+- Demo：[`examples/04_rag_knowledge_demo.py`](../../examples/04_rag_knowledge_demo.py)
+- 测试：[`agent/rag/indexer_test.py`](../../agent/rag/indexer_test.py)、[`server/api/knowledge_test.py`](../../server/api/knowledge_test.py)
 
 ## M2+ 启动前
 

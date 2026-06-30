@@ -62,6 +62,19 @@ def require_amap() -> None:
 
 
 @pytest.fixture
+def require_rag() -> None:
+    from agent.rag import is_rag_ready, rag
+
+    load_env()
+    if not is_rag_ready():
+        pytest.skip("Milvus 不可用，跳过 RAG 集成测试")
+    try:
+        rag.index(force=False)
+    except Exception as exc:
+        pytest.skip(f"RAG 索引不可用: {exc}")
+
+
+@pytest.fixture
 def require_graph_backend() -> None:
     try:
         import langgraph  # noqa: F401

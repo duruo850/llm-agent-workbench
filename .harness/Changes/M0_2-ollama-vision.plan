@@ -26,8 +26,7 @@ depends_on:
 
 | 文件 | 说明 |
 |------|------|
-| `examples/01_image_ollama_chain/docker-compose.yml` | Ollama Docker 服务 |
-| `examples/01_image_ollama_chain/setup-ollama.sh` | 一键启动 + pull 模型 |
+| `examples/01_image_ollama_chain/setup-ollama.sh` | 一键启动 Ollama + pull 视觉模型 |
 | `examples/01_image_ollama_chain/01_image_ollama_chain.py` | 截图入账 LCEL 链 |
 | `common/llm/` | LLM 平台抽象（Provider + Factory） |
 | `server/model/request/parsed.py` | 共享 ParsedTransaction / JSON 校验 |
@@ -47,7 +46,7 @@ depends_on:
 
 ## 验收标准
 
-- [x] `docker compose -f examples/01_image_ollama_chain/docker-compose.yml up -d` 后 Ollama 11434 可访问
+- [x] `docker compose up -d ollama` 后 Ollama 11434 可访问
 - [x] `./examples/01_image_ollama_chain/setup-ollama.sh` 成功 pull `qwen2.5vl:7b`
 - [x] `01_image_ollama_chain.py` 解析截图输出合法 `ParsedTransaction`
 - [x] `00_hello_chain.py` 文本用例仍全部通过

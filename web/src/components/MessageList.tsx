@@ -14,6 +14,7 @@ export default function MessageList({ messages, loading }: MessageListProps) {
           <ul>
             <li>刚才 Starbucks 花了 38，算餐饮</li>
             <li>查一下本月餐饮花了多少</li>
+            <li>应急资金一般该留多少？（理财知识库）</li>
             <li>或上传支付截图自动识别</li>
           </ul>
         </div>

@@ -135,7 +135,7 @@ export default function ChatInput({ disabled = false, onSend }: ChatInputProps) 
         <textarea
           className="chat-input-text"
           rows={1}
-          placeholder="输入记账或查账内容，Enter 发送，Shift+Enter 换行"
+          placeholder="记账、查账或问理财知识，Enter 发送，Shift+Enter 换行"
           value={text}
           disabled={disabled}
           onChange={(event) => setText(event.target.value)}
