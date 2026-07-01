@@ -63,7 +63,7 @@ def require_amap() -> None:
 
 @pytest.fixture
 def require_rag() -> None:
-    from agent.rag.knowledge import Knowledge
+    from storage.rag.knowledge import Knowledge
     from common.milvus import embedding_ready
 
     load_env()

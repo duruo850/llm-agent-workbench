@@ -1,0 +1,78 @@
+---
+milestone: M9
+seq: 1
+slug: memory-os
+status: done
+skills:
+  - entity-service
+  - add-api-endpoint
+  - http-integration-test
+  - db-migrate
+  - local-dev
+  - extract-ai-knowledge
+depends_on:
+  - M8_1-txn-semantic-search
+---
+
+# M9 Memory OS — Knowledge 文档 + agent/memory 模块化 + 生产级持久化
+
+## 里程碑
+
+**M9** — LangGraph checkpointer 从 `MemorySaver` 升级为 `AsyncPostgresSaver`；新增 `conversations` / `chat_messages` 业务表；`agent/memory/` 作为 Memory OS 总入口（RAG 经 facade 重导出）。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [entity-service](../Skills/entity-service/SKILL.md) | conversations / chat_messages 模型与服务 |
+| [add-api-endpoint](../Skills/add-api-endpoint/SKILL.md) | `GET /conversations` |
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | conversations_test、跨轮/重启验收 |
+| [db-migrate](../Skills/db-migrate/SKILL.md) | `003_chat_history.py` |
+| [local-dev](../Skills/local-dev/SKILL.md) | PostgreSQL + Milvus 本地验收 |
+| [extract-ai-knowledge](../Skills/extract-ai-knowledge/SKILL.md) | `docs/knowledge/memory-os.md` |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `docs/knowledge/memory-os.md` | 9 类 Memory、五阶段流水线、5 种压缩方案、BillMind 映射 |
+| `agent/memory/**` | Memory OS 总入口：working / chat / profile / knowledge / semantic / pipeline / planned |
+| `agent/memory/working/checkpointer.py` | `AsyncPostgresSaver` 生命周期 |
+| `server/model/conversation.py` | `conversations` + `chat_messages` |
+| `server/service/conversation.py` | CRUD + `append_turn` |
+| `server/api/conversations.py` | `GET /conversations`、`GET /conversations/{thread_id}/messages` |
+| `server/alembic/versions/003_chat_history.py` | 聊天历史迁移 |
+| `agent/graph/agent.py` | 使用 `get_checkpointer()` |
+| `server/main.py` | lifespan 初始化/关闭 checkpointer |
+| `server/api/agent.py` | invoke 后 `append_turn` |
+
+### 不在范围内
+
+- Redis Working Memory / Neo4j / ClickHouse
+- Extraction / Integration / Forgetting 自动化（pipeline stub only）
+- 5 种压缩方案 LLM 实现（文档 + stub）
+- HITL 断点（M12）
+
+## 知识点文档
+
+| slug | 文件 | 验收 |
+|------|------|------|
+| `memory-os` | `docs/knowledge/memory-os.md` | README 索引 status → done |
+
+## 运行命令
+
+```bash
+docker compose up -d
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python3.14 server/main.py
+.venv/bin/python3.14 -m pytest server/api/agent_test.py server/api/conversations_test.py agent/memory -v
+```
+
+## 验收标准
+
+- [ ] `AsyncPostgresSaver` 替代 `MemorySaver`，重启后会话可恢复
+- [ ] `POST /agent/chat` 后 `GET /conversations/{thread_id}/messages` 含 user/assistant
+- [ ] `memory_status()` 反映 postgres / milvus 状态
+- [ ] `docs/knowledge/memory-os.md` 存在且 README 索引已更新

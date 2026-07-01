@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent.agent.promt.policy import account_id_from_config, tool_policy
 from common.format import format_db_error, format_tool_result
-from server.service import transaction_service
+from storage.postgres import transaction_service
 
 
 @tool_policy(

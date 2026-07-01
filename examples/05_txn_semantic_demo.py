@@ -4,7 +4,7 @@
 用法::
 
     docker compose up -d milvus ollama
-    .venv/bin/python3.14 -m agent.rag.transaction --account-id 1
+    .venv/bin/python3.14 -m storage.rag.transaction --account-id 1
     .venv/bin/python3.14 examples/05_txn_semantic_demo.py
     .venv/bin/python3.14 examples/05_txn_semantic_demo.py --query "星巴克"
 """
@@ -20,7 +20,7 @@ _root = Path(__file__).resolve().parents[1]
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-from agent.rag import transaction_rag
+from storage.rag.transaction import transaction_rag
 from common.env import get_database_url
 from common.milvus import embedding_ready
 from server.db.session import Database

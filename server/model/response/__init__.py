@@ -7,6 +7,8 @@ from server.model.response.account import (
     AccountLoginResponse,
     AccountUpdateResponse,
 )
+from server.model.response.chat_message import ChatMessageGetListResponse
+from server.model.response.conversation import ConversationGetListResponse
 from server.model.response.geo import GeoMeResponse
 from server.model.response.agent import AgentChatResponse
 from server.model.response.budget import (
@@ -51,6 +53,8 @@ __all__ = [
     "CategoryGetResponse",
     "CategoryListResponse",
     "CategoryUpdateResponse",
+    "ChatMessageGetListResponse",
+    "ConversationGetListResponse",
     "CategorySummaryResponse",
     "DailySummaryResponse",
     "MonthlySummaryResponse",

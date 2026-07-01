@@ -21,7 +21,7 @@ from server.model.response import (
     TransactionUpdateResponse,
 )
 from server.model.transaction import Transaction
-from server.service.enter import transaction_crud
+from storage.postgres.service.enter import transaction_crud
 
 
 class TransactionService:

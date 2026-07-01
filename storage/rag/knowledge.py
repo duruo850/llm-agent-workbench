@@ -6,7 +6,7 @@ import logging
 from collections.abc import Sequence
 from pathlib import Path
 
-from agent.rag.common import RagBaseService, KnowledgeHit
+from storage.rag.common import RagBaseService, KnowledgeHit
 
 from common.env import (
     get_rag_top_k,
@@ -37,7 +37,7 @@ class Knowledge(RagBaseService):
     KNOWLEDGE_DIRS = ("finance",)
     
     # 知识库根目录
-    KNOWLEDGE_ROOT = Path(__file__).resolve().parents[1] / "knowledge"
+    KNOWLEDGE_ROOT = Path(__file__).resolve().parents[2] / "agent" / "knowledge"
     
     # 有效知识库分类
     VALID_KB = frozenset(KNOWLEDGE_DIRS)
@@ -127,3 +127,6 @@ class Knowledge(RagBaseService):
                 )
             )
         return hits
+
+
+knowledge = Knowledge()

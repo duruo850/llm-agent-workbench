@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
 
-from agent.rag import search
+from storage.rag.knowledge import knowledge
 from common.milvus import embedding_ready
 from server.model.response.knowledge import KnowledgeHitResponse, KnowledgeSearchResponse
 
@@ -20,7 +20,7 @@ async def knowledge_search(
         raise HTTPException(status_code=503, detail="RAG 未就绪（Milvus 不可用）")
 
     try:
-        hits = search(q, kb=kb)
+        hits = knowledge.search(q, kb=kb)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:

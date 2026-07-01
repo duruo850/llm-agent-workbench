@@ -19,7 +19,7 @@ _root = Path(__file__).resolve().parents[1]
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-from agent.rag.knowledge import Knowledge
+from storage.rag.knowledge import Knowledge
 from common.milvus import available as milvus_available
 
 

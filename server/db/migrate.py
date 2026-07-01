@@ -16,7 +16,7 @@ from common.env import get_database_url, load_env
 logger = logging.getLogger("billmind.db")
 
 _ALEMBIC_INI = Path(__file__).resolve().parents[1] / "alembic.ini"
-_REQUIRED_TABLES = ("accounts", "categories", "budgets", "transactions")
+_REQUIRED_TABLES = ("accounts", "categories", "budgets", "transactions", "conversations", "chat_messages")
 
 
 def _alembic_config() -> Config:
@@ -50,6 +50,8 @@ async def migrate_on_startup(engine: AsyncEngine) -> None:
     import server.model.account  # noqa: F401
     import server.model.budget  # noqa: F401
     import server.model.category  # noqa: F401
+    import server.model.chat_message  # noqa: F401
+    import server.model.conversation  # noqa: F401
     import server.model.transaction  # noqa: F401
 
     try:

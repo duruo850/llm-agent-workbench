@@ -6,11 +6,11 @@ import logging
 from typing import Any
 from uuid import uuid4
 
-from langchain_core.messages import AIMessage,HumanMessage
-from langgraph.checkpoint.memory import MemorySaver
+from langchain_core.messages import AIMessage, HumanMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent.agent.agent import Agent as ClassicAgent
+import storage as storage
 from agent.skills import SKILL_TOOLS
 from agent.graph.graph import build_agent_graph
 from agent.mcp import MCP_TOOLS
@@ -47,7 +47,7 @@ class Agent:
         # 聚合所有工具:skill tools + mcp tools
         tools = list(SKILL_TOOLS.values())
         tools.extend(MCP_TOOLS)
-        checkpointer = MemorySaver()
+        checkpointer = storage.working.get_checkpointer()
         _COMPILED_GRAPH, _RECURSION_LIMIT = build_agent_graph(
             tools,
             checkpointer,
@@ -76,7 +76,7 @@ class Agent:
         logger.info("input: %s", message)
 
         if _COMPILED_GRAPH is None:
-            raise RuntimeError("Graph Agent 未初始化，请先调用 Agent.init_async()")
+            raise RuntimeError("Graph Agent 未初始化，请先调用 Agent.init()")
 
         effective_thread_id = thread_id or str(uuid4())
         config = {

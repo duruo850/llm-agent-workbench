@@ -6,8 +6,7 @@ from langchain_core.runnables import RunnableConfig
 from sqlalchemy.ext.asyncio import AsyncSession
 from dataclasses import asdict
 from agent.agent.promt.policy import tool_policy
-from agent.rag import search
-from common.milvus import embedding_ready
+from storage.rag.knowledge import knowledge
 from common.format import format_tool_result
 
 
@@ -26,14 +25,14 @@ async def search_knowledge(
         kb: 可选知识库范围：finance（理财）；留空则搜索全部。
     """
     del db, config
-    if not embedding_ready():
+    if not knowledge.is_ready():
         return format_tool_result(
             {"error": True, "detail": "RAG 未就绪（Milvus 或索引不可用）"}
         )
 
     kb_filter = kb.strip() or None
     try:
-        hits = [asdict(hit) for hit in search(query, kb=kb_filter)]
+        hits = [asdict(hit) for hit in knowledge.search(query, kb=kb_filter)]
     except ValueError as exc:
         return format_tool_result({"error": True, "detail": str(exc)})
 

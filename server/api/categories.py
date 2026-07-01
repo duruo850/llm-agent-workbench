@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.db.session import get_db
 from server.model.account import Account
-from server.service.account import get_current_account
+from storage.postgres.service.account import get_current_account
 from server.model.request import CategoryCreateRequest, CategoryUpdateRequest
 from server.model.response import (
     CategoryCreateResponse,
@@ -17,8 +17,8 @@ from server.model.response import (
     CategoryListResponse,
     CategoryUpdateResponse,
 )
-from server.service import category_service
-from server.service.base import PaginatedList
+from storage.postgres.service import category_service
+from storage.postgres.service.base import PaginatedList
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 

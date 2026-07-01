@@ -8,11 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from agent import Agent
 from common.file_kind import FileKind, detect_file_kind
 from server.db.session import get_db
-from server.service.account import get_current_account
+from storage.postgres.service.account import get_current_account
 from server.model.account import Account
 from server.model.request.agent import AgentChatRequest
 from server.model.response.agent import AgentChatResponse
 from utils.client_ip import get_client_ip
+from storage.postgres.service.conversation import conversation_service
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -62,6 +63,15 @@ async def agent_chat(
             account_id=account.id,
             thread_id=body.thread_id,
         )
+        # 将对话落库:放到chat内存目录
+        if message:
+            await conversation_service.create_chat_messages(
+                db,
+                account_id=account.id,
+                thread_id=thread_id,
+                user_message=message,
+                assistant_message=reply,
+            )
         return AgentChatResponse(reply=reply, thread_id=thread_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

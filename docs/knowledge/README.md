@@ -8,9 +8,10 @@
 | Function Calling | M2 | [function-calling.md](function-calling.md) | `agent/agent.py`, `agent/skills/` | done |
 | LangGraph 状态图 Agent | M4 | [langgraph.md](langgraph.md) | `graph/graph.py`, `graph/agent.py` | done |
 | MCP + 高德（IP / 天气） | M6 | [mcp-amap.md](mcp-amap.md) | `agent/mcp/gaode/`, `server/api/geo.py` | done |
-| RAG / Milvus + Ollama Embedding | M7 | [rag.md](rag.md) | `agent/rag/`, `agent/knowledge/`, `GET /knowledge/search` | done |
-| Embeddings 语义检索 | M8 | [txn-semantic-search.md](txn-semantic-search.md) | `agent/rag/transaction.py`, `GET /transactions/search` | done |
-| Memory + Human-in-the-loop | M9 | [memory-hitl.md](memory-hitl.md) | 待建 | 待提取 |
+| RAG / Milvus + Ollama Embedding | M7 | [rag.md](rag.md) | `agent/storage/rag/`, `agent/knowledge/`, `GET /knowledge/search` | done |
+| Embeddings 语义检索 | M8 | [txn-semantic-search.md](txn-semantic-search.md) | `agent/storage/rag/transaction.py`, `GET /transactions/search` | done |
+| Memory OS（分层存储 + 流水线） | M9 | [memory-os.md](memory-os.md) | `agent/storage/`, `AsyncPostgresSaver` | done |
+| Memory + Human-in-the-loop | M12 | [memory-hitl.md](memory-hitl.md) | 待建 | 待提取 |
 | Eval + LangSmith | M10 | [eval-langsmith.md](eval-langsmith.md) | 待建 | 待提取 |
 | 可插拔 Agent Skills | M11 | [agent-skills.md](agent-skills.md) | `agent/skills/`（待建） | 待提取 |
 | Fine-tuning / LoRA | M12 | [fine-tuning.md](fine-tuning.md) | 待建 | 待提取 |

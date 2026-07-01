@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.db.session import get_db
-from server.service.account import get_current_account
+from storage.postgres.service.account import get_current_account
 from server.model.account import Account
 from server.model.request import BudgetCreateRequest, BudgetUpdateRequest
 from server.model.response import (
@@ -17,8 +17,8 @@ from server.model.response import (
     BudgetListResponse,
     BudgetUpdateResponse,
 )
-from server.service import budget_service
-from server.service.base import PaginatedList
+from storage.postgres.service.budget import budget_service
+from storage.postgres.service.base import PaginatedList
 
 router = APIRouter(prefix="/budgets", tags=["budgets"])
 

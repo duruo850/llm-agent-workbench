@@ -27,7 +27,7 @@ from common.env import get_database_url
 from common.logging_config import configure_app_logging
 from agent import Agent
 from server.db.session import Database
-from server.service.account import account_service
+from storage.postgres.service import account_service
 
 Database.init(get_database_url())
 Agent.init()

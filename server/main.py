@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
-from agent import init_agent
+from agent import init_agent, shutdown_agent
 from common.env import get_database_url, get_web_origins
 from common.logging_config import configure_app_logging
 from server.db.migrate import migrate_on_startup
@@ -34,6 +34,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     await migrate_on_startup(Database.get().engine)
     await init_agent()
     yield
+    await shutdown_agent()
 
 
 app = FastAPI(title="BillMind API", version="0.1.0", lifespan=lifespan)

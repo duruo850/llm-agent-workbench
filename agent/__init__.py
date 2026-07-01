@@ -4,12 +4,16 @@ from agent.graph import Agent # 导出Agent类，用于在server中使用
 from agent.graph import init as init_agent_graph
 from agent.skills import init  as init_skills
 from agent.mcp import init  as init_mcp
+from storage import init as init_storage, shutdown as shutdown_storage
 from server.db.session import Database
 
 __all__ = ["Agent"]
 
 async def init_agent():
     """初始化"""
+    await init_storage()
+    print("storage initialized")
+    
     # 初始化 skills
     init_skills(Database.get().async_session_factory)
     print("skills initialized")
@@ -20,3 +24,9 @@ async def init_agent():
     # 初始化 Agent
     await init_agent_graph()
     print("agent initialized")
+    
+    
+async def shutdown_agent():
+    """关闭"""
+    await shutdown_storage()
+    print("storage shutdown")

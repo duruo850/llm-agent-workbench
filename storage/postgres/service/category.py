@@ -5,7 +5,7 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.model.category import Category
-from server.service.enter import category_crud
+from storage.postgres.service.enter import category_crud
 from server.model.request import CategoryCreateRequest, CategoryUpdateRequest
 from server.model.response import (
     CategoryCreateResponse,
@@ -13,7 +13,7 @@ from server.model.response import (
     CategoryListResponse,
     CategoryUpdateResponse,
 )
-from server.service.base import PaginatedList
+from storage.postgres.service.base import PaginatedList
 
 
 class CategoryService:

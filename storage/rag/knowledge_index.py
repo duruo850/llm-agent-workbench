@@ -2,7 +2,7 @@
 
 用法::
 
-    .venv/bin/python3.14 -m agent.rag.index
+    .venv/bin/python3.14 -m storage.rag.knowledge_index
 
 配置见下方常量 ``SKIP_DOCKER``、``INDEX_FORCE``、``KNOWLEDGE_ROOT``、``KNOWLEDGE_DIRS``。
 """
@@ -30,7 +30,7 @@ _DOCKER_SERVICES = ("ollama", "etcd", "minio", "milvus")
 # 一键入库配置
 SKIP_DOCKER = False
 INDEX_FORCE = True
-KNOWLEDGE_ROOT = Path(__file__).resolve().parents[1] / "knowledge"
+KNOWLEDGE_ROOT = Path(__file__).resolve().parents[2] / "agent" / "knowledge"
 KNOWLEDGE_DIRS = ("finance",)
 
 
@@ -102,7 +102,7 @@ def main() -> None:
     _wait_ollama_embedding()
     _wait_http("Milvus", get_milvus_health_uri(), attempts=90)
 
-    from agent.rag.knowledge import Knowledge
+    from storage.rag.knowledge import Knowledge
     from common.milvus import available as milvus_available
 
     if not milvus_available():

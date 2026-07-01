@@ -6,8 +6,7 @@ from langchain_core.runnables import RunnableConfig
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent.agent.promt.policy import account_id_from_config, tool_policy
-from agent.rag import transaction_rag
-from common.milvus import embedding_ready
+from storage.rag.transaction import transaction_rag
 from common.format import format_tool_result
 
 
@@ -37,7 +36,7 @@ async def search_similar_transactions(
     del db
     account_id = account_id_from_config(config)
 
-    if not embedding_ready():
+    if not transaction_rag.is_ready():
         return format_tool_result(
             {
                 "error": True,
@@ -46,7 +45,10 @@ async def search_similar_transactions(
         )
 
     try:
-        hits = [hit.to_search_dict() for hit in transaction_rag.search(query, account_id=account_id)]
+        hits = [
+            hit.to_search_dict()
+            for hit in transaction_rag.search(query, account_id=account_id)
+        ]
     except Exception as exc:
         return format_tool_result({"error": True, "detail": str(exc)})
 
@@ -55,7 +57,7 @@ async def search_similar_transactions(
             {
                 "message": "未找到相似交易",
                 "query": query,
-                "hint": "请先运行: python -m agent.rag.transaction --account-id <账号ID>",
+                "hint": "请先运行: python -m storage.rag.transaction --account-id <账号ID>",
                 "results": [],
             }
         )

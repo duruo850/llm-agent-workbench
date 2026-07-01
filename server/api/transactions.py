@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from agent.agent.common.parse_sentence import parse_sentence
 from common.csv_import import import_csv_transactions
 from server.db.session import get_db
-from server.service.account import get_current_account
+from storage.postgres.service.account import get_current_account
 from server.model.account import Account
 from server.model.request import TransactionCreateRequest, TransactionListQueryRequest, TransactionUpdateRequest
 from server.model.transaction import Transaction
@@ -22,7 +22,7 @@ from server.model.response import (
     TransactionListResponse,
     TransactionUpdateResponse,
 )
-from server.service import transaction_service
+from storage.postgres.service.transaction import transaction_service
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 

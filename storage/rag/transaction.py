@@ -1,7 +1,7 @@
 """BillMind 交易语义搜索 — PG 交易 → Ollama Embedding → Milvus 检索。
 
 门面 ``TransactionRagService``（单例 ``transaction_rag``）提供向量层增删改查；
-CLI：``python -m agent.rag.transaction --account-id 1 [--force]``。
+CLI：``python -m storage.rag.transaction --account-id 1 [--force]``。
 """
 
 from __future__ import annotations
@@ -24,8 +24,8 @@ from common.milvus import available as milvus_available
 from common.milvus import get_client
 from server.db.session import Database
 from server.model.transaction import Transaction
-from server.service import transaction_service
-from agent.rag.common import RagBaseService
+from storage.postgres import transaction_service
+from storage.rag.common import RagBaseService
 
 logger = logging.getLogger("billmind.transaction_rag")
 

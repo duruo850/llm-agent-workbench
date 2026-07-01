@@ -5,7 +5,7 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.model.budget import Budget
-from server.service.enter import budget_crud, category_crud
+from storage.postgres.service.enter import budget_crud, category_crud
 from server.model.request import BudgetCreateRequest, BudgetUpdateRequest
 from server.model.response import (
     BudgetCreateResponse,
@@ -13,7 +13,7 @@ from server.model.response import (
     BudgetListResponse,
     BudgetUpdateResponse,
 )
-from server.service.base import PaginatedList
+from storage.postgres.service.base import PaginatedList
 
 
 class BudgetService:

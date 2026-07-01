@@ -17,8 +17,8 @@ from server.model.response.account import (
     AccountListResponse,
     AccountUpdateResponse,
 )
-from server.service.base import PaginatedList
-from server.service.enter import account_crud
+from storage.postgres.service.base import PaginatedList
+from storage.postgres.service.enter import account_crud
 from utils.bearer_token import parse_bearer_token
 
 

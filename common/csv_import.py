@@ -11,10 +11,10 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from agent.rag import transaction_rag
+from storage.rag.transaction import transaction_rag
 from server.model.request.parsed import ParsedTransaction
 from server.model.transaction import Transaction
-from server.service import transaction_service
+from storage.postgres.service import transaction_service
 
 
 @dataclass

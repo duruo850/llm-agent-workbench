@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from server.db.session import get_db
 from server.model.request.account import AccountLoginRequest
 from server.model.response.account import AccountLoginResponse
-from server.service.account import account_service
+from storage.postgres.service.account import account_service
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 

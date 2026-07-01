@@ -8,11 +8,11 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.db.session import get_db
-from server.service.account import get_current_account
+from storage.postgres.service.account import get_current_account
 from server.model.account import Account
 from server.model.request import MonthlySummaryQueryRequest
 from server.model.response import MonthlySummaryResponse
-from server.service import transaction_service
+from storage.postgres.service.transaction import transaction_service
 
 router = APIRouter(prefix="/summary", tags=["summary"])
 

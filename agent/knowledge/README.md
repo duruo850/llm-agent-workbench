@@ -1,6 +1,6 @@
 # BillMind 知识库（RAG）
 
-理财类静态 Markdown，供 `agent/rag` 索引到 Milvus。
+理财类静态 Markdown，供 `agent/storage/rag` 索引到 Milvus。
 
 | 目录 | 含义 | kb 标识 |
 |------|------|---------|
@@ -13,7 +13,7 @@
 **一键入库**（推荐）：
 
 ```bash
-./agent/rag/index.sh
+.venv/bin/python3.14 -m agent.storage.rag.knowledge_index
 ```
 
 或手动：
@@ -21,7 +21,7 @@
 ```bash
 docker compose up -d ollama ollama-pull-embeddings   # 启动 Ollama 并自动 pull embedding 模型
 # 或手动：
-./agent/rag/index.sh                                  # 一键入库（含上述步骤）
+.venv/bin/python3.14 -m agent.storage.rag.knowledge_index                                  # 一键入库（含上述步骤）
 ```
 
 服务启动时若集合为空也会自动索引（需 Milvus + Ollama 可用）。

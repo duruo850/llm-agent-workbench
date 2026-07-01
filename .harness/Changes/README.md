@@ -33,7 +33,10 @@ M{n}_{seq}-{slug}.plan
 | [M4_1-langgraph-agent.plan](M4_1-langgraph-agent.plan) | M4 | 1 | done |
 | [M4_2-accounts-auth.plan](M4_2-accounts-auth.plan) | M4 | 2 | done |
 | [M5_1-file-import.plan](M5_1-file-import.plan) | M5 | 1 | done |
-| [M6_1-amap-mcp.plan](M6_1-amap-mcp.plan) | M6 | 1 | in_progress |
+| [M6_1-amap-mcp.plan](M6_1-amap-mcp.plan) | M6 | 1 | done |
+| [M7_1-rag-knowledge.plan](M7_1-rag-knowledge.plan) | M7 | 1 | done |
+| [M8_1-txn-semantic-search.plan](M8_1-txn-semantic-search.plan) | M8 | 1 | done |
+| [M9_1-memory-os.plan](M9_1-memory-os.plan) | M9 | 1 | done |
 
 > M1 已在 harness 建立前完成，无编号 plan；后续 M1 补丁可用 `M1_1-*.plan`。
 

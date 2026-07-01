@@ -15,6 +15,16 @@ from server.model.request.category import (
     CategoryListQueryRequest,
     CategoryUpdateRequest,
 )
+from server.model.request.chat_message import (
+    ChatMessageCreateRequest,
+    ChatMessageListQueryRequest,
+    ChatMessageUpdateRequest,
+)
+from server.model.request.conversation import (
+    ConversationCreateRequest,
+    ConversationListQueryRequest,
+    ConversationUpdateRequest,
+)
 from server.model.request.parsed import LoadTransaction, ParsedTransaction, Transaction
 from server.model.request.summary import MonthlySummaryQueryRequest
 from server.model.request.transaction import (
@@ -35,6 +45,12 @@ __all__ = [
     "CategoryCreateRequest",
     "CategoryListQueryRequest",
     "CategoryUpdateRequest",
+    "ChatMessageCreateRequest",
+    "ChatMessageListQueryRequest",
+    "ChatMessageUpdateRequest",
+    "ConversationCreateRequest",
+    "ConversationListQueryRequest",
+    "ConversationUpdateRequest",
     "LoadTransaction",
     "MonthlySummaryQueryRequest",
     "ParsedTransaction",

@@ -1,11 +1,13 @@
 ---
 name: entity-service
-description: 实体服务全栈 SOP — model / request / response / service / db 迁移 / api / 集成测试（参考 Category / Budget / Transaction）
+description: 实体服务全栈 SOP — model / request / response / service / db 迁移 / api / 集成测试（参考 Category / ChatMessage 薄 CRUD）
 ---
 
 # entity-service — 实体服务全栈实现
 
-BillMind M1 每个实体（Category / Budget / Transaction）都遵循同一套**七层流水线**。新增第 4 个实体时，按本 Skill 从 model 到 test 完整走一遍。
+BillMind M1 实体 (Category / Budget / Transaction) 采用 **Request/Response 穿透 Service** (档位 A–C).  
+M9 起 Chat History (`Conversation` / `ChatMessage`) 采用 **薄 CRUD + ORM 进出 Service** (档位 E).  
+**新实体默认档位 E** — Service 复制 [service.py.tpl](service.py.tpl) 即可, 详见下文.
 
 ## 何时触发
 
@@ -28,24 +30,37 @@ BillMind M1 每个实体（Category / Budget / Transaction）都遵循同一套*
 | **A 标准** | Category | 纯 FastCRUD，无自定义 API | 全层最简 |
 | **B 关联** | Budget | 外键 `category_id`、唯一约束、索引 | 有 FK 时参照 |
 | **C 扩展** | Transaction | 禁用 FastCRUD 列表 + 自定义 `GET /transactions?month=` | 需非标准查询时参照 |
-| **D 租户根** | Account | 无 `account_id` 自引用；HTTP 以 `/auth/login` 为主，**Service 仍须五件套 CRUD** | [`service/account.py`](../../../server/service/account.py) |
+| **D 租户根** | Account | 无 `account_id` 自引用; HTTP 以 `/auth/login` 为主 | [`storage/postgres/service/account.py`](../../../storage/postgres/service/account.py) |
+| **E 薄 CRUD** | ChatMessage | Service 入出 ORM; Request/Response 仅 API | [service.py.tpl](service.py.tpl) / [`chat_message.py`](../../../storage/postgres/service/chat_message.py) |
 
-> **强制**：新建任意实体时，`{Entity}Service` **必须**提供 `create_` / `get_` / `list_` / `update_` / `delete_`（FastCRUD + Request/Response），再叠加领域方法（如 `login_or_register`、`get_current_account`）。不得仅写裸 SQL 或单点方法而跳过 CRUD 基线。
+> **档位 A–D (M1 存量)**: `create_` / `get_` / `list_` / `update_` / `delete_`, 入出 Request/Response.  
+> **档位 E (新实体默认)**: 复制 [service.py.tpl](service.py.tpl) → `storage/postgres/service/{entity}.py`; 复杂逻辑放 API/Facade.
 
 ### 各层文件对照
 
-| 层 | Category | Budget | Transaction | Account |
-|----|----------|--------|-------------|---------|
-| ORM | `model/category.py` | `model/budget.py` | `model/transaction.py` | `model/account.py` |
-| Request | `request/category.py` | `request/budget.py` | `request/transaction.py` | `request/account.py` + `request/auth.py`（Login） |
-| Response | `response/category.py` | `response/budget.py` | `response/transaction.py` | `response/account.py` + `response/auth.py`（Login） |
-| FastCRUD 实例 | `service/enter.py` | 同上 | 同上 | `account_crud` |
-| Service | `service/category.py` | `service/budget.py` | `service/transaction.py` | `service/account.py` |
-| API Router | `api/categories.py` | `api/budgets.py` | `api/transactions.py` | `api/auth.py`（登录；管理 CRUD 可后续加） |
-| 路由注册 | `routers.py` | 同上 | 同上 | `auth` 无 Bearer；业务 router 加 `protected` |
-| 迁移 | `alembic/versions/001_*.py` | 同上 | 同上 | `002_accounts_multi_tenant.py` |
-| 启动同步 | `db/migrate.py` `_REQUIRED_TABLES` | 同上 | 同上 | 含 `accounts` |
-| 测试 | `api/{entities}_test.py` | `api/budgets_test.py` | `api/transactions_test.py` | `api/auth_test.py` |
+| 层 | Category (A) | ChatMessage (E) | Conversation (E) |
+|----|--------------|-----------------|------------------|
+| ORM | `model/category.py` | `model/chat_message.py` | `model/conversation.py` |
+| Request | `request/category.py` | `request/chat_message.py` | `request/conversation.py` |
+| Response | `response/category.py` | `response/chat_message.py` | `response/conversation.py` |
+| FastCRUD | `storage/postgres/service/enter.py` | `chat_message_crud` | `conversation_crud` |
+| Service | `storage/postgres/service/category.py` | `storage/postgres/service/chat_message.py` | `storage/postgres/service/conversation.py` |
+| API | `api/categories.py` | `api/chat_messages.py` | `api/conversations.py` |
+| 测试 | `api/categories_test.py` | `api/chat_messages_test.py` | `api/conversations_test.py` |
+
+## 档位 E — 薄 CRUD Service
+
+**新实体默认本档位.** Service 层只做薄 CRUD (入出 ORM, 委托 FastCRUD); Request/Response 转换与多实体编排放 **API** 或 **Agent Facade**, 不写进 Service.
+
+实现方式: 复制 [service.py.tpl](service.py.tpl) 为 `storage/postgres/service/{entity}.py`, 替换 `{Entity}` / `{entity}` 及 `get_list` 过滤键. 细节以模板与标杆 [`chat_message.py`](../../../storage/postgres/service/chat_message.py) / [`conversation.py`](../../../storage/postgres/service/conversation.py) 为准.
+
+**`get_list` 约定** (档位 E):
+
+- 入参 `{Entity}ListQueryRequest` (含 `Page` / `PageSize` 默认值 + 可选过滤字段)
+- Service 内组装 `filters: dict[str, object]`, 非空字段才写入; 分页 `offset=req.Page * req.PageSize`, `limit=req.PageSize`
+- API 用 `Depends()` 解析 query, 租户字段 (如 `AccountId`) 由 handler 注入: `req = query.model_copy(update={"AccountId": account.id})`
+
+编排参考: [`chat_messages.py`](../../../server/api/chat_messages.py)、[`conversation.py`](../../../storage/postgres/service/conversation.py)（`create_chat_messages`）.
 
 ## 分层数据流
 
@@ -107,43 +122,51 @@ class Category(SQLModel, table=True):
 
 ### ② Request — 入参 schema
 
-- [ ] 新建 `server/model/request/{entity}.py`
-- [ ] `{Entity}CreateRequest(RequestBase)` — POST body
-- [ ] `{Entity}UpdateRequest(RequestBase)` — PATCH body（字段均可选）
-- [ ] `{Entity}ListQueryRequest(RequestBase)` — 列表 query（可为空 `pass`）
-- [ ] 在 `server/model/request/__init__.py` 导出
+**档位 A–D** (M1 存量):
 
-基类：[`server/model/base.py`](../../../server/model/base.py) 的 `RequestBase`（`extra="forbid"`）。
+- [ ] `{Entity}CreateRequest` / `UpdateRequest` — 逐字段展开
+- [ ] `{Entity}ListQueryRequest` — 列表 query: `Page`/`PageSize` 默认值 + 可选过滤字段 (PascalCase); 标杆 [`request/conversation.py`](../../../server/model/request/conversation.py)
+- [ ] 参照 [`request/category.py`](../../../server/model/request/category.py)
+
+**档位 E** (新实体默认):
+
+- [ ] 复制 [request.py.tpl](request.py.tpl) → Create/Update 用 `Data: {Entity}`
+- [ ] API 从 `body.Data` 组装 ORM 后调 service; 标杆 [`request/chat_message.py`](../../../server/model/request/chat_message.py)
 
 ### ③ Response — 出参 schema
 
-- [ ] 新建 `server/model/response/{entity}.py`
-- [ ] `{Entity}GetResponse` — FastCRUD `select_schema`（仅标量，无 Relationship）
-- [ ] 可选：`CreateResponse` / `UpdateResponse` / `ListResponse`（与现有三实体保持一致）
-- [ ] `model_config = ConfigDict(from_attributes=True)`
-- [ ] 在 `server/model/response/__init__.py` 导出
+**档位 A–D** (M1 存量):
+
+- [ ] `{Entity}GetResponse` + 可选 `CreateResponse` / `UpdateResponse` / `ListResponse`
+- [ ] 参照 [`response/category.py`](../../../server/model/response/category.py)
+
+**档位 E** (新实体默认):
+
+- [ ] 复制 [response.py.tpl](response.py.tpl) → `{Entity}GetListResponse` 含 `List: list[{Entity}]`
+- [ ] GET 列表 `return {Entity}GetListResponse(List=result.data)`; POST/PATCH `status_code=200` 无 body
+- [ ] 标杆: [`response/chat_message.py`](../../../server/model/response/chat_message.py)
 
 ### ④ Service — 业务层 + enter.py
 
-- [ ] `server/service/enter.py`：添加 `{entity}_crud = FastCRUD({Entity})`
-- [ ] 新建 `server/service/{entity}.py`，类名 `{Entity}Service`
-- [ ] 实现：`create_{entity}` / `get_{entity}` / `list_{entities}` / `update_{entity}` / `delete_{entity}`
-- [ ] 第一参数 `db: AsyncSession`；内部调 `enter.py` 中的 FastCRUD 实例
-- [ ] 模块末尾：`{entity}_service = {Entity}Service()`
-- [ ] 自定义查询（如 Transaction 按月列表）作为 Service 额外方法
+**档位 A–D** (M1 存量):
 
-参照 [`server/service/category.py`](../../../server/service/category.py)。
+- [ ] `storage/postgres/service/enter.py`: `{entity}_crud = FastCRUD({Entity})`
+- [ ] `create_{entity}` / `get_{entity}` / `list_{entities}` / `update_{entity}` / `delete_{entity}`
+- [ ] 入参 Request, 出参 Response
+- [ ] 参照 [`storage/postgres/service/category.py`](../../../storage/postgres/service/category.py)
+
+**档位 E** (新实体默认):
+
+- [ ] `enter.py` 注册 `{entity}_crud`; Service 复制 [service.py.tpl](service.py.tpl), `get_list(db, req)` 用 filters + 分页
+- [ ] API 做 Request/Response 转换与编排; 参照 [`conversations.py`](../../../server/api/conversations.py)、[`chat_messages.py`](../../../server/api/chat_messages.py)
 
 ### ⑤ API Router — HTTP 编排 + 路由注册
 
 **5a. 新建 `server/api/{entities}.py`**
 
-- [ ] 定义 `router = APIRouter(prefix="/{entities}", tags=["{entities}"])`
-- [ ] 标准五路由：`POST ""` / `GET "/{id}"` / `GET ""` / `PATCH "/{id}"` / `DELETE "/{id}"`
-- [ ] 每 handler：`Depends(get_db)` → 调 `{entity}_service` 对应方法
-- [ ] 404：service 返回 `None` 时 `HTTPException(404)`；DELETE 成功返回 `204`
+档位 A–D: 标准五路由, handler 调 `{entity}_service`, 入参 Request / 出参 Response.
 
-参照 [`server/api/categories.py`](../../../server/api/categories.py)。
+档位 E: Handler 内 Request → ORM → `service.*` → `Response.model_validate`; 编排见 [档位 E](#档位-e--薄-crud-service).
 
 **5b. 注册到 [`server/routers.py`](../../../server/routers.py)**
 
@@ -190,25 +213,28 @@ Transaction 示例：[`server/api/transactions.py`](../../../server/api/transact
 ```
 新实体 {Entity}
     │
-    ├─ 仅标准 CRUD，无特殊列表？
-    │       └─ 档位 A（参照 Category）
+    ├─ M9+ 新表 / 新实体?
+    │       └─ 档位 E — 复制 [service.py.tpl](service.py.tpl)
     │
-    ├─ 有外键 / 唯一约束？
-    │       └─ 档位 B（参照 Budget）+ 档位 A 步骤
+    ├─ 仅标准 CRUD, 无特殊列表? (M1 存量风格)
+    │       └─ 档位 A (参照 Category)
     │
-    └─ 列表或查询逻辑非默认分页？
-            └─ 档位 C（参照 Transaction）= Service 额外方法 + 同一 api router
+    ├─ 有外键 / 唯一约束?
+    │       └─ 档位 B (参照 Budget) + 档位 A 或 E 步骤
     │
-    └─ 租户根 / 认证实体（无 account_id 自引用，HTTP 以 login 为主）？
-            └─ 档位 D（参照 Account）= **Service 仍须 CRUD 五件套** + 领域方法；敏感字段（token）不进 Get/List Response
+    ├─ 列表或查询逻辑非默认分页?
+    │       └─ 档位 C (参照 Transaction) = API/Service 额外方法
+    │
+    └─ 租户根 / 认证实体?
+            └─ 档位 D (参照 Account)
 ```
 
 ## 整合点（勿漏）
 
 | 文件 | 动作 |
 |------|------|
-| `server/service/enter.py` | 添加 `{entity}_crud` |
-| `server/service/{entity}.py` | `{Entity}Service` + `{entity}_service` 单例 |
+| `storage/postgres/service/enter.py` | 添加 `{entity}_crud` |
+| `storage/postgres/service/{entity}.py` | `{Entity}Service` + `{entity}_service` 单例 |
 | `server/api/{entities}.py` | 定义 `router`，五路由调 service |
 | **`server/routers.py`** | **`register_routers` 中 `include_router`** |
 | `server/model/request/__init__.py` | 导出 Request |
@@ -225,8 +251,8 @@ server/model/request/tag.py
 server/model/response/tag.py
 server/model/request/__init__.py          # 修改
 server/model/response/__init__.py         # 修改
-server/service/enter.py                   # 修改
-server/service/tag.py                     # 新建
+storage/postgres/service/enter.py           # 修改
+storage/postgres/service/tag.py             # 新建
 server/api/tags.py                        # 新建
 server/routers.py                         # include_router
 server/alembic/versions/002_add_tags.py   # 新建
@@ -255,7 +281,8 @@ curl -X POST http://127.0.0.1:8000/{entities} -H 'Content-Type: application/json
 ## 反模式
 
 - 不要在 ORM 上加双向 `Relationship`
-- 不要把 SQL / FastCRUD 调用写进 `server/api/`（必须经 Service）
+- 不要把 SQL / FastCRUD 调用写进 `server/api/` (必须经 Service)
+- 档位 E: 不要把 Request/Response 传入 Service; 不要把跨实体编排写进 Service
 - 不要跳过 Alembic 或 `_REQUIRED_TABLES`
 - 不要用 `TestClient`；必须真实 HTTP 集成测试
 - 不要 Response 继承带关联的 ORM 类
@@ -270,3 +297,6 @@ curl -X POST http://127.0.0.1:8000/{entities} -H 'Content-Type: application/json
 | [db-migrate](../db-migrate/SKILL.md) | 迁移细节 |
 | [http-integration-test](../http-integration-test/SKILL.md) | 测试 SOP |
 | [local-dev](../local-dev/SKILL.md) | 本地启动与调试 |
+| [service.py.tpl](service.py.tpl) | 档位 E Service 复制模板 |
+| [request.py.tpl](request.py.tpl) | 档位 E Request 复制模板 |
+| [response.py.tpl](response.py.tpl) | 档位 E Response 复制模板 |
