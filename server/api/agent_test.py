@@ -12,6 +12,8 @@ from typing import Any
 
 import httpx
 
+from server.api.conftest import _txn_list_rows
+
 TEST_MONTH = "2025-06"
 AGENT_CHAT_TIMEOUT = 60.0
 
@@ -82,7 +84,7 @@ def test_agent_chat_add_transaction(
     list_response.raise_for_status()
     created = [
         row
-        for row in list_response.json()
+        for row in _txn_list_rows(list_response)
         if row.get("merchant") == merchant and float(row["amount"]) == 12.5
     ]
     assert created, f"未找到 Agent 创建的交易（merchant={merchant}）"
@@ -128,6 +130,7 @@ def test_agent_chat_daily_spending(
                 "merchant": merchant,
                 "note": "今日测试",
                 "transacted_at": f"{today}T10:00:00",
+                "account_id": category["account_id"],
             }
         },
     )
@@ -175,7 +178,7 @@ def test_agent_chat_cross_turn_memory(
     list_response.raise_for_status()
     created = [
         row
-        for row in list_response.json()
+        for row in _txn_list_rows(list_response)
         if row.get("merchant") == merchant and float(row["amount"]) == 15.5
     ]
     assert created, f"未找到首轮创建的交易（merchant={merchant}）"
@@ -215,7 +218,7 @@ def test_agent_chat_csv_file(
         month = datetime.now().strftime("%Y-%m")
         list_response = http_client.get("/transactions", params={"month": month}, timeout=15.0)
         if list_response.is_success:
-            for row in list_response.json():
+            for row in _txn_list_rows(list_response):
                 merchant = row.get("merchant") or ""
                 note = row.get("note") or ""
                 if prefix in merchant or prefix in note:

@@ -71,6 +71,7 @@ def test_create_transaction(http_client: httpx.Client, category: dict[str, Any])
                 "merchant": "便利店",
                 "note": "创建测试",
                 "transacted_at": f"{TEST_MONTH}-10T09:00:00",
+                "account_id": category["account_id"],
             }
         },
     )
@@ -119,6 +120,7 @@ def test_delete_transaction(http_client: httpx.Client, category: dict[str, Any])
                 "merchant": "待删",
                 "note": "",
                 "transacted_at": f"{TEST_MONTH}-11T10:00:00",
+                "account_id": category["account_id"],
             }
         },
     )

@@ -12,11 +12,21 @@ from typing import Any
 import httpx
 
 
-def test_create_category(http_client: httpx.Client, unique_suffix: str) -> None:
+def test_create_category(
+    http_client: httpx.Client,
+    account: dict[str, Any],
+    unique_suffix: str,
+) -> None:
     name = f"新建分类-{unique_suffix}"
     response = http_client.post(
         "/categories",
-        json={"Data": {"name": name, "budget_monthly": 2000}},
+        json={
+            "Data": {
+                "name": name,
+                "budget_monthly": 2000,
+                "account_id": account["account_id"],
+            }
+        },
     )
     response.raise_for_status()
     body = response.json()
@@ -53,10 +63,19 @@ def test_update_category(http_client: httpx.Client, category: dict[str, Any]) ->
     assert response.json()["name"] == new_name
 
 
-def test_delete_category(http_client: httpx.Client, unique_suffix: str) -> None:
+def test_delete_category(
+    http_client: httpx.Client,
+    account: dict[str, Any],
+    unique_suffix: str,
+) -> None:
     response = http_client.post(
         "/categories",
-        json={"Data": {"name": f"待删-{unique_suffix}"}},
+        json={
+            "Data": {
+                "name": f"待删-{unique_suffix}",
+                "account_id": account["account_id"],
+            }
+        },
     )
     response.raise_for_status()
     category_id = response.json()["id"]

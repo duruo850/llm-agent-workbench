@@ -23,10 +23,18 @@ import httpx
 import pytest
 
 from common.env import load_env
-from common.test.account import login_token
+from common.test.account import login, login_token
 
 DEFAULT_API_BASE_URL = "http://127.0.0.1:8000"
 TEST_MONTH = "2025-06"
+
+
+def _txn_list_rows(response: httpx.Response) -> list[dict[str, Any]]:
+    """解析 GET /transactions 列表响应（``List`` 字段）。"""
+    body = response.json()
+    if isinstance(body, list):
+        return body
+    return body["List"]
 
 
 @pytest.fixture(scope="session")
@@ -92,8 +100,13 @@ def http_client_no_auth(
 
 
 @pytest.fixture
-def auth_token(http_client_no_auth: httpx.Client, unique_suffix: str) -> str:
-    return login_token(http_client_no_auth, f"test-{unique_suffix}")
+def account(http_client_no_auth: httpx.Client, unique_suffix: str) -> dict[str, Any]:
+    return login(http_client_no_auth, f"test-{unique_suffix}")
+
+
+@pytest.fixture
+def auth_token(account: dict[str, Any]) -> str:
+    return account["token"]
 
 
 @pytest.fixture
@@ -116,11 +129,21 @@ def unique_suffix() -> str:
 
 
 @pytest.fixture
-def category(http_client: httpx.Client, unique_suffix: str) -> Generator[dict[str, Any], None, None]:
+def category(
+    http_client: httpx.Client,
+    account: dict[str, Any],
+    unique_suffix: str,
+) -> Generator[dict[str, Any], None, None]:
     name = f"分类-{unique_suffix}"
     response = http_client.post(
         "/categories",
-        json={"Data": {"name": name, "budget_monthly": 1000}},
+        json={
+            "Data": {
+                "name": name,
+                "budget_monthly": 1000,
+                "account_id": account["account_id"],
+            }
+        },
     )
     response.raise_for_status()
     body = response.json()
@@ -137,6 +160,7 @@ def budget(http_client: httpx.Client, category: dict[str, Any]) -> Generator[dic
                 "category_id": category["id"],
                 "month": TEST_MONTH,
                 "limit_amount": 1500,
+                "account_id": category["account_id"],
             }
         },
     )
@@ -160,6 +184,7 @@ def transaction(
                 "merchant": "测试商户",
                 "note": "fixture",
                 "transacted_at": f"{TEST_MONTH}-25T12:00:00",
+                "account_id": category["account_id"],
             }
         },
     )

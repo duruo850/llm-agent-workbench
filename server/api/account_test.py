@@ -54,13 +54,14 @@ def test_malformed_authorization_returns_401(http_client_no_auth: httpx.Client) 
 
 def test_accounts_are_isolated(http_client_no_auth: httpx.Client, unique_suffix: str) -> None:
     """A/B 两账号各自创建的分类互不可见。"""
-    token_a = login_token(http_client_no_auth, f"account-a-{unique_suffix}")
+    account_a = login(http_client_no_auth, f"account-a-{unique_suffix}")
+    token_a = account_a["token"]
     token_b = login_token(http_client_no_auth, f"account-b-{unique_suffix}")
 
     cat_name = f"隔离分类-{unique_suffix}"
     create = http_client_no_auth.post(
         "/categories",
-        json={"Data": {"name": cat_name}},
+        json={"Data": {"name": cat_name, "account_id": account_a["account_id"]}},
         headers=bearer_headers(token_a),
     )
     create.raise_for_status()

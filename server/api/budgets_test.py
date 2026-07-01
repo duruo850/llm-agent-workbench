@@ -23,6 +23,7 @@ def test_create_budget(http_client: httpx.Client, category: dict[str, Any]) -> N
                 "category_id": category["id"],
                 "month": TEST_MONTH,
                 "limit_amount": 2000,
+                "account_id": category["account_id"],
             }
         },
     )
@@ -68,6 +69,7 @@ def test_delete_budget(http_client: httpx.Client, category: dict[str, Any]) -> N
                 "category_id": category["id"],
                 "month": "2099-01",
                 "limit_amount": 500,
+                "account_id": category["account_id"],
             }
         },
     )

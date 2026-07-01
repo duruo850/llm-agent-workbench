@@ -14,7 +14,6 @@ from server.model.category import Category
 from server.model.request.transaction import TransactionListQueryRequest
 from server.model.transaction import Transaction
 from storage.postgres.service.enter import transaction_crud
-from sqlalchemy.sql import between
 
 
 @dataclass
@@ -72,23 +71,25 @@ class TransactionService:
             filters["id"] = req.Id
         if req.Month:
             start, end = month_range(req.Month)
-            filters["transacted_at"] = between(start, end)
-        if req.Date:
+            filters["transacted_at__gte"] = start
+            filters["transacted_at__lt"] = end
+        elif req.Date:
             start, end = day_range(req.Date)
-            filters["transacted_at"] = between(start, end)
+            filters["transacted_at__gte"] = start
+            filters["transacted_at__lt"] = end
         if req.Category:
             filters["category"] = req.Category
-        if req.Keyword:
-            filters["keyword"] = req.Keyword
         result = await transaction_crud.get_multi(
             db,
             **filters,
             offset=req.Page * req.PageSize,
             limit=req.PageSize,
+            sort_columns="transacted_at",
+            sort_orders="desc",
             schema_to_select=Transaction,
             return_as_model=True,
         )
-        return TransactionList(data=result.data, total_count=result.total_count)
+        return TransactionList(data=result["data"], total_count=result["total_count"])
 
     async def get_monthly_summary(
         self, db: AsyncSession, *, account_id: int, month: str
