@@ -24,6 +24,8 @@ async def create_category(
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
 ) -> Category:
+    if body.Data.account_id != account.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
     return await category_service.create(db, body.Data)
 
 
@@ -48,6 +50,7 @@ async def list_categories(
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
 ) -> CategoryGetListResponse:
+    query.AccountId = account.id
     result = await category_service.get_list(db, query)
     return CategoryGetListResponse(List=result.data, TotalCount=result.total_count)
 
@@ -71,4 +74,7 @@ async def delete_category(
     category_id: int,
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
-) -> None:await category_service.delete(db, Category(id=category_id, account_id=account.id))
+) -> None:
+    if body.Data.account_id != account.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    await category_service.delete(db, Category(id=category_id, account_id=account.id))

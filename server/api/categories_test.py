@@ -45,7 +45,7 @@ def test_update_category(http_client: httpx.Client, category: dict[str, Any]) ->
     new_name = f"{category['name']}-更新"
     response = http_client.patch(
         f"/categories/{category['id']}",
-        json={"Data": {"name": new_name}},
+        json={"Data": {**category, "name": new_name}},
     )
     response.raise_for_status()
     response = http_client.get(f"/categories/{category['id']}")
