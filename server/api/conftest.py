@@ -118,7 +118,10 @@ def unique_suffix() -> str:
 @pytest.fixture
 def category(http_client: httpx.Client, unique_suffix: str) -> Generator[dict[str, Any], None, None]:
     name = f"分类-{unique_suffix}"
-    response = http_client.post("/categories", json={"name": name, "budget_monthly": 1000})
+    response = http_client.post(
+        "/categories",
+        json={"Data": {"name": name, "budget_monthly": 1000}},
+    )
     response.raise_for_status()
     body = response.json()
     yield body
@@ -129,7 +132,13 @@ def category(http_client: httpx.Client, unique_suffix: str) -> Generator[dict[st
 def budget(http_client: httpx.Client, category: dict[str, Any]) -> Generator[dict[str, Any], None, None]:
     response = http_client.post(
         "/budgets",
-        json={"category_id": category["id"], "month": TEST_MONTH, "limit_amount": 1500},
+        json={
+            "Data": {
+                "category_id": category["id"],
+                "month": TEST_MONTH,
+                "limit_amount": 1500,
+            }
+        },
     )
     response.raise_for_status()
     body = response.json()
@@ -145,11 +154,13 @@ def transaction(
     response = http_client.post(
         "/transactions",
         json={
-            "amount": 38,
-            "category": category["name"],
-            "merchant": "测试商户",
-            "note": "fixture",
-            "transacted_at": f"{TEST_MONTH}-25T12:00:00",
+            "Data": {
+                "amount": 38,
+                "category": category["name"],
+                "merchant": "测试商户",
+                "note": "fixture",
+                "transacted_at": f"{TEST_MONTH}-25T12:00:00",
+            }
         },
     )
     response.raise_for_status()

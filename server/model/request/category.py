@@ -1,27 +1,27 @@
 from __future__ import annotations
 
-from decimal import Decimal
-
-from pydantic import Field
-
 from server.model.base import RequestBase
+from server.model.category import Category
 
 
 class CategoryCreateRequest(RequestBase):
-    """POST /categories — 创建分类。"""
+    """POST /categories — 创建分类."""
 
-    name: str = Field(min_length=1, max_length=100)
-    budget_monthly: Decimal | None = Field(default=None, ge=0)
+    Data: Category
 
 
 class CategoryUpdateRequest(RequestBase):
-    """PATCH /categories/{id} — 部分更新。"""
+    """PATCH /categories/{id} — 部分更新."""
 
-    name: str | None = Field(default=None, min_length=1, max_length=100)
-    budget_monthly: Decimal | None = Field(default=None, ge=0)
+    Data: Category
 
 
 class CategoryListQueryRequest(RequestBase):
-    """GET /categories — 列表查询参数（分页由 FastCRUD 提供 offset/limit/sort）。"""
+    """GET /categories — 列表查询参数."""
 
-    pass
+    Page: int = 0
+    PageSize: int = 100
+    Keyword: str | None = None
+    Id: int | None = None
+    AccountId: int | None = None
+    Name: str = ""

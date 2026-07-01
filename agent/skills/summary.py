@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent.agent.promt.policy import account_id_from_config, tool_policy
 from common.format import format_db_error, format_tool_result
+from server.model.response import CategorySummaryResponse, DailySummaryResponse, MonthlySummaryResponse
 from storage.postgres import transaction_service
 
 
@@ -36,7 +37,21 @@ async def get_daily_summary(
         summary = await transaction_service.get_daily_summary(
             db, account_id=account_id, date=date
         )
-        return format_tool_result(summary)
+        return format_tool_result(
+            DailySummaryResponse(
+                date=summary.date,
+                categories=[
+                    CategorySummaryResponse(
+                        category=row.category,
+                        total_amount=row.total_amount,
+                        transaction_count=row.transaction_count,
+                    )
+                    for row in summary.categories
+                ],
+                total_amount=summary.total_amount,
+                total_count=summary.total_count,
+            )
+        )
     except SQLAlchemyError as exc:
         return format_db_error(exc)
 
@@ -62,6 +77,22 @@ async def get_monthly_summary(
         summary = await transaction_service.get_monthly_summary(
             db, account_id=account_id, month=month
         )
-        return format_tool_result(summary)
+        return format_tool_result(
+            MonthlySummaryResponse(
+                month=summary.month,
+                categories=[
+                    CategorySummaryResponse(
+                        category=row.category,
+                        total_amount=row.total_amount,
+                        transaction_count=row.transaction_count,
+                        budget_limit=row.budget_limit,
+                        over_budget=row.over_budget,
+                    )
+                    for row in summary.categories
+                ],
+                total_amount=summary.total_amount,
+                total_count=summary.total_count,
+            )
+        )
     except SQLAlchemyError as exc:
         return format_db_error(exc)

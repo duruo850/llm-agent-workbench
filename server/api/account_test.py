@@ -60,7 +60,7 @@ def test_accounts_are_isolated(http_client_no_auth: httpx.Client, unique_suffix:
     cat_name = f"隔离分类-{unique_suffix}"
     create = http_client_no_auth.post(
         "/categories",
-        json={"name": cat_name},
+        json={"Data": {"name": cat_name}},
         headers=bearer_headers(token_a),
     )
     create.raise_for_status()
@@ -77,7 +77,7 @@ def test_accounts_are_isolated(http_client_no_auth: httpx.Client, unique_suffix:
         headers=bearer_headers(token_b),
     )
     list_b.raise_for_status()
-    assert all(item["name"] != cat_name for item in list_b.json()["data"])
+    assert all(item["name"] != cat_name for item in list_b.json()["List"])
 
     http_client_no_auth.delete(
         f"/categories/{cat_id}",

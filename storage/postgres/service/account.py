@@ -1,8 +1,9 @@
-"""Account 业务服务 — 增删改查 + 登录 / 鉴权。"""
+"""Account 业务服务 - 薄 CRUD + 登录 / 鉴权, 入出均为 ``Account`` 模型."""
 
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException
@@ -10,96 +11,65 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.db.session import get_db
 from server.model.account import Account
-from server.model.request.account import AccountCreateRequest, AccountUpdateRequest
-from server.model.response.account import (
-    AccountCreateResponse,
-    AccountGetResponse,
-    AccountListResponse,
-    AccountUpdateResponse,
-)
-from storage.postgres.service.base import PaginatedList
+from server.model.request.account import AccountListQueryRequest
 from storage.postgres.service.enter import account_crud
 from utils.bearer_token import parse_bearer_token
 
 
+@dataclass
+class AccountList:
+    data: list[Account]
+    total_count: int
+
+
 class AccountService:
-    async def create_account(
+    async def create(
         self,
         db: AsyncSession,
-        body: AccountCreateRequest,
-        *,
-        token: str | None = None,
-    ) -> AccountCreateResponse:
-        payload = Account(name=body.name, token=token or str(uuid.uuid4()))
+        account: Account,
+    ) -> Account:
         created = await account_crud.create(
             db,
-            object=payload,
-            schema_to_select=AccountCreateResponse,
+            object=account,
+            schema_to_select=Account,
             return_as_model=True,
         )
         if created is None:
             raise RuntimeError("create account returned None")
         return created
 
-    async def get_account(
-        self, db: AsyncSession, account_id: int
-    ) -> AccountGetResponse | None:
-        return await account_crud.get(
-            db,
-            id=account_id,
-            schema_to_select=AccountGetResponse,
-            return_as_model=True,
-            one_or_none=True,
-        )
-
-    async def list_accounts(
+    async def get_list(
         self,
         db: AsyncSession,
-        *,
-        offset: int = 0,
-        limit: int | None = 100,
-    ) -> PaginatedList[AccountListResponse]:
+        req: AccountListQueryRequest,
+    ) -> AccountList:
+        filters: dict[str, object] = {}
+        if req.Id is not None:
+            filters["id"] = req.Id
+        if req.Name:
+            filters["name"] = req.Name.strip()
         result = await account_crud.get_multi(
             db,
-            offset=offset,
-            limit=limit,
-            schema_to_select=AccountListResponse,
+            **filters,
+            offset=req.Page * req.PageSize,
+            limit=req.PageSize,
+            schema_to_select=Account,
             return_as_model=True,
         )
-        return PaginatedList(data=result["data"], total_count=result["total_count"])
+        return AccountList(data=result["data"], total_count=result["total_count"])
 
-    async def update_account(
-        self,
-        db: AsyncSession,
-        account_id: int,
-        body: AccountUpdateRequest,
-    ) -> AccountUpdateResponse | None:
+    async def update(self, db: AsyncSession, account: Account) -> Account | None:
         return await account_crud.update(
             db,
-            object=body,
-            id=account_id,
-            schema_to_select=AccountUpdateResponse,
-            return_as_model=True,
-            one_or_none=True,
-        )
-
-    async def delete_account(self, db: AsyncSession, account_id: int) -> bool:
-        existing = await account_crud.get(db, id=account_id)
-        if existing is None:
-            return False
-        await account_crud.delete(db, id=account_id)
-        return True
-
-    async def get_account_model(
-        self, db: AsyncSession, account_id: int
-    ) -> Account | None:
-        return await account_crud.get(
-            db,
-            id=account_id,
+            object={"name": account.name, "token": account.token},
+            id=account.id,
             schema_to_select=Account,
             return_as_model=True,
             one_or_none=True,
         )
+
+    async def delete(self, db: AsyncSession, account: Account) -> None:
+        await account_crud.delete(db, id=account.id)
 
     async def get_by_name(self, db: AsyncSession, name: str) -> Account | None:
         return await account_crud.get(
@@ -125,15 +95,12 @@ class AccountService:
         new_token = str(uuid.uuid4())
         account = await self.get_by_name(db, stripped)
         if account is None:
-            created = await self.create_account(
-                db, AccountCreateRequest(name=stripped), token=new_token
+            return await self.create(
+                db,
+                Account(name=stripped, token=new_token),
             )
-            loaded = await self.get_account_model(db, created.id)
-            if loaded is None:
-                raise RuntimeError("create account not found after insert")
-            return loaded
         await account_crud.update(db, object={"token": new_token}, id=account.id)
-        refreshed = await self.get_account_model(db, account.id)
+        refreshed = await self.get_by_name(db, stripped)
         if refreshed is None:
             raise RuntimeError("account not found after token refresh")
         return refreshed

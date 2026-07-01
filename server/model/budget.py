@@ -17,7 +17,7 @@ class Budget(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    account_id: int = Field(foreign_key="accounts.id")
+    account_id: int | None = Field(default=None, foreign_key="accounts.id")
     category_id: int = Field(foreign_key="categories.id")
     month: str = Field(max_length=7)
     limit_amount: Decimal = Field(max_digits=12, decimal_places=2)

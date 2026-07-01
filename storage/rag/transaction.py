@@ -24,6 +24,7 @@ from common.milvus import available as milvus_available
 from common.milvus import get_client
 from server.db.session import Database
 from server.model.transaction import Transaction
+from server.model.request.transaction import TransactionListQueryRequest
 from storage.postgres import transaction_service
 from storage.rag.common import RagBaseService
 
@@ -60,7 +61,11 @@ class TransactionRagService(RagBaseService):
         """
         从 PG 全量同步账号交易到 Milvus。
         """
-        rows = await transaction_service.list_transactions(db, account_id=account_id)
+        result = await transaction_service.get_list(
+            db,
+            TransactionListQueryRequest(AccountId=account_id, Page=0, PageSize=100000),
+        )
+        rows = result.data
         if force:
             if rows:
                 self.delete_by_expr(self.COLLECTION_NAME, f"account_id == {account_id}")

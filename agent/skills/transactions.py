@@ -7,7 +7,7 @@ from decimal import Decimal
 from langchain_core.runnables import RunnableConfig
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from server.model.response import TransactionCreateResponse
+from server.model.request.transaction import TransactionListQueryRequest
 from server.model.transaction import Transaction
 from agent.agent.promt.policy import account_id_from_config, tool_policy
 from storage.rag.transaction import transaction_rag
@@ -35,7 +35,7 @@ async def add_transaction(
     """
     account_id = account_id_from_config(config)
     try:
-        createdTransaction = await transaction_service.create_transaction(
+        created = await transaction_service.create(
             db,
             Transaction(
                 account_id=account_id,
@@ -46,9 +46,8 @@ async def add_transaction(
                 transacted_at=datetime.now().replace(microsecond=0),
             ),
         )
-        # 将创建的交易向量添加到 Milvus向量库
-        transaction_rag.create([createdTransaction])
-        return format_tool_result(TransactionCreateResponse.model_validate(createdTransaction))
+        transaction_rag.create([created])
+        return format_tool_result(created)
     except (IntegrityError, SQLAlchemyError) as exc:
         return format_db_error(exc)
 
@@ -77,12 +76,18 @@ async def find_closest_transaction(
     """
     account_id = account_id_from_config(config)
     try:
-        row = await transaction_service.find_closest_transaction(
-            db, account_id=account_id, date=date, target_amount=target_amount
+        result = await transaction_service.get_list(
+            db,
+            TransactionListQueryRequest(
+                AccountId=account_id,
+                Date=date,
+                Page=0,
+                PageSize=10000,
+            ),
         )
-        if row is None:
+        if not result.data:
             return format_tool_result({"message": f"{date} 无交易记录"})
-        return format_tool_result(row)
+        return format_tool_result(result.data)
     except SQLAlchemyError as exc:
         return format_db_error(exc)
 
@@ -107,9 +112,16 @@ async def query_transactions(
     """
     account_id = account_id_from_config(config)
     try:
-        rows = await transaction_service.list_transactions(
-            db, account_id=account_id, month=month, category=category
+        result = await transaction_service.get_list(
+            db,
+            TransactionListQueryRequest(
+                AccountId=account_id,
+                Month=month,
+                Category=category or "",
+                Page=0,
+                PageSize=10000,
+            ),
         )
-        return format_tool_result(rows)
+        return format_tool_result(result.data)
     except SQLAlchemyError as exc:
         return format_db_error(exc)

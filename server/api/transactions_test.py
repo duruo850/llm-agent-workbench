@@ -14,6 +14,7 @@ from typing import Any
 import httpx
 
 from common.test.resource_paths import resource_path
+from server.api.conftest import _txn_list_rows
 
 TEST_MONTH = "2025-06"
 
@@ -21,7 +22,7 @@ TEST_MONTH = "2025-06"
 def _delete_import_test_rows(http_client: httpx.Client, prefix: str) -> None:
     response = http_client.get("/transactions", params={"month": TEST_MONTH})
     response.raise_for_status()
-    for item in response.json():
+    for item in _txn_list_rows(response):
         merchant = item.get("merchant") or ""
         note = item.get("note") or ""
         if prefix in merchant or prefix in note:
@@ -64,11 +65,13 @@ def test_create_transaction(http_client: httpx.Client, category: dict[str, Any])
     response = http_client.post(
         "/transactions",
         json={
-            "amount": 50,
-            "category": category["name"],
-            "merchant": "便利店",
-            "note": "创建测试",
-            "transacted_at": f"{TEST_MONTH}-10T09:00:00",
+            "Data": {
+                "amount": 50,
+                "category": category["name"],
+                "merchant": "便利店",
+                "note": "创建测试",
+                "transacted_at": f"{TEST_MONTH}-10T09:00:00",
+            }
         },
     )
     response.raise_for_status()
@@ -91,13 +94,15 @@ def test_list_transactions_by_month(
 ) -> None:
     response = http_client.get("/transactions", params={"month": TEST_MONTH})
     response.raise_for_status()
-    body = response.json()
-    assert isinstance(body, list)
-    assert any(item["id"] == transaction["id"] for item in body)
+    rows = _txn_list_rows(response)
+    assert any(item["id"] == transaction["id"] for item in rows)
 
 
 def test_update_transaction(http_client: httpx.Client, transaction: dict[str, Any]) -> None:
-    response = http_client.patch(f"/transactions/{transaction['id']}", json={"note": "午餐"})
+    response = http_client.patch(
+        f"/transactions/{transaction['id']}",
+        json={"Data": {**transaction, "note": "午餐"}},
+    )
     response.raise_for_status()
     response = http_client.get(f"/transactions/{transaction['id']}")
     response.raise_for_status()
@@ -108,11 +113,13 @@ def test_delete_transaction(http_client: httpx.Client, category: dict[str, Any])
     response = http_client.post(
         "/transactions",
         json={
-            "amount": 1,
-            "category": category["name"],
-            "merchant": "待删",
-            "note": "",
-            "transacted_at": f"{TEST_MONTH}-11T10:00:00",
+            "Data": {
+                "amount": 1,
+                "category": category["name"],
+                "merchant": "待删",
+                "note": "",
+                "transacted_at": f"{TEST_MONTH}-11T10:00:00",
+            }
         },
     )
     response.raise_for_status()

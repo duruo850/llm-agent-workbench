@@ -122,11 +122,13 @@ def test_agent_chat_daily_spending(
     create = http_client.post(
         "/transactions",
         json={
-            "amount": 7.9,
-            "category": category["name"],
-            "merchant": merchant,
-            "note": "今日测试",
-            "transacted_at": f"{today}T10:00:00",
+            "Data": {
+                "amount": 7.9,
+                "category": category["name"],
+                "merchant": merchant,
+                "note": "今日测试",
+                "transacted_at": f"{today}T10:00:00",
+            }
         },
     )
     create.raise_for_status()

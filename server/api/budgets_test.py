@@ -18,7 +18,13 @@ TEST_MONTH = "2025-06"
 def test_create_budget(http_client: httpx.Client, category: dict[str, Any]) -> None:
     response = http_client.post(
         "/budgets",
-        json={"category_id": category["id"], "month": TEST_MONTH, "limit_amount": 2000},
+        json={
+            "Data": {
+                "category_id": category["id"],
+                "month": TEST_MONTH,
+                "limit_amount": 2000,
+            }
+        },
     )
     response.raise_for_status()
     body = response.json()
@@ -39,12 +45,15 @@ def test_list_budgets(http_client: httpx.Client, budget: dict[str, Any]) -> None
     response = http_client.get("/budgets")
     response.raise_for_status()
     body = response.json()
-    assert "data" in body
-    assert any(item["id"] == budget["id"] for item in body["data"])
+    assert "List" in body
+    assert any(item["id"] == budget["id"] for item in body["List"])
 
 
 def test_update_budget(http_client: httpx.Client, budget: dict[str, Any]) -> None:
-    response = http_client.patch(f"/budgets/{budget['id']}", json={"limit_amount": 3000})
+    response = http_client.patch(
+        f"/budgets/{budget['id']}",
+        json={"Data": {**budget, "limit_amount": 3000}},
+    )
     response.raise_for_status()
     response = http_client.get(f"/budgets/{budget['id']}")
     response.raise_for_status()
@@ -54,7 +63,13 @@ def test_update_budget(http_client: httpx.Client, budget: dict[str, Any]) -> Non
 def test_delete_budget(http_client: httpx.Client, category: dict[str, Any]) -> None:
     response = http_client.post(
         "/budgets",
-        json={"category_id": category["id"], "month": "2099-01", "limit_amount": 500},
+        json={
+            "Data": {
+                "category_id": category["id"],
+                "month": "2099-01",
+                "limit_amount": 500,
+            }
+        },
     )
     response.raise_for_status()
     budget_id = response.json()["id"]

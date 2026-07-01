@@ -19,7 +19,7 @@ class Transaction(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    account_id: int = Field(foreign_key="accounts.id")
+    account_id: int | None = Field(default=None, foreign_key="accounts.id")
     amount: Decimal = Field(max_digits=12, decimal_places=2, gt=0)
     category: str = Field(max_length=100)
     merchant: str = Field(default="", max_length=200)

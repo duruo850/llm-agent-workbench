@@ -1,53 +1,22 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 from pydantic import ConfigDict
 from sqlmodel import SQLModel
 
-
-class AccountCreateResponse(SQLModel):
-    """POST /accounts 响应（不含 token，登录接口单独返回）。"""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
-    created_at: datetime
+from server.model.account import Account
 
 
-class AccountUpdateResponse(SQLModel):
-    """PATCH /accounts/{id} 响应。"""
+class AccountGetListResponse(SQLModel):
+    """GET /accounts 响应."""
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
-    name: str
-    created_at: datetime
-
-
-class AccountGetResponse(SQLModel):
-    """GET /accounts/{id} 响应。"""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
-    created_at: datetime
-
-
-class AccountListResponse(SQLModel):
-    """GET /accounts 列表项。"""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
-    created_at: datetime
+    List: list[Account]
+    TotalCount: int
 
 
 class AccountLoginResponse(SQLModel):
-    """POST /accounts/login 响应。"""
+    """POST /accounts/login 响应."""
 
     model_config = ConfigDict(from_attributes=True)
 

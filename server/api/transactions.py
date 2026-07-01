@@ -1,7 +1,8 @@
-"""Transaction HTTP API — 编排层，业务逻辑走 ``transaction_service``。"""
+"""Transaction HTTP API — 编排层，Request/Response 与 ``Transaction`` 模型转换。"""
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -15,24 +16,21 @@ from server.model.account import Account
 from server.model.request import TransactionCreateRequest, TransactionListQueryRequest, TransactionUpdateRequest
 from server.model.transaction import Transaction
 from server.model.response import (
-    TransactionCreateResponse,
-    TransactionGetResponse,
+    TransactionGetListResponse,
     TransactionImportCategorySummary,
     TransactionImportResponse,
-    TransactionListResponse,
-    TransactionUpdateResponse,
 )
 from storage.postgres.service.transaction import transaction_service
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 
-@router.post("", response_model=TransactionCreateResponse)
+@router.post("", response_model=Transaction)
 async def create_transaction(
     body: TransactionCreateRequest,
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
-) -> TransactionCreateResponse:
+) -> Transaction:
     transaction = Transaction(
         account_id=account.id,
         amount=body.amount,
@@ -41,8 +39,7 @@ async def create_transaction(
         note=body.note,
         transacted_at=body.transacted_at,
     )
-    created = await transaction_service.create_transaction(db,transaction)
-    return TransactionCreateResponse.model_validate(created)
+    return await transaction_service.create(db, transaction)
 
 
 @router.post("/import", response_model=TransactionImportResponse)
@@ -82,44 +79,47 @@ async def import_transactions_csv(
     )
 
 
-@router.get("/{transaction_id}", response_model=TransactionGetResponse)
+@router.get("/{transaction_id}", response_model=Transaction)
 async def get_transaction(
     transaction_id: int,
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
-) -> TransactionGetResponse:
-    row = await transaction_service.get_transaction(
-        db, transaction_id, account_id=account.id
+) -> Transaction:
+    result = await transaction_service.get_list(
+        db,
+        TransactionListQueryRequest(
+            Id=transaction_id,
+            AccountId=account.id,
+            Page=0,
+            PageSize=1,
+        ),
     )
-    if row is None:
+    if not result.data:
         raise HTTPException(status_code=404, detail="Transaction not found")
-    return row
+    return result.data[0]
 
 
-@router.get("", response_model=list[TransactionListResponse])
+@router.get("", response_model=TransactionGetListResponse)
 async def list_transactions(
     query: Annotated[TransactionListQueryRequest, Depends()],
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
-) -> list[TransactionListResponse]:
-    return await transaction_service.list_transactions(
-        db, account_id=account.id, month=query.month
-    )
+) -> TransactionGetListResponse:
+    result = await transaction_service.get_list(db, query)
+    return TransactionGetListResponse(List=result.data)
 
 
-@router.patch("/{transaction_id}", response_model=TransactionUpdateResponse)
+@router.patch("/{transaction_id}", response_model=Transaction)
 async def update_transaction(
     transaction_id: int,
     body: TransactionUpdateRequest,
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
-) -> TransactionUpdateResponse:
-    row = await transaction_service.update_transaction(
-        db, transaction_id, body, account_id=account.id
-    )
-    if row is None:
+) -> Transaction:
+    updated = await transaction_service.update(db, body.Data)
+    if updated is None:
         raise HTTPException(status_code=404, detail="Transaction not found")
-    return row
+    return updated
 
 
 @router.delete("/{transaction_id}", status_code=204)
@@ -128,8 +128,16 @@ async def delete_transaction(
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
 ) -> None:
-    deleted = await transaction_service.delete_transaction(
-        db, transaction_id, account_id=account.id
+    result = await transaction_service.get_list(
+        db,
+        TransactionListQueryRequest(
+            Id=transaction_id,
+            AccountId=account.id,
+            Page=0,
+            PageSize=1,
+        ),
     )
-    if not deleted:
+    if not result.data:
         raise HTTPException(status_code=404, detail="Transaction not found")
+    existing = result.data[0]
+    await transaction_service.delete(db, existing)

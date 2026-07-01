@@ -1,101 +1,75 @@
-"""Budget 业务服务 — 增删改查（按 account 隔离）。"""
+"""Budget 业务服务 - 薄 CRUD, 入参/出参均为 ``Budget`` 模型."""
 
 from __future__ import annotations
+
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.model.budget import Budget
-from storage.postgres.service.enter import budget_crud, category_crud
-from server.model.request import BudgetCreateRequest, BudgetUpdateRequest
-from server.model.response import (
-    BudgetCreateResponse,
-    BudgetGetResponse,
-    BudgetListResponse,
-    BudgetUpdateResponse,
-)
-from storage.postgres.service.base import PaginatedList
+from server.model.request.budget import BudgetListQueryRequest
+from storage.postgres.service.enter import budget_crud
+
+
+@dataclass
+class BudgetList:
+    data: list[Budget]
+    total_count: int
 
 
 class BudgetService:
-    async def create_budget(
-        self,
-        db: AsyncSession,
-        body: BudgetCreateRequest,
-        *,
-        account_id: int,
-    ) -> BudgetCreateResponse | None:
-        category = await category_crud.get(
-            db, id=body.category_id, account_id=account_id, one_or_none=True
-        )
-        if category is None:
-            return None
-        payload = Budget(**body.model_dump(), account_id=account_id)
+    async def create(self, db: AsyncSession, budget: Budget) -> Budget:
         created = await budget_crud.create(
             db,
-            object=payload,
-            schema_to_select=BudgetCreateResponse,
+            object=budget,
+            schema_to_select=Budget,
             return_as_model=True,
         )
         if created is None:
             raise RuntimeError("create budget returned None")
         return created
 
-    async def get_budget(
-        self, db: AsyncSession, budget_id: int, *, account_id: int
-    ) -> BudgetGetResponse | None:
-        return await budget_crud.get(
-            db,
-            id=budget_id,
-            account_id=account_id,
-            schema_to_select=BudgetGetResponse,
-            return_as_model=True,
-            one_or_none=True,
-        )
-
-    async def list_budgets(
+    async def get_list(
         self,
         db: AsyncSession,
-        *,
-        account_id: int,
-        offset: int = 0,
-        limit: int | None = 100,
-    ) -> PaginatedList[BudgetListResponse]:
+        req: BudgetListQueryRequest,
+    ) -> BudgetList:
+        filters: dict[str, object] = {}
+        if req.Id is not None:
+            filters["id"] = req.Id
+        if req.AccountId is not None:
+            filters["account_id"] = req.AccountId
+        if req.CategoryId is not None:
+            filters["category_id"] = req.CategoryId
+        if req.Month:
+            filters["month"] = req.Month
         result = await budget_crud.get_multi(
             db,
-            account_id=account_id,
-            offset=offset,
-            limit=limit,
-            schema_to_select=BudgetListResponse,
+            **filters,
+            offset=req.Page * req.PageSize,
+            limit=req.PageSize,
+            schema_to_select=Budget,
             return_as_model=True,
         )
-        return PaginatedList(data=result["data"], total_count=result["total_count"])
+        return BudgetList(data=result["data"], total_count=result["total_count"])
 
-    async def update_budget(
-        self,
-        db: AsyncSession,
-        budget_id: int,
-        body: BudgetUpdateRequest,
-        *,
-        account_id: int,
-    ) -> BudgetUpdateResponse | None:
+    async def update(self, db: AsyncSession, budget: Budget) -> Budget | None:
         return await budget_crud.update(
             db,
-            object=body,
-            id=budget_id,
-            account_id=account_id,
-            schema_to_select=BudgetUpdateResponse,
+            object={
+                "category_id": budget.category_id,
+                "month": budget.month,
+                "limit_amount": budget.limit_amount,
+            },
+            id=budget.id,
+            account_id=budget.account_id,
+            schema_to_select=Budget,
             return_as_model=True,
             one_or_none=True,
         )
 
-    async def delete_budget(
-        self, db: AsyncSession, budget_id: int, *, account_id: int
-    ) -> bool:
-        existing = await budget_crud.get(db, id=budget_id, account_id=account_id)
-        if existing is None:
-            return False
-        await budget_crud.delete(db, id=budget_id, account_id=account_id)
-        return True
+    async def delete(self, db: AsyncSession, budget: Budget) -> None:
+        await budget_crud.delete(db, id=budget.id, account_id=budget.account_id)
 
 
 budget_service = BudgetService()

@@ -16,6 +16,6 @@ class Category(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    account_id: int = Field(foreign_key="accounts.id")
+    account_id: int | None = Field(default=None, foreign_key="accounts.id")
     name: str = Field(max_length=100)
     budget_monthly: Decimal | None = Field(default=None, max_digits=12, decimal_places=2)

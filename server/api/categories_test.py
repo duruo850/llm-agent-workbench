@@ -14,7 +14,10 @@ import httpx
 
 def test_create_category(http_client: httpx.Client, unique_suffix: str) -> None:
     name = f"新建分类-{unique_suffix}"
-    response = http_client.post("/categories", json={"name": name, "budget_monthly": 2000})
+    response = http_client.post(
+        "/categories",
+        json={"Data": {"name": name, "budget_monthly": 2000}},
+    )
     response.raise_for_status()
     body = response.json()
     assert body["name"] == name
@@ -34,13 +37,16 @@ def test_list_categories(http_client: httpx.Client, category: dict[str, Any]) ->
     response = http_client.get("/categories")
     response.raise_for_status()
     body = response.json()
-    assert "data" in body
-    assert any(item["id"] == category["id"] for item in body["data"])
+    assert "List" in body
+    assert any(item["id"] == category["id"] for item in body["List"])
 
 
 def test_update_category(http_client: httpx.Client, category: dict[str, Any]) -> None:
     new_name = f"{category['name']}-更新"
-    response = http_client.patch(f"/categories/{category['id']}", json={"name": new_name})
+    response = http_client.patch(
+        f"/categories/{category['id']}",
+        json={"Data": {"name": new_name}},
+    )
     response.raise_for_status()
     response = http_client.get(f"/categories/{category['id']}")
     response.raise_for_status()
@@ -48,7 +54,10 @@ def test_update_category(http_client: httpx.Client, category: dict[str, Any]) ->
 
 
 def test_delete_category(http_client: httpx.Client, unique_suffix: str) -> None:
-    response = http_client.post("/categories", json={"name": f"待删-{unique_suffix}"})
+    response = http_client.post(
+        "/categories",
+        json={"Data": {"name": f"待删-{unique_suffix}"}},
+    )
     response.raise_for_status()
     category_id = response.json()["id"]
     response = http_client.delete(f"/categories/{category_id}")

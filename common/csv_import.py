@@ -114,7 +114,7 @@ async def import_csv_transactions(
             txn = parsed.transaction
             if not isinstance(txn, ParsedTransaction):
                 raise TypeError(f"expected ParsedTransaction, got {type(txn).__name__}")
-            created = await transaction_service.create_transaction(
+            created = await transaction_service.create(
                 db,
                 Transaction(
                     account_id=account_id,

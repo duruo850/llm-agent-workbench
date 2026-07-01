@@ -1,29 +1,28 @@
 from __future__ import annotations
 
-from decimal import Decimal
-
-from pydantic import Field
-
 from server.model.base import RequestBase
+from server.model.budget import Budget
 
 
 class BudgetCreateRequest(RequestBase):
-    """POST /budgets — 创建预算。"""
+    """POST /budgets — 创建预算."""
 
-    category_id: int
-    month: str = Field(pattern=r"^\d{4}-\d{2}$")
-    limit_amount: Decimal = Field(ge=0)
+    Data: Budget
 
 
 class BudgetUpdateRequest(RequestBase):
-    """PATCH /budgets/{id} — 部分更新。"""
+    """PATCH /budgets/{id} — 部分更新."""
 
-    category_id: int | None = None
-    month: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}$")
-    limit_amount: Decimal | None = Field(default=None, ge=0)
+    Data: Budget
 
 
 class BudgetListQueryRequest(RequestBase):
-    """GET /budgets — 列表查询参数（分页由 FastCRUD 提供 offset/limit/sort）。"""
+    """GET /budgets — 列表查询参数."""
 
-    pass
+    Page: int = 0
+    PageSize: int = 100
+    Keyword: str | None = None
+    Id: int | None = None
+    AccountId: int | None = None
+    CategoryId: int | None = None
+    Month: str = ""
