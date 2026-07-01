@@ -75,6 +75,4 @@ async def delete_category(
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
 ) -> None:
-    if body.Data.account_id != account.id:
-        raise HTTPException(status_code=403, detail="Forbidden")
     await category_service.delete(db, Category(id=category_id, account_id=account.id))

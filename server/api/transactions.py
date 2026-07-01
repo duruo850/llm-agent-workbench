@@ -31,15 +31,11 @@ async def create_transaction(
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
 ) -> Transaction:
-    transaction = Transaction(
-        account_id=account.id,
-        amount=body.amount,
-        category=body.category,
-        merchant=body.merchant,
-        note=body.note,
-        transacted_at=body.transacted_at,
-    )
-    return await transaction_service.create(db, transaction)
+    row = body.Data
+    row.account_id = account.id
+    if isinstance(row.transacted_at, str):
+        row.transacted_at = datetime.fromisoformat(row.transacted_at)
+    return await transaction_service.create(db, row)
 
 
 @router.post("/import", response_model=TransactionImportResponse)
@@ -105,18 +101,22 @@ async def list_transactions(
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
 ) -> TransactionGetListResponse:
+    query.AccountId = account.id
     result = await transaction_service.get_list(db, query)
     return TransactionGetListResponse(List=result.data)
 
 
 @router.patch("/{transaction_id}", response_model=Transaction)
 async def update_transaction(
-    transaction_id: int,
     body: TransactionUpdateRequest,
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
 ) -> Transaction:
-    updated = await transaction_service.update(db, body.Data)
+    row = body.Data
+    row.account_id = account.id
+    if isinstance(row.transacted_at, str):
+        row.transacted_at = datetime.fromisoformat(row.transacted_at)
+    updated = await transaction_service.update(db, row)
     if updated is None:
         raise HTTPException(status_code=404, detail="Transaction not found")
     return updated
