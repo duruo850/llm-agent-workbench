@@ -1,4 +1,4 @@
-# 里程碑索引 M0–M14
+# 里程碑索引 M0–M16
 
 - **learning-plan** = 长期课表：`[docs/learning-plan.md](../../docs/learning-plan.md)`
 - **Changes** = 可执行交付单：`[.harness/Changes/](../Changes/)`
@@ -18,12 +18,14 @@
 | **M6**  | ✅ 完成 | MCP 功能研究；高德 MCP 接入（IP → 城市 / 天气） | [M6_1-amap-mcp](../Changes/M6_1-amap-mcp.plan)                                                                        |
 | **M7**  | ✅ 完成 | RAG 知识库（Milvus + Ollama）          | [M7_1-rag-knowledge](../Changes/M7_1-rag-knowledge.plan)                                                                        |
 | **M8**  | ✅ 完成 | Embeddings 语义搜账                  | [M8_1-txn-semantic-search](../Changes/M8_1-txn-semantic-search.plan)                                                                                                                     |
-| **M9**  | ⬜ 待做 | 月报工作流                            | —                                                                                                                     |
-| **M10** | ⬜ 待做 | Memory + HITL                    | —                                                                                                                     |
-| **M11** | ⬜ 待做 | Eval + LangSmith                 | —                                                                                                                     |
-| **M12** | ⬜ 待做 | Skills 模块                        | —                                                                                                                     |
-| **M13** | ⬜ 待做 | Fine-tuning                      | —                                                                                                                     |
-| **M14** | ⬜ 待做 | 前端仪表盘                            | —                                                                                                                     |
+| **M9**  | ⬜ 待做 | 生产级别 Memory 存储记忆架构               | —                                                                                                                     |
+| **M10** | ⬜ 待做 | Loop engineering                 | —                                                                                                                     |
+| **M11** | ⬜ 待做 | 月报工作流                            | —                                                                                                                     |
+| **M12** | ⬜ 待做 | Memory + HITL                    | —                                                                                                                     |
+| **M13** | ⬜ 待做 | Eval + LangSmith                 | —                                                                                                                     |
+| **M14** | ⬜ 待做 | Skills 模块                        | —                                                                                                                     |
+| **M15** | ⬜ 待做 | Fine-tuning                      | —                                                                                                                     |
+| **M16** | ⬜ 待做 | 前端仪表盘                            | —                                                                                                                     |
 
 
 ### 状态符号
@@ -97,6 +99,18 @@
 - 知识点：[`docs/knowledge/txn-semantic-search.md`](../../docs/knowledge/txn-semantic-search.md)
 - Demo：[`examples/05_txn_semantic_demo.py`](../../examples/05_txn_semantic_demo.py)
 - 测试：[`agent/rag/transaction_test.py`](../../agent/rag/transaction_test.py)、[`server/api/transactions_search_test.py`](../../server/api/transactions_search_test.py)
+
+## M9 要点（规划）
+
+- **生产级别 Memory**：LangGraph checkpointer 从进程内 `MemorySaver` 升级为 PostgreSQL / Redis 等持久化存储
+- **记忆架构**：`thread_id` 与 `account_id` 隔离；跨进程 / 重启后对话历史可恢复
+- **交付方向**：checkpointer 选型、schema 设计、迁移与集成测试；具体 plan 待 `M9_1-*.plan`
+
+## M10 要点（规划）
+
+- **Loop engineering**：Agent 循环编排的工程化——递归上限、工具轮次监控、失败重试与降级策略
+- **可观测性**：debug 模式、结构化日志、循环轨迹可视化（为 Eval / LangSmith 铺路）
+- **交付方向**：graph 层 loop 策略配置、异常边界与验收用例；具体 plan 待 `M10_1-*.plan`
 
 ## M2+ 启动前
 
