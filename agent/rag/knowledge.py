@@ -6,12 +6,7 @@ import logging
 from collections.abc import Sequence
 from pathlib import Path
 
-from langchain_core.documents import Document
-from langchain_milvus import Milvus
-
-from agent.rag.common import get_vector_store
-from agent.rag.common import RagBaseService
-from agent.rag.common import KnowledgeHit
+from agent.rag.common import RagBaseService, KnowledgeHit
 
 from common.env import (
     get_rag_top_k,
@@ -52,9 +47,6 @@ class Knowledge(RagBaseService):
     
     # 分块重叠大小
     CHUNK_OVERLAP = 50
-
-    def __init__(self) -> None:
-        self._vector_store: Milvus | None = None
 
     # ------------------------------------------------------------------
     # 对外 API：索引、检索、启动初始化
@@ -121,7 +113,7 @@ class Knowledge(RagBaseService):
 
         k = top_k or get_rag_top_k()
         
-        docs = get_vector_store(self.COLLECTION_NAME).similarity_search(
+        docs = self.get_vector_store(self.COLLECTION_NAME).similarity_search(
             query.strip(), k=k, expr=f'kb == "{kb}"' if kb else None)
         hits: list[KnowledgeHit] = []
         for doc in docs:

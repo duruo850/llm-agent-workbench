@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from agent.rag.rag import KnowledgeDoc, KnowledgeHit, Knowledge
+from agent.rag.common import KnowledgeDoc, KnowledgeHit
+from agent.rag.knowledge import Knowledge
 from agent.rag.transaction import (
     TransactionRagService,
-    search_similar_transactions,
     transaction_rag,
 )
 from common.milvus import available as milvus_available, embedding_ready
@@ -32,6 +32,5 @@ __all__ = [
     "is_rag_ready",
     "is_txn_search_ready",
     "search",
-    "search_similar_transactions",
     "milvus_available",
 ]

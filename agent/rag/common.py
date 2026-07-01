@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import re
+from typing import List
 
 # Markdown frontmatter：---\ntitle: ...\nkb: ...\n---\n正文
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n?(.*)", re.DOTALL)
@@ -35,7 +36,11 @@ class KnowledgeHit:
 
 
 class RagBaseService:
-    
+
+    def __init__(self) -> None:
+        # 缓存向量库实例，避免重复创建
+        self._vector_stores: dict[str, Milvus] = {} 
+
     @classmethod
     def available(cls) -> bool:
         """Milvus 是否可达（委托 ``common.milvus.available``）。"""
@@ -46,10 +51,9 @@ class RagBaseService:
         """Milvus 可达且 Ollama embedding 模型可用。"""
         return embedding_ready()
         
-    @staticmethod
-    def get_vector_store(collection_name: str, *, drop_old: bool = False) -> Milvus:
+    def get_vector_store(self, collection_name: str, *, drop_old: bool = False) -> Milvus:
         """
-        获取 LangChain Milvus 向量库。
+        获取 LangChain Milvus 向量库（按 collection 缓存，避免重复创建）。
 
         Args:
             collection_name (str): 集合名称。
@@ -59,23 +63,42 @@ class RagBaseService:
             Milvus: 向量库实例。
         """
         if drop_old:
+            self.delete_vector_store(collection_name)
             client = get_client()
             if client.has_collection(collection_name):
                 client.drop_collection(collection_name)
+        elif collection_name in self._vector_stores:
+            return self._vector_stores[collection_name]
 
         embeddings = OllamaEmbeddings(
             model=get_ollama_embedding_model(),
             base_url=get_ollama_uri(),
         )
-        return Milvus(
+        store = Milvus(
             embedding_function=embeddings,
             collection_name=collection_name,
             connection_args={"uri": get_milvus_uri()},
             auto_id=False,
             drop_old=False,
         )
-    @classmethod
-    def add_documents(cls, collection_name: str, documents: list[Document], *, drop_old: bool = False) -> None:
+        self._vector_stores[collection_name] = store
+        return store
+
+    def delete_vector_store(self, collection_name: str) -> None:
+        """删除缓存的向量库实例。
+
+        Args:
+            collection_name (str): 集合名称。
+        """
+        self._vector_stores.pop(collection_name, None)
+
+    def add_documents(
+        self,
+        collection_name: str,
+        documents: list[Document],
+        *,
+        drop_old: bool = False,
+    ) -> List[str]:
         """
         将 documents 添加到向量库。
 
@@ -83,8 +106,10 @@ class RagBaseService:
             collection_name: 集合名称。
             documents: 要添加的 documents 列表。
             drop_old: 是否删除旧的 documents。
+        Return:
+            List[str]: 添加的 documents 的 列表。
         """
-        cls.get_vector_store(collection_name, drop_old=drop_old).add_documents(documents)
+        return self.get_vector_store(collection_name, drop_old=drop_old).add_documents(documents)
         
         
     @classmethod
@@ -104,6 +129,19 @@ class RagBaseService:
             return int(stats.get("row_count", 0))
         except Exception:
             return 0
+        
+    @classmethod
+    def delete_by_expr(cls, collection_name: str, expr: str) -> None:
+        """
+        根据表达式删除集合内的实体。
+        Args:
+            collection_name: 集合名称。
+            expr: 表达式。
+        """
+        client = get_client()
+        if not client.has_collection(collection_name):
+            return
+        client.delete(collection_name=collection_name, filter=expr)
         
 
     # ------------------------------------------------------------------
@@ -153,9 +191,11 @@ class RagBaseService:
             folder = root / kb_dir
             if not folder.is_dir():
                 continue
-            [docs.append(self._parse_markdown(path, kb_dir))
-             for path in sorted(folder.glob("*.md"))
-             if path.name.lower() != "readme.md"]
+            docs.extend(
+                self.parse_markdown(path, kb_dir)
+                for path in sorted(folder.glob("*.md"))
+                if path.name.lower() != "readme.md"
+            )
         return docs
 
     def docs_to_chunks(

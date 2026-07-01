@@ -109,7 +109,7 @@ def main() -> None:
         raise SystemExit("Milvus 不可达，请先 docker compose up -d milvus")
 
     print(f"+ Knowledge.index(force={INDEX_FORCE}, root={KNOWLEDGE_ROOT}, dirs={KNOWLEDGE_DIRS})")
-    count = Knowledge.index(force=INDEX_FORCE, root=KNOWLEDGE_ROOT, dirs=KNOWLEDGE_DIRS)
+    count = Knowledge().index(force=INDEX_FORCE, root=KNOWLEDGE_ROOT, dirs=KNOWLEDGE_DIRS)
     print(f"indexed chunks: {count}")
 
 

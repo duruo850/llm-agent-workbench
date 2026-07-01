@@ -11,8 +11,8 @@ import asyncio
 import logging
 from collections.abc import Sequence
 
-from langchain_milvus import Milvus
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List
 
 from common.env import (
     get_database_url,
@@ -36,17 +36,19 @@ class TransactionRagService(RagBaseService):
     COLLECTION_NAME = "billmind_transactions"
 
     def __init__(self) -> None:
-        self._vector_store: Milvus | None = None
+        super().__init__()
 
-    def create(self, txns: Sequence[Transaction]) -> int:
+    def create(self, txns: Sequence[Transaction]) -> List[str]:
         """批量增量索引（受 ``TXN_SEARCH_INCREMENTAL`` 控制）。"""
         if not is_txn_search_incremental_enabled() or not txns:
-            return 0
+            return []
+        if not self.is_ready():
+            return []
         try:
             return self.add_documents(self.COLLECTION_NAME, [txn.to_document() for txn in txns])
         except Exception as exc:
-            logger.warning("交易向量 create_many 失败: %s", exc)
-            return 0
+            logger.warning("交易向量 create 失败: %s", exc)
+            return []
 
     async def index(
         self,
@@ -61,12 +63,12 @@ class TransactionRagService(RagBaseService):
         rows = await transaction_service.list_transactions(db, account_id=account_id)
         if force:
             if rows:
-                self._delete_by_expr(f"account_id == {account_id}")
+                self.delete_by_expr(self.COLLECTION_NAME, f"account_id == {account_id}")
             elif milvus_available():
                 client = get_client()
                 if client.has_collection(self.COLLECTION_NAME):
-                    self._delete_by_expr(f"account_id == {account_id}")
-            self._vector_store = None
+                    self.delete_by_expr(self.COLLECTION_NAME, f"account_id == {account_id}")
+            self.delete_vector_store(self.COLLECTION_NAME)
 
         if not rows:
             logger.warning("账号 %s 无交易记录，跳过同步", account_id)

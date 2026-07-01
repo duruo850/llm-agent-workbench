@@ -47,7 +47,7 @@ async def add_transaction(
             ),
         )
         # 将创建的交易向量添加到 Milvus向量库
-        transaction_rag.create(createdTransaction)
+        transaction_rag.create([createdTransaction])
         return format_tool_result(TransactionCreateResponse.model_validate(createdTransaction))
     except (IntegrityError, SQLAlchemyError) as exc:
         return format_db_error(exc)
