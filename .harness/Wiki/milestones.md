@@ -17,7 +17,7 @@
 | **M5**  | ✅ 完成 | 文件导入                             | [M5_1-file-import](../Changes/M5_1-file-import.plan)                                                                  |
 | **M6**  | ✅ 完成 | MCP 功能研究；高德 MCP 接入（IP → 城市 / 天气） | [M6_1-amap-mcp](../Changes/M6_1-amap-mcp.plan)                                                                        |
 | **M7**  | ✅ 完成 | RAG 知识库（Milvus + Ollama）          | [M7_1-rag-knowledge](../Changes/M7_1-rag-knowledge.plan)                                                                        |
-| **M8**  | ⬜ 待做 | Embeddings 语义搜账                  | —                                                                                                                     |
+| **M8**  | ✅ 完成 | Embeddings 语义搜账                  | [M8_1-txn-semantic-search](../Changes/M8_1-txn-semantic-search.plan)                                                                                                                     |
 | **M9**  | ⬜ 待做 | 月报工作流                            | —                                                                                                                     |
 | **M10** | ⬜ 待做 | Memory + HITL                    | —                                                                                                                     |
 | **M11** | ⬜ 待做 | Eval + LangSmith                 | —                                                                                                                     |
@@ -86,6 +86,17 @@
 - 知识点：[`docs/knowledge/rag.md`](../../docs/knowledge/rag.md)
 - Demo：[`examples/04_rag_knowledge_demo.py`](../../examples/04_rag_knowledge_demo.py)
 - 测试：[`agent/rag/indexer_test.py`](../../agent/rag/indexer_test.py)、[`server/api/knowledge_test.py`](../../server/api/knowledge_test.py)
+
+## M8 要点
+
+- **向量层**：[`agent/rag/transaction.py`](../../agent/rag/transaction.py) — `TransactionRagService` → Milvus `billmind_transactions`
+- **Agent**：`search_similar_transactions` skill（[`agent/skills/transactions_semantic.py`](../../agent/skills/transactions_semantic.py)）
+- **REST**：`GET /transactions/search?q=...&top_k=...`
+- **CLI 全量同步**：`python -m agent.rag.transaction --account-id <id>`
+- **增量索引**：`TXN_SEARCH_INCREMENTAL`（默认开）；记账 / CSV 导入后 `transaction_rag.create*`
+- 知识点：[`docs/knowledge/txn-semantic-search.md`](../../docs/knowledge/txn-semantic-search.md)
+- Demo：[`examples/05_txn_semantic_demo.py`](../../examples/05_txn_semantic_demo.py)
+- 测试：[`agent/rag/transaction_test.py`](../../agent/rag/transaction_test.py)、[`server/api/transactions_search_test.py`](../../server/api/transactions_search_test.py)
 
 ## M2+ 启动前
 

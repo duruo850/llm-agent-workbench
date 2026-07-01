@@ -19,7 +19,8 @@ _root = Path(__file__).resolve().parents[1]
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-from agent.rag import milvus_available, rag
+from agent.rag.knowledge import Knowledge
+from common.milvus import available as milvus_available
 
 
 def main() -> None:
@@ -33,11 +34,11 @@ def main() -> None:
         print("Milvus 不可达，请先: docker compose up -d milvus")
         sys.exit(1)
 
-    count = rag.index(force=args.force)
+    count = Knowledge.index(force=args.force)
     print(f"indexed chunks: {count}")
 
     kb = args.kb.strip() or None
-    hits = rag.search(args.query, kb=kb)
+    hits = Knowledge.search(args.query, kb=kb)
     if not hits:
         print("无命中（请确认 agent/knowledge 已填写正文并 --force 重建索引）")
         sys.exit(0)

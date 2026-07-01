@@ -90,3 +90,23 @@ def get_rag_top_k() -> int:
         return max(1, int(raw))
     except ValueError:
         return 4
+
+
+def get_milvus_health_uri() -> str:
+    """Milvus standalone 健康检查地址（默认 9091/healthz）。"""
+    load_env()
+    explicit = os.getenv("MILVUS_HEALTH_URI", "").strip().rstrip("/")
+    if explicit:
+        return explicit
+    return "http://127.0.0.1:9091/healthz"
+
+
+def _env_flag(name: str, *, default: bool = True) -> bool:
+    load_env()
+    raw = os.getenv(name, "1" if default else "0").strip().lower()
+    return raw not in {"0", "false", "no", "off"}
+
+
+def is_txn_search_incremental_enabled() -> bool:
+    """记账/导入后是否自动 upsert 交易向量（``TXN_SEARCH_INCREMENTAL``，默认开启）。"""
+    return _env_flag("TXN_SEARCH_INCREMENTAL", default=True)

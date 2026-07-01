@@ -13,6 +13,7 @@ from server.db.session import get_db
 from server.service.account import get_current_account
 from server.model.account import Account
 from server.model.request import TransactionCreateRequest, TransactionListQueryRequest, TransactionUpdateRequest
+from server.model.transaction import Transaction
 from server.model.response import (
     TransactionCreateResponse,
     TransactionGetResponse,
@@ -32,9 +33,16 @@ async def create_transaction(
     db: AsyncSession = Depends(get_db),
     account: Account = Depends(get_current_account),
 ) -> TransactionCreateResponse:
-    return await transaction_service.create_transaction(
-        db, body, account_id=account.id
+    transaction = Transaction(
+        account_id=account.id,
+        amount=body.amount,
+        category=body.category,
+        merchant=body.merchant,
+        note=body.note,
+        transacted_at=body.transacted_at,
     )
+    created = await transaction_service.create_transaction(db,transaction)
+    return TransactionCreateResponse.model_validate(created)
 
 
 @router.post("/import", response_model=TransactionImportResponse)

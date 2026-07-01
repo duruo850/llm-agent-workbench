@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+from decimal import Decimal
 from langchain_core.runnables import RunnableConfig
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from server.model.response import TransactionCreateResponse
+from server.model.transaction import Transaction
 from agent.agent.promt.policy import account_id_from_config, tool_policy
+from agent.rag import transaction_rag
 from common.format import format_db_error, format_tool_result
 from server.service import transaction_service
 
@@ -31,15 +35,20 @@ async def add_transaction(
     """
     account_id = account_id_from_config(config)
     try:
-        result = await transaction_service.create_transaction_from_agent(
+        createdTransaction = await transaction_service.create_transaction(
             db,
-            account_id=account_id,
-            amount=amount,
-            category=category,
-            merchant=merchant,
-            note=note,
+            Transaction(
+                account_id=account_id,
+                amount=Decimal(str(amount)),
+                category=category,
+                merchant=merchant,
+                note=note,
+                transacted_at=datetime.now().replace(microsecond=0),
+            ),
         )
-        return format_tool_result(result)
+        # 将创建的交易向量添加到 Milvus向量库
+        transaction_rag.create(createdTransaction)
+        return format_tool_result(TransactionCreateResponse.model_validate(createdTransaction))
     except (IntegrityError, SQLAlchemyError) as exc:
         return format_db_error(exc)
 

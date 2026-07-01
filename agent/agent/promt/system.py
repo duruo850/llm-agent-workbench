@@ -76,6 +76,15 @@ def _format_intent_rules(tools: list[BaseTool], today_date: str) -> str:
             f"- 「最接近 X 元/块的是哪一笔」「哪笔离 X 最近」→ find_closest_transaction，"
             f"date={today_date}，target_amount=X；不要用 get_daily_summary 或 query_transactions"
         )
+    if "search_similar_transactions" in tool_names:
+        lines.append(
+            "- 模糊回忆消费（如「上次星巴克花了多少」「类似出差住宿的消费」），"
+            "无明确月份/日期/金额 → search_similar_transactions"
+        )
+        lines.append(
+            "- 本月总额 / 指定月份明细 / 指定日期最接近金额 → 仍用 get_monthly_summary、"
+            "query_transactions、find_closest_transaction，不要用 search_similar_transactions"
+        )
     return "\n".join(lines) if lines else "- （当前无单日意图分流规则）"
 
 

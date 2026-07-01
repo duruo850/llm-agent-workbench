@@ -102,13 +102,14 @@ def main() -> None:
     _wait_ollama_embedding()
     _wait_http("Milvus", get_milvus_health_uri(), attempts=90)
 
-    from agent.rag import rag
+    from agent.rag.knowledge import Knowledge
+    from common.milvus import available as milvus_available
 
-    if not rag.available():
+    if not milvus_available():
         raise SystemExit("Milvus 不可达，请先 docker compose up -d milvus")
 
-    print(f"+ rag.index(force={INDEX_FORCE}, root={KNOWLEDGE_ROOT}, dirs={KNOWLEDGE_DIRS})")
-    count = rag.index(force=INDEX_FORCE, root=KNOWLEDGE_ROOT, dirs=KNOWLEDGE_DIRS)
+    print(f"+ Knowledge.index(force={INDEX_FORCE}, root={KNOWLEDGE_ROOT}, dirs={KNOWLEDGE_DIRS})")
+    count = Knowledge.index(force=INDEX_FORCE, root=KNOWLEDGE_ROOT, dirs=KNOWLEDGE_DIRS)
     print(f"indexed chunks: {count}")
 
 

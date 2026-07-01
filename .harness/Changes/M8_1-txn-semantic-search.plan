@@ -1,0 +1,73 @@
+---
+milestone: M8
+seq: 1
+slug: txn-semantic-search
+status: done
+skills:
+  - add-api-endpoint
+  - http-integration-test
+  - local-dev
+  - extract-ai-knowledge
+depends_on:
+  - M7_1-rag-knowledge
+---
+
+# M8 交易语义搜索 — Embeddings 模糊回忆查账
+
+## 里程碑
+
+**M8** — 将用户历史交易向量化存入 Milvus 独立集合 `billmind_transactions`；Agent `search_similar_transactions` + REST 检索；记账/导入后可选增量 upsert。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [add-api-endpoint](../Skills/add-api-endpoint/SKILL.md) | `GET /transactions/search` |
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | transactions_search_test |
+| [local-dev](../Skills/local-dev/SKILL.md) | Milvus + Ollama 本地验收 |
+| [extract-ai-knowledge](../Skills/extract-ai-knowledge/SKILL.md) | `docs/knowledge/txn-semantic-search.md` |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `agent/rag/txn.py` | `TransactionSearch`：sync / search / upsert / delete |
+| `agent/rag/txn_index.py` | CLI 全量同步 `--account-id` / `--force` |
+| `agent/rag/txn_test.py` | `txn_to_text()` 单测 |
+| `agent/skills/transactions_semantic.py` | `search_similar_transactions` skill |
+| `agent/agent/promt/system.py` | 语义 vs SQL skill 分流规则 |
+| `common/env.py` | `TXN_SEARCH_INCREMENTAL`、`ollama_embedding_ready` |
+| `server/api/transactions.py` | `GET /transactions/search` |
+| `server/model/response/transaction_search.py` | 检索响应模型 |
+| `examples/05_txn_semantic_demo.py` | 独立 demo |
+| `docs/knowledge/txn-semantic-search.md` | M8 知识点 |
+
+### Phase 2（本 plan 含）
+
+- `add_transaction` / `import_csv_transactions` 成功后 `maybe_upsert*`（受 `TXN_SEARCH_INCREMENTAL` 控制）
+
+## 知识点文档
+
+| slug | 文件 | 验收 |
+|------|------|------|
+| `txn-semantic-search` | `docs/knowledge/txn-semantic-search.md` | README 索引 status → done |
+
+## 运行命令
+
+```bash
+docker compose up -d ollama milvus
+.venv/bin/python3.14 -m agent.rag.txn_index --account-id 1
+.venv/bin/python3.14 examples/05_txn_semantic_demo.py
+curl -H "Authorization: Bearer $TOKEN" "http://127.0.0.1:8000/transactions/search?q=星巴克"
+.venv/bin/python3.14 -m pytest agent/rag/txn_test.py server/api/transactions_search_test.py -v
+```
+
+## 验收标准
+
+- [x] `pytest agent/rag/txn_test.py -v` 通过
+- [x] 账号有 Starbucks 记录时 demo / `GET /transactions/search?q=星巴克` 能命中
+- [x] Agent `search_similar_transactions` 未就绪时返回 JSON 错误而非 500
+- [x] `TXN_SEARCH_INCREMENTAL=0` 可关闭记账后自动 upsert
+- [x] `docs/knowledge/txn-semantic-search.md` 存在

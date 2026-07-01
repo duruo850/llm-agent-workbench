@@ -28,39 +28,17 @@ class TransactionService:
     async def create_transaction(
         self,
         db: AsyncSession,
-        body: TransactionCreateRequest,
-        *,
-        account_id: int,
-    ) -> TransactionCreateResponse:
-        payload = Transaction(**body.model_dump(), account_id=account_id)
+        body: Transaction
+    ) -> Transaction:
         created = await transaction_crud.create(
             db,
-            object=payload,
-            schema_to_select=TransactionCreateResponse,
-            return_as_model=True,
+            object=body,                   # ② 入库用的仍是 Transaction
+            schema_to_select=Transaction,  # ③ 指定「返回时映射成什么」
+            return_as_model=True,          # 返回 ORM Transaction（含 DB 生成的 id、created_at）
         )
         if created is None:
             raise RuntimeError("create transaction returned None")
         return created
-
-    async def create_transaction_from_agent(
-        self,
-        db: AsyncSession,
-        *,
-        account_id: int,
-        amount: float,
-        category: str,
-        merchant: str = "",
-        note: str = "",
-    ) -> TransactionCreateResponse:
-        """Agent 工具入口 — 从 LLM 提取的标量参数构建请求。"""
-        body = TransactionCreateRequest(
-            amount=Decimal(str(amount)),
-            category=category,
-            merchant=merchant,
-            note=note,
-        )
-        return await self.create_transaction(db, body, account_id=account_id)
 
     async def get_transaction(
         self, db: AsyncSession, transaction_id: int, *, account_id: int

@@ -13,6 +13,7 @@ class TransactionCreateResponse(SQLModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    account_id: int
     amount: Decimal
     category: str
     merchant: str

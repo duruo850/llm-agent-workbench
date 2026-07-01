@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
 
-from agent.rag import is_rag_ready, search
+from agent.rag import search
+from common.milvus import embedding_ready
 from server.model.response.knowledge import KnowledgeHitResponse, KnowledgeSearchResponse
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
@@ -15,7 +16,7 @@ async def knowledge_search(
     q: str = Query(min_length=1, description="检索关键词或问题"),
     kb: str | None = Query(default=None, description="finance"),
 ) -> KnowledgeSearchResponse:
-    if not is_rag_ready():
+    if not embedding_ready():
         raise HTTPException(status_code=503, detail="RAG 未就绪（Milvus 不可用）")
 
     try:

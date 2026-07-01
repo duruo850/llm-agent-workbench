@@ -6,7 +6,8 @@ from langchain_core.runnables import RunnableConfig
 from sqlalchemy.ext.asyncio import AsyncSession
 from dataclasses import asdict
 from agent.agent.promt.policy import tool_policy
-from agent.rag import is_rag_ready, search
+from agent.rag import search
+from common.milvus import embedding_ready
 from common.format import format_tool_result
 
 
@@ -25,7 +26,7 @@ async def search_knowledge(
         kb: 可选知识库范围：finance（理财）；留空则搜索全部。
     """
     del db, config
-    if not is_rag_ready():
+    if not embedding_ready():
         return format_tool_result(
             {"error": True, "detail": "RAG 未就绪（Milvus 或索引不可用）"}
         )

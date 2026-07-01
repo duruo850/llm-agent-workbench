@@ -7,11 +7,13 @@ import io
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from server.model.request import TransactionCreateRequest
+from agent.rag import transaction_rag
+from server.model.request.parsed import ParsedTransaction
+from server.model.transaction import Transaction
 from server.service import transaction_service
 
 
@@ -93,6 +95,7 @@ async def import_csv_transactions(
     sentences, parse_errors = parse_csv_sentences(content)
     errors = list(parse_errors)
     imported_rows: list[tuple[str, Decimal]] = []
+    created_transactions: list[Transaction] = []
     skipped_count = 0
 
     for row_num, sentence in enumerate(sentences, start=1):
@@ -108,15 +111,28 @@ async def import_csv_transactions(
             continue
 
         try:
-            body = TransactionCreateRequest.from_parsed(parsed.transaction)
+            txn = parsed.transaction
+            if not isinstance(txn, ParsedTransaction):
+                raise TypeError(f"expected ParsedTransaction, got {type(txn).__name__}")
             created = await transaction_service.create_transaction(
-                db, body, account_id=account_id
+                db,
+                Transaction(
+                    account_id=account_id,
+                    amount=Decimal(str(txn.amount)),
+                    category=txn.category,
+                    merchant=txn.merchant,
+                    note=txn.note,
+                    transacted_at=datetime.now().replace(microsecond=0),
+                ),
             )
             imported_rows.append((created.category, created.amount))
+            created_transactions.append(created)
         except Exception as exc:
             skipped_count += 1
             errors.append(f"row {row_num}: import failed ({exc})")
 
+    # 将创建的交易向量添加到 Milvus向量库
+    transaction_rag.create(created_transactions)
     return ImportResult(
         imported_count=len(imported_rows),
         skipped_count=skipped_count,
