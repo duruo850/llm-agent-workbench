@@ -187,6 +187,8 @@ class RagBaseService:
             list[KnowledgeDoc]: 知识库文档列表。
         """
         docs: list[KnowledgeDoc] = []
+        if kb_dirs is None:
+            return docs
         for kb_dir in kb_dirs:
             folder = root / kb_dir
             if not folder.is_dir():

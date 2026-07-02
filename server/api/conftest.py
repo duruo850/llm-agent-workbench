@@ -23,7 +23,7 @@ import httpx
 import pytest
 
 from common.env import load_env
-from common.test.account import login, login_token
+from common.test.account import login
 
 DEFAULT_API_BASE_URL = "http://127.0.0.1:8000"
 TEST_MONTH = "2025-06"
@@ -71,14 +71,14 @@ def require_amap() -> None:
 
 @pytest.fixture
 def require_rag() -> None:
-    from storage.rag.knowledge import Knowledge
+    from storage.rag.knowledge import knowledge
     from common.milvus import embedding_ready
 
     load_env()
     if not embedding_ready():
         pytest.skip("Milvus 不可用，跳过 RAG 集成测试")
     try:
-        Knowledge.index(force=False)
+        knowledge.index(force=False)
     except Exception as exc:
         pytest.skip(f"RAG 索引不可用: {exc}")
 

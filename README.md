@@ -97,3 +97,24 @@ llm-agent-workbench/
 ```
 
 Agent 实现功能前请读 [AGENTS.md](AGENTS.md) 与 [.harness/](.harness/)。里程碑交付单见 [.harness/Changes/](.harness/Changes/)。
+
+## 💬 会话与 Loop 数据模型（M9 / M10）
+
+一次用户聊天在库里的层级关系：
+
+```
+conversation（1 次会话，thread_id）
+  └─ turn × N（每轮 POST /agent/chat，turn_id）
+       ├─ chat_messages × 2（user + assistant）
+       ├─ agent_loop_runs × 1（LoopRunResult 汇总：步数、token、input/output_message）
+       └─ agent_loop_steps × M（loop 内每步 LLM / 工具指标）
+```
+
+| 概念 | 表 / 字段 | 说明 |
+|------|-----------|------|
+| **conversation** | `conversations` | 按 `account_id` + `thread_id` 标识整场对话 |
+| **turn** | `agent_loop_runs.turn_id` | 单次 `/agent/chat`；1 turn = 2 条 `chat_messages` |
+| **loop 汇总** | `agent_loop_runs` | 存 `LoopRunResult`（`total_steps`、`total_tokens`、`input_message`、`output_message` 等） |
+| **loop 单步** | `agent_loop_steps` | ReAct 循环内每一步的 token / 工具名 |
+
+跨轮记忆：`thread_id` → LangGraph checkpointer；业务历史 → `chat_messages`。

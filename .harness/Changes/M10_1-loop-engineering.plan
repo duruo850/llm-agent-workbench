@@ -1,0 +1,81 @@
+---
+milestone: M10
+seq: 1
+slug: loop-engineering
+status: done
+skills:
+  - entity-service
+  - db-migrate
+  - http-integration-test
+  - extract-ai-knowledge
+depends_on:
+  - M9_1-memory-os
+---
+
+# M10 Loop Engineering — Loop Harness + 步级指标落库
+
+## 里程碑
+
+**M10** — 在 `create_react_agent` 图之上增加 Loop Harness（不改 graph 拓扑）：硬/软循环限制、步级 token 监控、`agent_loop_steps` 落库；生产 HTTP 默认 `invoke_v2`。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [entity-service](../Skills/entity-service/SKILL.md) | `agent_loop_steps` 模型与服务 |
+| [db-migrate](../Skills/db-migrate/SKILL.md) | `004_agent_loop_steps.py` |
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | `agent_test` 落库断言 |
+| [extract-ai-knowledge](../Skills/extract-ai-knowledge/SKILL.md) | `docs/knowledge/loop-engineering.md` |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `agent/loop/{policy,hooks,harness,prompt}.py` | Loop Harness 核心 |
+| `agent/graph/agent.py` | 保留 `invoke()`，新增 `invoke_v2()` |
+| `agent/agent/promt/system.py` | 追加 `LOOP_ENGINEERING_RULES` |
+| `server/model/agent_loop_step.py` | ORM 模型 |
+| `server/alembic/versions/004_agent_loop_steps.py` | 迁移 |
+| `storage/postgres/service/agent_loop_step.py` | CRUD 服务 |
+| `server/api/agent.py` | 默认 `invoke_v2` + `link_user_message` |
+| `docs/knowledge/loop-engineering.md` | 知识点文档 |
+
+### 不在范围内
+
+- LangSmith / Eval（M13）
+- 上下文压缩自动化
+- 前端 trace 展示
+- 对外 HTTP 读取 loop steps
+
+## 知识点文档
+
+| slug | 文件 | 验收 |
+|------|------|------|
+| `loop-engineering` | `docs/knowledge/loop-engineering.md` | README 索引 status → done |
+
+## 步骤清单
+
+- [x] 1. Loop Harness 模块（policy / hooks / harness / prompt）
+- [x] 2. System prompt 软限制 + Harness 同工具 streak 兜底
+- [x] 3. `agent_loop_steps` 表 + migration + storage service
+- [x] 4. `invoke_v2` + HTTP 切到 v2
+- [x] 5. 单测 + `loop-engineering.md` + milestones 更新
+
+## 运行命令
+
+```bash
+docker compose up -d
+.venv/bin/python3.14 -m pytest agent/loop -v
+.venv/bin/python3.14 -m pytest storage/postgres/service/agent_loop_step_test.py -v
+.venv/bin/python3.14 -m pytest server/api/agent_test.py::test_agent_chat_loop_steps_persisted -v
+```
+
+## 验收标准
+
+- [ ] `invoke()` 行为不变（M4 基线）
+- [ ] `invoke_v2` 使用 `RECURSION_LIMIT=15` + `astream_events` 监控
+- [ ] 同工具连续 3 次无结果 →「我搞不定」
+- [ ] `POST /agent/chat` 后 `agent_loop_steps` 有对应 `thread_id` 记录
+- [ ] `docs/knowledge/loop-engineering.md` 存在且 README 索引已更新

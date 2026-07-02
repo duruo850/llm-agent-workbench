@@ -6,13 +6,15 @@ import logging
 from typing import Any
 from uuid import uuid4
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import HumanMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent.agent.agent import Agent as ClassicAgent
 import storage as storage
 from agent.skills import SKILL_TOOLS
 from agent.graph.graph import build_agent_graph
+from agent.common.text import extract_reply
+from agent.loop.harness import LoopHarness
 from agent.mcp import MCP_TOOLS
 
 MAX_TOOL_ROUNDS = 5
@@ -23,21 +25,8 @@ _COMPILED_GRAPH: Any | None = None
 _RECURSION_LIMIT: int = MAX_TOOL_ROUNDS * 2 + 1
 
 
-def extract_reply(messages: list) -> str:
-    """从图输出 messages 中取最后一条 AI 文本回复。"""
-    for message in reversed(messages):
-        if isinstance(message, AIMessage) and not message.tool_calls:
-            content = message.content
-            return content if isinstance(content, str) else str(content)
-    if messages:
-        last = messages[-1]
-        if isinstance(last, AIMessage):
-            content = last.content
-            return content if isinstance(content, str) else str(content)
-    return "未能生成回复，请重试。"
-
 class Agent:
-    """LangGraph 版 Agent — init / invoke / parse_image（视觉链委托 M2）。"""
+    """LangGraph 版 Agent — init / invoke / invoke_v2 / parse_image（视觉链委托 M2）。"""
 
     @classmethod
     def init(cls) -> None:
@@ -95,6 +84,41 @@ class Agent:
         reply = extract_reply(result["messages"])
         logger.info("output: %s", reply)
         return reply, effective_thread_id
+
+    @classmethod
+    async def invoke_v2(
+        cls,
+        message: str,
+        *,
+        account_id: int,
+        db: AsyncSession,
+        thread_id: str | None = None,
+        debug: bool = False,
+    ) -> tuple[str, str, str]:
+        """M10 Loop Harness 路径 — 编排委托 ``LoopHarness``，此处仅调用 ``run``。"""
+        if _COMPILED_GRAPH is None:
+            raise RuntimeError("Graph Agent 未初始化，请先调用 Agent.init()")
+
+        # 准备turn轮次
+        ctx = await LoopHarness.prepare_turn(
+            db,
+            message,
+            account_id=account_id,
+            thread_id=thread_id,
+            debug=debug,
+        )
+
+        # 运行turn轮次
+        run_result = await LoopHarness.invoke_turn(
+            _COMPILED_GRAPH,
+            ctx.graph_input,
+            ctx.config,
+            turn_id=ctx.turn_id,
+            hooks=ctx.hooks,
+        )
+
+        # 完成turn轮次
+        return await LoopHarness.complete_turn(db, ctx, run_result)
 
     @classmethod
     async def parse_image(cls, image_data_url: str) -> str:

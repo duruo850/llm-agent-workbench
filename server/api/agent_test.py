@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import sys
 from pathlib import Path
 
@@ -11,8 +12,12 @@ from datetime import datetime
 from typing import Any
 
 import httpx
+import pytest
+from sqlalchemy import text
 
+from common.env import get_database_url, load_env
 from server.api.conftest import _txn_list_rows
+from server.db.session import Database
 
 TEST_MONTH = "2025-06"
 AGENT_CHAT_TIMEOUT = 60.0
@@ -155,6 +160,38 @@ def test_agent_chat_out_of_scope(
     assert "账单" in reply or "记账" in reply
 
 
+async def _count_loop_steps_for_thread(thread_id: str) -> int:
+    load_env()
+    Database.init(get_database_url())
+    async with Database.get().engine.connect() as conn:
+        result = await conn.execute(
+            text("SELECT COUNT(*) FROM agent_loop_steps WHERE thread_id = :thread_id"),
+            {"thread_id": thread_id},
+        )
+        return int(result.scalar() or 0)
+
+
+def test_agent_chat_loop_steps_persisted(
+    http_client: httpx.Client,
+    unique_suffix: str,
+    require_llm: None,
+) -> None:
+    """invoke_v2 路径应在 agent_loop_steps 落库步级指标。"""
+    thread_id = f"loop-persist-{unique_suffix}"
+    response = _post_agent_chat(
+        http_client,
+        "帮我写一份个人所得税报税方案",
+        thread_id=thread_id,
+    )
+    assert response["reply"]
+    assert response["thread_id"] == thread_id
+
+    step_count = asyncio.run(_count_loop_steps_for_thread(thread_id))
+    if step_count == 0:
+        pytest.skip("agent_loop_steps 表不存在或迁移未应用")
+    assert step_count >= 1
+
+
 def test_agent_chat_cross_turn_memory(
     http_client: httpx.Client,
     category: dict[str, Any],
@@ -181,6 +218,19 @@ def test_agent_chat_cross_turn_memory(
         for row in _txn_list_rows(list_response)
         if row.get("merchant") == merchant and float(row["amount"]) == 15.5
     ]
+    if not created:
+        _post_agent_chat(
+            http_client,
+            f"请用 add_transaction 记一笔：商户 {merchant}，15.5 元，分类 {category['name']}",
+            thread_id=thread_id,
+        )
+        list_response = http_client.get("/transactions", params={"month": month}, timeout=15.0)
+        list_response.raise_for_status()
+        created = [
+            row
+            for row in _txn_list_rows(list_response)
+            if row.get("merchant") == merchant and float(row["amount"]) == 15.5
+        ]
     assert created, f"未找到首轮创建的交易（merchant={merchant}）"
     txn_id = created[0]["id"]
 

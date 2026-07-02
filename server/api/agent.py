@@ -13,7 +13,6 @@ from server.model.account import Account
 from server.model.request.agent import AgentChatRequest
 from server.model.response.agent import AgentChatResponse
 from utils.client_ip import get_client_ip
-from storage.postgres.service.conversation import conversation_service
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -57,21 +56,12 @@ async def agent_chat(
         else:
             message = f"用户当前 IP: {client_ip}"
 
-        reply, thread_id = await Agent.invoke(
+        reply, thread_id, _turn_id = await Agent.invoke_v2(
             message,
             db=db,
             account_id=account.id,
             thread_id=body.thread_id,
         )
-        # 将对话落库:放到chat内存目录
-        if message:
-            await conversation_service.create_chat_messages(
-                db,
-                account_id=account.id,
-                thread_id=thread_id,
-                user_message=message,
-                assistant_message=reply,
-            )
         return AgentChatResponse(reply=reply, thread_id=thread_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

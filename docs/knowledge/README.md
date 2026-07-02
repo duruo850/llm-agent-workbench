@@ -11,6 +11,7 @@
 | RAG / Milvus + Ollama Embedding | M7 | [rag.md](rag.md) | `agent/storage/rag/`, `agent/knowledge/`, `GET /knowledge/search` | done |
 | Embeddings 语义检索 | M8 | [txn-semantic-search.md](txn-semantic-search.md) | `agent/storage/rag/transaction.py`, `GET /transactions/search` | done |
 | Memory OS（分层存储 + 流水线） | M9 | [memory-os.md](memory-os.md) | `agent/storage/`, `AsyncPostgresSaver` | done |
+| Loop Engineering（Harness + 步级落库） | M10 | [loop-engineering.md](loop-engineering.md) | `agent/loop/`, `invoke_v2` | done |
 | Memory + Human-in-the-loop | M12 | [memory-hitl.md](memory-hitl.md) | 待建 | 待提取 |
 | Eval + LangSmith | M10 | [eval-langsmith.md](eval-langsmith.md) | 待建 | 待提取 |
 | 可插拔 Agent Skills | M11 | [agent-skills.md](agent-skills.md) | `agent/skills/`（待建） | 待提取 |

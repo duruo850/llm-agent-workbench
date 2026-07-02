@@ -19,7 +19,7 @@
 | **M7**  | ✅ 完成 | RAG 知识库（Milvus + Ollama）          | [M7_1-rag-knowledge](../Changes/M7_1-rag-knowledge.plan)                                                                        |
 | **M8**  | ✅ 完成 | Embeddings 语义搜账                  | [M8_1-txn-semantic-search](../Changes/M8_1-txn-semantic-search.plan)                                                                                                                     |
 | **M9**  | ✅ 完成 | 生产级别 Memory 存储记忆架构               | [M9_1-memory-os](../Changes/M9_1-memory-os.plan)                                                                                                                     |
-| **M10** | ⬜ 待做 | Loop engineering                 | —                                                                                                                     |
+| **M10** | ✅ 完成 | Loop engineering                 | [M10_1-loop-engineering](../Changes/M10_1-loop-engineering.plan)                                                                                                                     |
 | **M11** | ⬜ 待做 | 月报工作流                            | —                                                                                                                     |
 | **M12** | ⬜ 待做 | Memory + HITL                    | —                                                                                                                     |
 | **M13** | ⬜ 待做 | Eval + LangSmith                 | —                                                                                                                     |
@@ -109,11 +109,13 @@
 - **知识点**：[`docs/knowledge/memory-os.md`](../../docs/knowledge/memory-os.md)
 - **测试**：[`agent/storage/`](../../agent/storage/)、[`server/api/conversations_test.py`](../../server/api/conversations_test.py)、[`server/api/agent_test.py`](../../server/api/agent_test.py)
 
-## M10 要点（规划）
+## M10 要点
 
-- **Loop engineering**：Agent 循环编排的工程化——递归上限、工具轮次监控、失败重试与降级策略
-- **可观测性**：debug 模式、结构化日志、循环轨迹可视化（为 Eval / LangSmith 铺路）
-- **交付方向**：graph 层 loop 策略配置、异常边界与验收用例；具体 plan 待 `M10_1-*.plan`
+- **Loop Harness**：[`agent/graph/loop/`](../../agent/graph/loop/) — `astream_events` 步级监控、硬/软循环限制
+- **双 invoke**：`invoke()` M4 基线；生产 HTTP 默认 `invoke_v2()`（[`agent/graph/agent.py`](../../agent/graph/agent.py)）
+- **步级落库**：`agent_loop_steps` 表；`turn_id` 标识单次 `/agent/chat`
+- **知识点**：[`docs/knowledge/loop-engineering.md`](../../docs/knowledge/loop-engineering.md)
+- **测试**：[`agent/graph/loop/harness_test.py`](../../agent/graph/loop/harness_test.py)、[`server/api/agent_test.py`](../../server/api/agent_test.py)
 
 ## M2+ 启动前
 

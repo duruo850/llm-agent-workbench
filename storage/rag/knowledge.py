@@ -69,9 +69,10 @@ class Knowledge(RagBaseService):
             int: 索引的 chunk 数。
         """
         base = root or self.KNOWLEDGE_ROOT
-        
+        effective_dirs = dirs or self.KNOWLEDGE_DIRS
+
         # 1.加载知识库文档
-        knowledge_docs = self.load_docs(base, dirs)
+        knowledge_docs = self.load_docs(base, effective_dirs)
         
         # 2.将知识库文档切分为 chunk
         chunks = self.docs_to_chunks(knowledge_docs, root=base)

@@ -19,7 +19,7 @@ _root = Path(__file__).resolve().parents[1]
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-from storage.rag.knowledge import Knowledge
+from storage.rag.knowledge import knowledge
 from common.milvus import available as milvus_available
 
 
@@ -34,7 +34,7 @@ def main() -> None:
         print("Milvus 不可达，请先: docker compose up -d milvus")
         sys.exit(1)
 
-    count = Knowledge.index(force=args.force)
+    count = knowledge.index(force=args.force)
     print(f"indexed chunks: {count}")
 
     kb = args.kb.strip() or None
