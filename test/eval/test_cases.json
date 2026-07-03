@@ -1,0 +1,161 @@
+{
+  "description": "BillMind 离线 Eval 用例集。由 run_eval.py 读取，进程内 Agent.invoke 逐条执行（不启动 HTTP server）。",
+  "how_it_works": [
+    "1. run_eval.py 调用 init_agent()，与 server 启动时相同",
+    "2. 每条 cases[] 用独立 thread_id=eval-{id} 调用 Agent.invoke(message)，返回 tool_names",
+    "3. actual_tools 来自 LangGraph 的 ToolMessage.name；与 expected_tools 比对",
+    "4. reply 与 reply_keywords 比对；可选 llm_judge + --llm-judge 另起 LLM 评审"
+  ],
+  "fields": {
+    "id": "用例唯一标识，也用作 thread_id 后缀",
+    "message": "发给 Agent 的用户消息（与 POST /agent/chat 的 message 同类，但无 IP 拼接）",
+    "expected_tools": "期望调用的 skill 名列表，如 add_transaction",
+    "tool_match": "all=全部出现 | any=至少一个 | sequence=顺序一致 | none=不应调工具",
+    "reply_keywords": "回复中应包含的关键词（全部命中才算过，除非 reply_match_all=false）",
+    "reply_match_all": "可选，默认 true",
+    "forbidden_tools": "可选，若被调用则 tools 项直接失败",
+    "llm_judge": "可选，自然语言评审标准；仅 CLI --llm-judge 时启用"
+  },
+  "cases": [
+    {
+      "id": "add-coffee",
+      "message": "刚才 Starbucks 花了 38，算餐饮",
+      "expected_tools": ["add_transaction"],
+      "tool_match": "all",
+      "reply_keywords": ["38"]
+    },
+    {
+      "id": "add-salary",
+      "message": "今天收到工资 8000 元，分类工资",
+      "expected_tools": ["add_transaction"],
+      "tool_match": "all",
+      "reply_keywords": ["8000"]
+    },
+    {
+      "id": "query-month-category",
+      "message": "查一下本月餐饮花了多少",
+      "expected_tools": ["get_monthly_summary"],
+      "tool_match": "any",
+      "reply_keywords": ["餐饮"]
+    },
+    {
+      "id": "query-month-total",
+      "message": "这个月一共花了多少钱",
+      "expected_tools": ["get_monthly_summary"],
+      "tool_match": "any",
+      "reply_keywords": ["月"]
+    },
+    {
+      "id": "query-today",
+      "message": "我今天用了多少钱",
+      "expected_tools": ["get_daily_summary"],
+      "tool_match": "any",
+      "reply_keywords": ["今天", "日"]
+    },
+    {
+      "id": "query-txn-list",
+      "message": "列出我本月所有交易明细",
+      "expected_tools": ["query_transactions"],
+      "tool_match": "any",
+      "reply_keywords": ["交易"]
+    },
+    {
+      "id": "knowledge-tax",
+      "message": "个人所得税专项附加扣除有哪些",
+      "expected_tools": ["search_knowledge"],
+      "tool_match": "any",
+      "reply_keywords": ["扣除"]
+    },
+    {
+      "id": "knowledge-fund",
+      "message": "基金定投有什么好处",
+      "expected_tools": ["search_knowledge"],
+      "tool_match": "any",
+      "reply_keywords": ["基金"]
+    },
+    {
+      "id": "semantic-search",
+      "message": "找一下和咖啡有关的消费",
+      "expected_tools": ["search_similar_transactions"],
+      "tool_match": "any",
+      "reply_keywords": ["咖啡"]
+    },
+    {
+      "id": "closest-txn",
+      "message": "我最接近 50 元的那笔消费是什么",
+      "expected_tools": ["find_closest_transaction"],
+      "tool_match": "any",
+      "reply_keywords": ["50"]
+    },
+    {
+      "id": "greeting",
+      "message": "你好，你能做什么",
+      "expected_tools": [],
+      "tool_match": "none",
+      "reply_keywords": ["记账", "查"]
+    },
+    {
+      "id": "help-features",
+      "message": "BillMind 有哪些功能",
+      "expected_tools": [],
+      "tool_match": "none",
+      "reply_keywords": ["记账"]
+    },
+    {
+      "id": "add-with-merchant",
+      "message": "地铁出行花了 6 块，交通分类",
+      "expected_tools": ["add_transaction"],
+      "tool_match": "all",
+      "reply_keywords": ["6"]
+    },
+    {
+      "id": "add-note",
+      "message": "午餐盒饭 25 元，备注公司食堂，餐饮",
+      "expected_tools": ["add_transaction"],
+      "tool_match": "all",
+      "reply_keywords": ["25"]
+    },
+    {
+      "id": "month-summary-traffic",
+      "message": "本月交通支出汇总",
+      "expected_tools": ["get_monthly_summary"],
+      "tool_match": "any",
+      "reply_keywords": ["交通"]
+    },
+    {
+      "id": "knowledge-insurance",
+      "message": "什么是重疾险",
+      "expected_tools": ["search_knowledge"],
+      "tool_match": "any",
+      "reply_keywords": ["保险", "重疾"]
+    },
+    {
+      "id": "query-yesterday",
+      "message": "昨天花了多少钱",
+      "expected_tools": ["get_daily_summary"],
+      "tool_match": "any",
+      "reply_keywords": ["昨天", "日"]
+    },
+    {
+      "id": "add-income",
+      "message": "兼职收入 500 元，分类其他",
+      "expected_tools": ["add_transaction"],
+      "tool_match": "all",
+      "reply_keywords": ["500"]
+    },
+    {
+      "id": "semantic-restaurant",
+      "message": "语义搜索一下和餐厅相关的账单",
+      "expected_tools": ["search_similar_transactions"],
+      "tool_match": "any",
+      "reply_keywords": ["餐厅", "餐"]
+    },
+    {
+      "id": "budget-advice",
+      "message": "如何制定家庭预算",
+      "expected_tools": ["search_knowledge"],
+      "tool_match": "any",
+      "reply_keywords": ["预算"]
+    }
+  ]
+}

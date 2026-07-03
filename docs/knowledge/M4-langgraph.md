@@ -94,7 +94,7 @@ sequenceDiagram
 | 适用场景 | 单次链路、无跨轮记忆 | 多步工作流、跨轮引用（「刚才那笔…」）、后续 M8 月报图 |
 | BillMind 落点 | `common/llm/`、`agent.Agent.parse_image`（视觉 Chain） | `graph/` + `MemorySaver` + `thread_id` |
 
-M2 的 Function Calling **执行语义不变**；详见 [function-calling.md](function-calling.md)。
+M2 的 Function Calling **执行语义不变**；详见 [M2-function-calling.md](M2-function-calling.md)。
 
 ### M2 `agent/agent.py` vs M4 `graph/` — 核心代码差异
 
@@ -309,5 +309,5 @@ M2 无 `thread_id`，`invoke` 结束即丢弃 `messages`。M4 用 `MemorySaver` 
 ## 里程碑与延伸阅读
 
 - 课表 M4 节：[docs/learning-plan.md](../learning-plan.md)
-- M2 执行层：[function-calling.md](function-calling.md)
+- M2 执行层：[M2-function-calling.md](M2-function-calling.md)
 - 索引：[docs/knowledge/README.md](README.md)

@@ -23,7 +23,7 @@
   - checkpointer = Agent 跨轮推理用的 state 备份 (机器读)
   - chat_messages = 每轮 user/assistant 明文 (人读 / Web 展示)
 
-开发/测试对照见 ``docs/knowledge/memory-os.md`` § MemorySaver (进程内 ``MemorySaver`` 仅单测 mock).
+开发/测试对照见 ``docs/knowledge/M9-memory-os.md`` § MemorySaver (进程内 ``MemorySaver`` 仅单测 mock).
 """
 
 from __future__ import annotations

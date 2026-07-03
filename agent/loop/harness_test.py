@@ -15,9 +15,9 @@ from typing import Any
 import pytest
 from langchain_core.messages import AIMessage, ToolMessage
 
-from agent.common.result import is_no_tool_result
-from agent.common.text import extract_reply
-from agent.common.token import extract_token_usage
+from utils.agent.common.result import is_no_tool_result
+from utils.agent.common.text import extract_reply
+from utils.agent.common.token import extract_token_usage
 from agent.loop.harness import LoopHarness
 from agent.loop.hooks import LoopHooks, LoopStepMetrics
 from agent.loop.policy import (

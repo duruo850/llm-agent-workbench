@@ -17,22 +17,30 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
 from agent import init_agent, shutdown_agent
-from common.env import get_database_url, get_web_origins
+from common.env import configure_langsmith, get_database_url, get_langsmith_ui_url, get_web_origins
 from common.logging_config import configure_app_logging
 from server.db.migrate import migrate_on_startup
 from server.db.session import Database
 from server.routers import register_routers
 
 Database.init(get_database_url())
+configure_langsmith()
 
 configure_app_logging()
 request_logger = logging.getLogger("billmind.request")
+startup_logger = logging.getLogger("billmind.startup")
+
+
+def _log_console() -> None:
+    if ui_url := get_langsmith_ui_url():
+        startup_logger.info("LangSmith 后台: %s", ui_url)
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     await migrate_on_startup(Database.get().engine)
     await init_agent()
+    _log_console()
     yield
     await shutdown_agent()
 

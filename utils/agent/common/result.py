@@ -1,6 +1,8 @@
 from typing import Any
-from agent.common.text import tool_result_text
 import json
+
+from utils.agent.common.text import tool_result_text
+
 
 def is_no_tool_result(output: Any) -> bool:
     """判断工具返回是否视为「无结果」（与 prompt 规则、streak 逻辑对齐）。

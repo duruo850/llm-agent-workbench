@@ -56,9 +56,8 @@ async def agent_chat(
         else:
             message = f"用户当前 IP: {client_ip}"
 
-        reply, thread_id, _turn_id = await Agent.invoke_v2(
+        reply, thread_id, _tool_names = await Agent.invoke(
             message,
-            db=db,
             account_id=account.id,
             thread_id=body.thread_id,
         )

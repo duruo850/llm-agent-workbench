@@ -176,7 +176,7 @@ def test_agent_chat_loop_steps_persisted(
     unique_suffix: str,
     require_llm: None,
 ) -> None:
-    """invoke_v2 路径应在 agent_loop_steps 落库步级指标。"""
+    """HTTP 默认 ``invoke``（LangSmith 自动 trace）；``invoke_v2`` 保留供 Loop Harness 测试。"""
     thread_id = f"loop-persist-{unique_suffix}"
     response = _post_agent_chat(
         http_client,
@@ -188,7 +188,7 @@ def test_agent_chat_loop_steps_persisted(
 
     step_count = asyncio.run(_count_loop_steps_for_thread(thread_id))
     if step_count == 0:
-        pytest.skip("agent_loop_steps 表不存在或迁移未应用")
+        pytest.skip("HTTP 使用 invoke()，不写入 agent_loop_steps；invoke_v2 路径未启用")
     assert step_count >= 1
 
 

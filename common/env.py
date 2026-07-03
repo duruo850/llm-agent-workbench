@@ -110,3 +110,52 @@ def _env_flag(name: str, *, default: bool = True) -> bool:
 def is_txn_search_incremental_enabled() -> bool:
     """记账/导入后是否自动 upsert 交易向量（``TXN_SEARCH_INCREMENTAL``，默认开启）。"""
     return _env_flag("TXN_SEARCH_INCREMENTAL", default=True)
+
+
+def configure_langsmith() -> None:
+    """按 LangSmith Quickstart 同步 ``LANGSMITH_*`` 到进程环境，供 LangGraph 自动 trace。"""
+    load_env()
+    tracing_raw = os.getenv("LANGSMITH_TRACING", "").strip().lower()
+    if tracing_raw in {"true", "1", "yes", "on"}:
+        os.environ["LANGSMITH_TRACING"] = "true"
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    elif tracing_raw in {"false", "0", "no", "off"}:
+        os.environ["LANGSMITH_TRACING"] = "false"
+        os.environ["LANGCHAIN_TRACING_V2"] = "false"
+
+    for key in ("LANGSMITH_ENDPOINT", "LANGSMITH_API_KEY", "LANGSMITH_PROJECT"):
+        if value := os.getenv(key, "").strip():
+            os.environ[key] = value
+
+
+_LANGSMITH_API_TO_UI: dict[str, str] = {
+    "https://api.smith.langchain.com": "https://smith.langchain.com",   # 美国 endpoint
+    "https://eu.api.smith.langchain.com": "https://eu.smith.langchain.com",   # 欧洲 endpoint
+    "https://apac.api.smith.langchain.com": "https://apac.smith.langchain.com",   # 亚太 endpoint
+    "https://aws.api.smith.langchain.com": "https://aws.smith.langchain.com",   # AWS endpoint
+}
+
+
+def is_langsmith_tracing_enabled() -> bool:
+    """``LANGSMITH_TRACING`` 是否为开启状态。"""
+    load_env()
+    return os.getenv("LANGSMITH_TRACING", "").strip().lower() in {"true", "1", "yes", "on"}
+
+
+def get_langsmith_project() -> str | None:
+    load_env()
+    value = os.getenv("LANGSMITH_PROJECT", "").strip()
+    return value or None
+
+
+def get_langsmith_ui_url() -> str | None:
+    """由 ``LANGSMITH_ENDPOINT`` 推导 LangSmith 后台 Web 控制台地址；tracing 未开时返回 None。"""
+    if not is_langsmith_tracing_enabled():
+        return None
+    load_env()
+    api = os.getenv("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com").strip().rstrip("/")
+    if ui := _LANGSMITH_API_TO_UI.get(api):
+        return ui
+    if ".api.smith.langchain.com" in api:
+        return api.replace(".api.smith", ".smith", 1)
+    return "https://smith.langchain.com"

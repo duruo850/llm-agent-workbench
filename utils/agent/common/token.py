@@ -4,7 +4,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
 def extract_token_usage(event: dict[str, Any]) -> int:
     """从 ``on_chat_model_end`` 事件提取 token 合计（prompt + completion）。
 

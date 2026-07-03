@@ -20,9 +20,9 @@
 | **M8**  | ✅ 完成 | Embeddings 语义搜账                  | [M8_1-txn-semantic-search](../Changes/M8_1-txn-semantic-search.plan)                                                                                                                     |
 | **M9**  | ✅ 完成 | 生产级别 Memory 存储记忆架构               | [M9_1-memory-os](../Changes/M9_1-memory-os.plan)                                                                                                                     |
 | **M10** | ✅ 完成 | Loop engineering                 | [M10_1-loop-engineering](../Changes/M10_1-loop-engineering.plan)                                                                                                                     |
-| **M11** | ⬜ 待做 | 月报工作流                            | —                                                                                                                     |
+| **M11** | ✅ 完成 | Eval + LangSmith                 | [M11_1-eval-langsmith](../Changes/M11_1-eval-langsmith.plan)                                                                                                                     |
 | **M12** | ⬜ 待做 | Memory + HITL                    | —                                                                                                                     |
-| **M13** | ⬜ 待做 | Eval + LangSmith                 | —                                                                                                                     |
+| **M13** | ⬜ 待做 | 月报工作流                            | —                                                                                                                     |
 | **M14** | ⬜ 待做 | Skills 模块                        | —                                                                                                                     |
 | **M15** | ⬜ 待做 | Fine-tuning                      | —                                                                                                                     |
 | **M16** | ⬜ 待做 | 前端仪表盘                            | —                                                                                                                     |
@@ -63,7 +63,7 @@
 - Agent 层：`[agent/graph/](../../agent/graph/)`（LangGraph）；对照学习见 `[agent/agent/](../../agent/agent/)`（M2 for 循环）
 - 跨轮记忆：`thread_id` 经 API / Web 透传
 - 多账号：`POST /auth/login` + Bearer 鉴权；Agent skill 显式 `account_id` 参数
-- 知识点：`[docs/knowledge/langgraph.md](../../docs/knowledge/langgraph.md)`
+- 知识点：`[docs/knowledge/M4-langgraph.md](../../docs/knowledge/M4-langgraph.md)`
 - CLI demo：`[examples/02_function_calling_agent.py](../../examples/02_function_calling_agent.py)`（`--repl` 复用 thread_id）
 - HTTP：`POST /agent/chat`（request/response 含 `thread_id`）
 - 测试：`[server/api/agent_test.py](../../server/api/agent_test.py)`、`[server/api/auth_test.py](../../server/api/auth_test.py)`
@@ -74,7 +74,7 @@
 - **高德 MCP**：`[agent/mcp/gaode/](../../agent/mcp/gaode/)` 共用 MCP 客户端；Streamable HTTP 连接 `mcp.amap.com`
 - **REST**：`GET /geo/me`（IP → 省/市/天气）；Web header 展示
 - **Agent**：`init_async` 合并 `maps_ip_location` + `maps_weather`；system prompt 允许本地天气查询
-- 知识点：`[docs/knowledge/mcp-amap.md](../../docs/knowledge/mcp-amap.md)`
+- 知识点：`[docs/knowledge/M6-mcp-amap.md](../../docs/knowledge/M6-mcp-amap.md)`
 - CLI demo：`[examples/03_amap_mcp_demo.py](../../examples/03_amap_mcp_demo.py)`
 - 测试：`[server/api/geo_test.py](../../server/api/geo_test.py)`
 
@@ -85,7 +85,7 @@
 - **Agent**：`search_knowledge` skill（[`agent/skills/knowledge.py`](../../agent/skills/knowledge.py)）
 - **REST**：`GET /knowledge/search?q=...&kb=...`
 - **基础设施**：根目录 `docker-compose.yml`（`milvus` + `ollama`）
-- 知识点：[`docs/knowledge/rag.md`](../../docs/knowledge/rag.md)
+- 知识点：[`docs/knowledge/M7-rag.md`](../../docs/knowledge/M7-rag.md)
 - Demo：[`examples/04_rag_knowledge_demo.py`](../../examples/04_rag_knowledge_demo.py)
 - 测试：[`agent/storage/rag/knowledge_test.py`](../../agent/storage/rag/knowledge_test.py)、[`server/api/knowledge_test.py`](../../server/api/knowledge_test.py)
 
@@ -96,7 +96,7 @@
 - **REST**：`GET /transactions/search?q=...&top_k=...`
 - **CLI 全量同步**：`python -m agent.storage.rag.transaction --account-id <id>`
 - **增量索引**：`TXN_SEARCH_INCREMENTAL`（默认开）；记账 / CSV 导入后 `transaction_rag.create*`
-- 知识点：[`docs/knowledge/txn-semantic-search.md`](../../docs/knowledge/txn-semantic-search.md)
+- 知识点：[`docs/knowledge/M8-txn-semantic-search.md`](../../docs/knowledge/M8-txn-semantic-search.md)
 - Demo：[`examples/05_txn_semantic_demo.py`](../../examples/05_txn_semantic_demo.py)
 - 测试：[`agent/storage/rag/transaction_test.py`](../../agent/storage/rag/transaction_test.py)、[`server/api/transactions_search_test.py`](../../server/api/transactions_search_test.py)
 
@@ -106,16 +106,23 @@
 - **Working Memory**：[`agent/storage/working/checkpointer.py`](../../agent/storage/working/checkpointer.py) — `AsyncPostgresSaver`（复用 `DATABASE_URL`）
 - **Chat History**：`conversations` + `chat_messages` 表；`GET /conversations`
 - **RAG**：[`agent/storage/rag/`](../../agent/storage/rag/) — 知识库 + 交易语义检索
-- **知识点**：[`docs/knowledge/memory-os.md`](../../docs/knowledge/memory-os.md)
+- **知识点**：[`docs/knowledge/M9-memory-os.md`](../../docs/knowledge/M9-memory-os.md)
 - **测试**：[`agent/storage/`](../../agent/storage/)、[`server/api/conversations_test.py`](../../server/api/conversations_test.py)、[`server/api/agent_test.py`](../../server/api/agent_test.py)
 
 ## M10 要点
 
-- **Loop Harness**：[`agent/graph/loop/`](../../agent/graph/loop/) — `astream_events` 步级监控、硬/软循环限制
-- **双 invoke**：`invoke()` M4 基线；生产 HTTP 默认 `invoke_v2()`（[`agent/graph/agent.py`](../../agent/graph/agent.py)）
+- **Loop Harness**：[`agent/loop/`](../../agent/loop/) — `astream_events` 步级监控、硬/软循环限制
+- **invoke 路径**：`invoke()` 为生产 HTTP / Eval 默认（LangSmith 自动 trace）；`invoke_v2()` 保留 Loop Harness + 步级落库
 - **步级落库**：`agent_loop_steps` 表；`turn_id` 标识单次 `/agent/chat`
-- **知识点**：[`docs/knowledge/loop-engineering.md`](../../docs/knowledge/loop-engineering.md)
-- **测试**：[`agent/graph/loop/harness_test.py`](../../agent/graph/loop/harness_test.py)、[`server/api/agent_test.py`](../../server/api/agent_test.py)
+- **知识点**：[`docs/knowledge/M10-loop-engineering.md`](../../docs/knowledge/M10-loop-engineering.md)
+- **测试**：[`agent/loop/harness_test.py`](../../agent/loop/harness_test.py)、[`server/api/agent_test.py`](../../server/api/agent_test.py)
+
+## M11 要点
+
+- **LangSmith**：[`common/env.py`](../../common/env.py) → `configure_langsmith()`；`LANGSMITH_*` 环境变量（APAC endpoint）；无需额外 invoke 包装
+- **离线 Eval**：[`test/eval/`](../../test/eval/) — `invoke(..., return_tools=True)` 从 graph messages 取工具链
+- **知识点**：[`docs/knowledge/M11-eval-langsmith.md`](../../docs/knowledge/M11-eval-langsmith.md)
+- **验收**：`pytest test/eval/scorers_test.py`；`python test/eval/run_eval.py`
 
 ## M2+ 启动前
 

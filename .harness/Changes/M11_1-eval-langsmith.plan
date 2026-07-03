@@ -1,0 +1,78 @@
+---
+milestone: M11
+seq: 1
+slug: eval-langsmith
+status: done
+skills:
+  - http-integration-test
+  - extract-ai-knowledge
+depends_on:
+  - M10_1-loop-engineering
+---
+
+# M11 Eval + LangSmith — 可观测性与离线评测
+
+## 里程碑
+
+**M11** — LangSmith tracing（`LANGSMITH_*` env，LangGraph 自动 trace）+ 离线 Eval harness（`test/eval/`，复用 `agent_loop_steps` 读工具链）。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | `agent_test` 回归 |
+| [extract-ai-knowledge](../Skills/extract-ai-knowledge/SKILL.md) | `docs/knowledge/M11-eval-langsmith.md` |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `requirements.txt` | 显式 `langsmith` |
+| `.env.example` | `LANGSMITH_*` |
+| `common/env.py` | `configure_langsmith()` |
+| `server/main.py` | 启动时 `configure_langsmith()` |
+| `server/api/agent.py` | 继续 `invoke_v2`（trace 由 env 驱动） |
+| `test/eval/scorers.py` | 工具 + 回复打分 |
+| `test/eval/scorers_test.py` | pytest 纯逻辑单测 |
+| `test/eval/test_cases.json` | 15–25 条用例 |
+| `test/eval/run_eval.py` | 离线评测 CLI |
+| `docs/knowledge/M11-eval-langsmith.md` | 知识点文档 |
+
+### 不在范围内
+
+- 月报工作流（已挪至 M13）
+- LangSmith 云端 Eval Dataset 同步
+- 前端 trace 展示
+- CI 强制跑全量 Eval
+
+## 知识点文档
+
+| slug | 文件 | 验收 |
+|------|------|------|
+| `eval-langsmith` | `docs/knowledge/M11-eval-langsmith.md` | README 索引 status → done |
+
+## 步骤清单
+
+- [x] 1. 本 plan + milestones M11/M13 对调
+- [x] 2. env/langsmith + HTTP 继续 `invoke_v2`
+- [x] 3. `test/eval/*` scorers + runner
+- [x] 4. `docs/knowledge/M11-eval-langsmith.md`
+- [x] 5. Eval 报告 + agent_test 回归
+
+## 运行命令
+
+```bash
+docker compose up -d
+.venv/bin/python3.14 -m pytest test/eval/scorers_test.py -v
+.venv/bin/python3.14 test/eval/run_eval.py
+.venv/bin/python3.14 -m pytest server/api/agent_test.py -v
+```
+
+## 验收标准
+
+- [ ] `LANGSMITH_TRACING=true` 时 LangGraph 自动上报（需 `.env` 配 Key）；无需 invoke_v3
+- [ ] `scorers_test.py` 全绿
+- [ ] `run_eval.py` 输出工具/回复评分报告
+- [ ] `docs/knowledge/M11-eval-langsmith.md` 存在且 README 索引为 done

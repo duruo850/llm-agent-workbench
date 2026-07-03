@@ -37,6 +37,8 @@ M{n}_{seq}-{slug}.plan
 | [M7_1-rag-knowledge.plan](M7_1-rag-knowledge.plan) | M7 | 1 | done |
 | [M8_1-txn-semantic-search.plan](M8_1-txn-semantic-search.plan) | M8 | 1 | done |
 | [M9_1-memory-os.plan](M9_1-memory-os.plan) | M9 | 1 | done |
+| [M10_1-loop-engineering.plan](M10_1-loop-engineering.plan) | M10 | 1 | done |
+| [M11_1-eval-langsmith.plan](M11_1-eval-langsmith.plan) | M11 | 1 | done |
 
 > M1 已在 harness 建立前完成，无编号 plan；后续 M1 补丁可用 `M1_1-*.plan`。
 

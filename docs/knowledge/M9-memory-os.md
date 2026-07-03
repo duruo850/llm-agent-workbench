@@ -55,7 +55,7 @@ LangGraph 用「检查点」保存 Agent **运行状态快照**（当前 `messag
 - **作用**：短期、线程级上下文（多轮对话）
 - **官方定位**：**仅开发/测试**（轻量、零依赖）
 - **核心限制**：**禁止生产** — 无法持久化、扩缩容/重启丢会话
-- **BillMind M4**：`agent/graph/agent.py` 曾用 `MemorySaver()` + `thread_id`（详见 [langgraph.md](langgraph.md)）
+- **BillMind M4**：`agent/graph/agent.py` 曾用 `MemorySaver()` + `thread_id`（详见 [M4-langgraph.md](M4-langgraph.md)）
 - **BillMind M9**：`AsyncPostgresSaver`，复用 `DATABASE_URL`；`MemorySaver` 仅作文档对照，测试可在 pytest 内 mock
 
 ### 生产替代：AsyncPostgresSaver
@@ -203,7 +203,7 @@ sequenceDiagram
 
 ## 里程碑与延伸阅读
 
-- LangGraph 基础：[langgraph.md](langgraph.md)（MemorySaver 段落已链至本文 § MemorySaver）
-- RAG：[rag.md](rag.md) · 交易语义：[txn-semantic-search.md](txn-semantic-search.md)
+- LangGraph 基础：[M4-langgraph.md](M4-langgraph.md)（MemorySaver 段落已链至本文 § MemorySaver）
+- RAG：[M7-rag.md](M7-rag.md) · 交易语义：[M8-txn-semantic-search.md](M8-txn-semantic-search.md)
 - 索引：[docs/knowledge/README.md](README.md)
-- HITL（M12）：[memory-hitl.md](memory-hitl.md)
+- HITL（M12）：[M12-memory-hitl.md](M12-memory-hitl.md)

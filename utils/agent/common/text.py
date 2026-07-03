@@ -3,6 +3,11 @@ from typing import Any
 from langchain_core.messages import AIMessage, ToolMessage
 
 
+def extract_tool_names(messages: list) -> list[str]:
+    """从图输出 messages 中提取已执行的工具名（``ToolMessage.name``）。"""
+    return [message.name for message in messages if isinstance(message, ToolMessage) and message.name]
+
+
 def extract_reply(messages: list) -> str:
     """从图输出 messages 中取最后一条 AI 文本回复。"""
     for message in reversed(messages):

@@ -1,11 +1,11 @@
 ---
 name: extract-ai-knowledge
-description: 从 BillMind 代码与 learning-plan 提取 AI 技术知识点，写入 docs/knowledge/{slug}.md
+description: 从 BillMind 代码与 learning-plan 提取 AI 技术知识点，写入 docs/knowledge/M{n}-{slug}.md
 ---
 
 # extract-ai-knowledge — 提取 AI 知识点文档
 
-从项目代码与 [learning-plan](../../../docs/learning-plan.md) 提炼某主题的**本质**（非课表），写入 `docs/knowledge/{slug}.md`，并更新索引。
+从项目代码与 [learning-plan](../../../docs/learning-plan.md) 提炼某主题的**本质**（非课表），写入 `docs/knowledge/M{n}-{slug}.md`（如 `M2-function-calling.md`），并更新索引。
 
 ## 何时触发
 
@@ -25,7 +25,7 @@ description: 从 BillMind 代码与 learning-plan 提取 AI 技术知识点，�
 1. 已读 [Rules/00-core.md](../../Rules/00-core.md)（中文、最小 diff）
 2. 读 [docs/learning-plan.md](../../../docs/learning-plan.md) 中对应里程碑章节
 3. 读项目内相关代码（见下方 slug 表的「典型代码路径」）
-4. 参考已完成样例：[docs/knowledge/function-calling.md](../../../docs/knowledge/function-calling.md)
+4. 参考已完成样例：[docs/knowledge/M2-function-calling.md](../../../docs/knowledge/M2-function-calling.md)
 
 ## 主题 slug 表
 
@@ -47,7 +47,7 @@ description: 从 BillMind 代码与 learning-plan 提取 AI 技术知识点，�
 
 | 产出 | 路径 |
 |------|------|
-| 知识点正文 | `docs/knowledge/{slug}.md` |
+| 知识点正文 | `docs/knowledge/M{n}-{slug}.md` |
 | 索引更新 | `docs/knowledge/README.md`（对应行 status → done） |
 | 可选反向链接 | `docs/learning-plan.md` 对应里程碑节末加「详见 docs/knowledge/{slug}.md」 |
 
@@ -124,6 +124,6 @@ grep {slug} docs/knowledge/README.md
 
 ## 参考
 
-- 已完成样例：[function-calling.md](../../../docs/knowledge/function-calling.md)
+- 已完成样例：[M2-function-calling.md](../../../docs/knowledge/M2-function-calling.md)
 - 架构背景（只读）：[Wiki/architecture.md](../../Wiki/architecture.md)
 - 空模板：[template.md](template.md)

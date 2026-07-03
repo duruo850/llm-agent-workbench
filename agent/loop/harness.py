@@ -33,9 +33,9 @@ from langchain_core.messages import HumanMessage
 from langgraph.errors import GraphRecursionError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from agent.common.result import is_no_tool_result
-from agent.common.text import extract_reply
-from agent.common.token import extract_token_usage
+from utils.agent.common.result import is_no_tool_result
+from utils.agent.common.text import extract_reply
+from utils.agent.common.token import extract_token_usage
 from server.model.conversation import Conversation
 from server.model.chat_message import ChatMessage
 from agent.loop.hooks import LoopHooks, LoopStepMetrics

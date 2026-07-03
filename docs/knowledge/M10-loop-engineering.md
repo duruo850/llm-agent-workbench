@@ -118,5 +118,5 @@ sequenceDiagram
 
 - 课表：[docs/learning-plan.md](../learning-plan.md) M10
 - 进度：[.harness/Wiki/milestones.md](../../.harness/Wiki/milestones.md)
-- 对照 M4 LangGraph：[langgraph.md](langgraph.md)
-- 对照 M9 Memory：[memory-os.md](memory-os.md)
+- 对照 M4 LangGraph：[M4-langgraph.md](M4-langgraph.md)
+- 对照 M9 Memory：[M9-memory-os.md](M9-memory-os.md)

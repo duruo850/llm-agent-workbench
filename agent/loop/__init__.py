@@ -15,7 +15,7 @@
 对外统一从此模块导入，避免调用方散落引用子模块路径。
 """
 
-from agent.common.text import extract_reply
+from utils.agent.common.text import extract_reply
 from agent.loop.harness import LoopHarness, LoopRunResult, LoopTurnContext
 from agent.loop.hooks import LoopHooks, LoopStepMetrics
 from agent.loop.policy import (
