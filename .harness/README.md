@@ -4,7 +4,7 @@ Agent 实现 BillMind 功能前的**必读入口**。本目录沉淀目录结构
 
 ## 阅读顺序
 
-1. **[Rules/00-core.md](Rules/00-core.md)** — 全局原则（最小 diff、中文、不擅自 commit）
+1. **[Rules/00-core.md](Rules/00-core.md)** — 全局原则（**第一条：尽量小改动** — 复用 > 改名 > 加参数；不擅自 commit）
 2. 按任务类型查 **Rules** 专项规范
 3. 按任务类型执行 **Skills** 中的 SOP
 4. 需要背景时查 **Wiki**
