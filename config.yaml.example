@@ -9,6 +9,9 @@ deepseek_api_key: ""
 # DeepSeek Chat 模型 ID（默认 deepseek-v4-flash；legacy deepseek-chat 将于 2026-07-24 退役）
 # deepseek_model: deepseek-v4-flash
 
+# V4 默认开启 Thinking；Agent 记账建议关闭（见 docs/knowledge/M11.1-slim-prompt-reasoning-latency.md）
+# deepseek_thinking_disabled: true
+
 # --- Database ---
 # 本地
 database_url: postgresql+asyncpg://billmind:billmind@localhost:5432/billmind

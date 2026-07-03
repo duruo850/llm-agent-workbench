@@ -146,6 +146,14 @@ def get_deepseek_model() -> str:
     return os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash").strip()
 
 
+def is_deepseek_thinking_disabled() -> bool:
+    """V4 Agent 路径是否关闭 Thinking（``DEEPSEEK_THINKING_DISABLED``，默认 true）。
+
+    见 ``docs/knowledge/M11.1-slim-prompt-reasoning-latency.md``。
+    """
+    return _env_flag("DEEPSEEK_THINKING_DISABLED", default=True)
+
+
 def get_checkpointer_pool_max() -> int:
     """AsyncPostgresSaver 连接池 ``max_size``（默认 5）。"""
     load_config()

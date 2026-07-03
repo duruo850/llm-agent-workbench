@@ -87,6 +87,7 @@ def _assert_orchestration_rules(prompt: str) -> None:
     assert OUT_OF_SCOPE_REPLY in prompt
     assert "import_csv_file" in prompt
     assert "parse_image_file" in prompt
+    assert "不要展示推理过程" in prompt
     assert "recognize_image_file" not in prompt
     assert LOOP_ENGINEERING_RULES.strip() in prompt
 

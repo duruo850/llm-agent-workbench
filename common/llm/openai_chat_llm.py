@@ -7,6 +7,7 @@ import os
 import httpx
 from langchain_openai import ChatOpenAI
 
+from common.env import is_deepseek_thinking_disabled
 from common.llm.types import LLMCapability, LLMProvider
 from common.llm.spec import resolve_spec
 from common.llm.setting import OLLAMA_BASE_URL, use_system_proxy
@@ -34,6 +35,10 @@ def get_openai_chat_llm(
 
     if spec.provider is LLMProvider.DEEPSEEK and not use_system_proxy():
         kwargs["http_client"] = httpx.Client(trust_env=False)
+
+    if spec.provider is LLMProvider.DEEPSEEK and is_deepseek_thinking_disabled():
+        # V4 默认 thinking enabled；Agent 记账场景显式关闭（见 M11.1 知识文档）
+        kwargs["model_kwargs"] = {"thinking": {"type": "disabled"}}
         
     if check_health and spec.provider is LLMProvider.OLLAMA:
         check_ollama_health()

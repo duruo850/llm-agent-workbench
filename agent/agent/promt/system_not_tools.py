@@ -8,7 +8,8 @@ DeepSeek / OpenAI Chat Completions 请求体里，**工具定义**与**对话**�
 工具选型（含时间范围）交给 ``bind_tools`` + LLM；``_format_response_rules`` 复用 ``system.py``。
 完整版（含工具枚举 / 时间编排）见 ``system.system_prompt(tools)``。
 
-详见 ``docs/knowledge/agent-optimization.md`` §Tools 与 messages。
+详见 ``docs/knowledge/M11.2-agent-optimization.md`` §Tools 与 messages。
+推理延迟见 ``docs/knowledge/M11.1-slim-prompt-reasoning-latency.md``。
 """
 
 from __future__ import annotations
@@ -40,5 +41,6 @@ def system_prompt() -> str:
 - 若消息中含「用户上传了 CSV 文件」及 csv_text 内容，按用户指令调用 import_csv_file（不要用图片 skill 处理 CSV）
 - 若消息中含「用户上传了图片」及 image_data_url 内容，按用户意图调用 parse_image_file（多模态）
 - 工具返回 JSON 后，用简洁中文向用户说明处理结果
+- 直接回答用户问题，不要展示推理过程，不要输出思考内容
 
 {LOOP_ENGINEERING_RULES}"""
