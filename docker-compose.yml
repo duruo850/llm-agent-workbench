@@ -44,7 +44,11 @@ services:
         fi
         wait
     healthcheck:
-      test: ["CMD-SHELL", "ollama list | grep -Fq nomic-embed-text && ollama list | grep -Fq qwen2.5vl"]
+      test:
+        [
+          "CMD-SHELL",
+          "ollama list | grep -Fq \"$$OLLAMA_EMBEDDING_MODEL\" && ollama list | grep -Fq \"$$OLLAMA_VISION_MODEL\"",
+        ]
       interval: 15s
       timeout: 10s
       retries: 40
@@ -153,6 +157,8 @@ services:
     profiles: ["rag"]
     volumes:
       - ./config.yaml:/app/config.yaml:ro
+    environment:
+      PYTHONUNBUFFERED: "1"
     command: ["python", "-m", "storage.rag.knowledge_index"]
     depends_on:
       ollama:

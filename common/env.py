@@ -163,12 +163,17 @@ def get_rag_top_k() -> int:
 
 
 def get_milvus_health_uri() -> str:
-    """Milvus standalone 健康检查地址（默认 9091/healthz）。"""
+    """Milvus standalone 健康检查地址（由 ``MILVUS_URI`` 主机 + ``:9091/healthz`` 推导）。"""
     load_config()
     explicit = os.getenv("MILVUS_HEALTH_URI", "").strip().rstrip("/")
     if explicit:
         return explicit
-    return "http://127.0.0.1:9091/healthz"
+    uri = os.getenv("MILVUS_URI", "").strip().rstrip("/")
+    if not uri or "://" not in uri:
+        raise ValueError("请在 config.yaml 配置 milvus_uri 或 milvus_health_uri")
+    scheme, rest = uri.split("://", 1)
+    host = rest.split("/", 1)[0].split(":", 1)[0]
+    return f"{scheme}://{host}:9091/healthz"
 
 
 def _env_flag(name: str, *, default: bool = True) -> bool:
