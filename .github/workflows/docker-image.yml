@@ -1,0 +1,54 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build-amd64:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+      run: |
+        # 登录 Docker Hub
+        # 使用 Docker Hub 的官方服务器进行登录
+        # 使用 GitHub Secrets 存储的用户名和密码
+        # 请确保 secrets.DOCKER_USERNAME 和 secrets.DOCKER_PASSWORD 配置正确
+
+        docker login -u "${{secrets.DOCKER_USERNAME}}" -p "${{secrets.DOCKER_PASSWORD}}"
+
+        # 构建 server 镜像
+        # 切换到 server 目录后，根据 Dockerfile 构建镜像，并使用 run_number 作为版本号
+
+        cd server
+        docker build . --file Dockerfile --tag duruo850/billmind-server:0.0."${{github.run_number}}"
+
+        # 标记 server 镜像为 latest
+
+        docker tag duruo850/billmind-server:0.0.${{github.run_number}} duruo850/billmind-server:latest
+
+        # 推送 server 镜像到 Docker Hub
+
+        docker push duruo850/billmind-server:0.0.${{github.run_number}}
+        docker push duruo850/billmind-server:latest
+
+        # 构建 web 镜像
+        # 切换到 web 目录后，根据 Dockerfile 构建镜像，并使用 run_number 作为版本号
+
+        cd ../web
+        docker build . --file Dockerfile --tag duruo850/billmind-web:0.0.${{github.run_number}}
+
+        # 标记 web 镜像为 latest
+
+        docker tag duruo850/billmind-web:0.0.${{github.run_number}} duruo850/billmind-web:latest
+
+        # 推送 web 镜像到 Docker Hub
+
+        docker push duruo850/billmind-web:0.0.${{github.run_number}}
+        docker push duruo850/billmind-web:latest
