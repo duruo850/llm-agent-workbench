@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: billmind
       POSTGRES_DB: billmind
     ports:
-      - "5432"
+      - "5432:5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
@@ -26,7 +26,7 @@ services:
     container_name: billmind-ollama
     restart: unless-stopped
     ports:
-      - "11434"
+      - "11434:11434"
     volumes:
       - ./data/ollama:/root/.ollama
     environment:
@@ -110,8 +110,8 @@ services:
     volumes:
       - ./data/milvus:/var/lib/milvus
     ports:
-      - "19530"
-      - "9091"
+      - "19530:19530"
+      - "9091:9091"
     depends_on:
       etcd:
         condition: service_healthy
@@ -122,32 +122,6 @@ services:
       interval: 15s
       timeout: 10s
       retries: 10
-    networks:
-      - billmind
-
-  server:
-    image: billmind-server:latest
-    container_name: billmind-server
-    restart: unless-stopped
-    ports:
-      - "8000"
-    volumes:
-      - ./config.yaml:/app/config.yaml:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "python",
-          "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     networks:
       - billmind
 
@@ -171,6 +145,32 @@ services:
     networks:
       - billmind
 
+  server:
+    image: billmind-server:latest
+    container_name: billmind-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config.docker.yaml:/app/config.yaml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - billmind
+
   web:
     image: billmind-web:latest
     container_name: billmind-web
@@ -179,9 +179,9 @@ services:
       - "5173:80"
     volumes:
       - ./web/my.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      server:
-        condition: service_healthy
+    # depends_on:
+    #   server:
+    #     condition: service_healthy
     networks:
       - billmind
 

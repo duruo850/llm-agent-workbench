@@ -1,0 +1,34 @@
+# Docker Compose 用配置模板 — 复制为 config.docker.yaml 并填入密钥（勿提交 config.docker.yaml）
+
+# --- LLM（必填）---
+deepseek_api_key: ""
+
+# DeepSeek Chat 模型 ID（默认 deepseek-v4-flash）
+deepseek_model: deepseek-v4-flash
+
+# V4 推理强度（Agent 默认 low；可选 low / medium / high；none 表示不传）
+deepseek_reasoning_effort: low
+
+# 可选：终端 SOCKS 代理时必须走代理时设为 true
+# deepseek_use_system_proxy: false
+
+# --- Database ---
+database_url: postgresql+asyncpg://billmind:billmind@postgres:5432/billmind
+
+# --- Ollama ---
+ollama_uri: http://ollama:11434
+ollama_vision_model: qwen2.5vl:7b
+ollama_embedding_model: nomic-embed-text
+
+# --- MCP / Geo ---
+amap_maps_api_key: ""
+
+# --- RAG（Milvus + Ollama embedding）---
+milvus_uri: http://milvus:19530
+rag_top_k: 4
+
+# --- LangSmith（勿提交真实 Key）---
+langsmith_tracing: true
+langsmith_endpoint: https://apac.api.smith.langchain.com
+langsmith_api_key: ""
+langsmith_project:

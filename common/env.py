@@ -146,12 +146,26 @@ def get_deepseek_model() -> str:
     return os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash").strip()
 
 
-def is_deepseek_thinking_disabled() -> bool:
-    """V4 Agent 路径是否关闭 Thinking（``DEEPSEEK_THINKING_DISABLED``，默认 true）。
+def get_deepseek_reasoning_effort() -> str | None:
+    """DeepSeek V4 ``reasoning_effort``（默认 ``low``；``none``/空 表示不传）。
 
+    兼容旧配置 ``DEEPSEEK_THINKING_DISABLED``：``true`` → ``low``，``false`` → 不传。
     见 ``docs/knowledge/M11.1-slim-prompt-reasoning-latency.md``。
     """
-    return _env_flag("DEEPSEEK_THINKING_DISABLED", default=True)
+    load_config()
+    explicit = os.getenv("DEEPSEEK_REASONING_EFFORT", "").strip().lower()
+    if explicit:
+        if explicit in ("none", "off", "false", "0", "disabled"):
+            return None
+        return explicit
+
+    legacy = os.getenv("DEEPSEEK_THINKING_DISABLED", "").strip().lower()
+    if legacy in ("0", "false", "no", "off"):
+        return None
+    if legacy in ("1", "true", "yes", "on"):
+        return "low"
+
+    return "low"
 
 
 def get_checkpointer_pool_max() -> int:
