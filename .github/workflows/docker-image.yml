@@ -26,8 +26,7 @@ jobs:
         # 构建 server 镜像
         # 切换到 server 目录后，根据 Dockerfile 构建镜像，并使用 run_number 作为版本号
 
-        cd server
-        docker build . --file Dockerfile --tag duruo850/billmind-server:0.0."${{github.run_number}}"
+        docker build -f server/Dockerfile . --tag duruo850/billmind-server:0.0."${{github.run_number}}"
 
         # 标记 server 镜像为 latest
 
@@ -41,8 +40,7 @@ jobs:
         # 构建 web 镜像
         # 切换到 web 目录后，根据 Dockerfile 构建镜像，并使用 run_number 作为版本号
 
-        cd ../web
-        docker build . --file Dockerfile --tag duruo850/billmind-web:0.0.${{github.run_number}}
+        docker build -f web/Dockerfile . --tag duruo850/billmind-web:0.0."${{github.run_number}}"
 
         # 标记 web 镜像为 latest
 
