@@ -11,24 +11,6 @@
 - 系统掌握 AI 应用全链路：Chain → Agent → RAG → Embeddings → Skills → Fine-tuning
 - 交付可演示的后端 + 前端 + Agent 面试级项目
 
-## 📚 学习路线
-
-详细增量计划见 [docs/learning-plan.md](docs/learning-plan.md)。各主题本质讲解见 [docs/knowledge/](docs/knowledge/README.md)。
-
-**第 1 周**
-- [x] M0 LangChain 解析记账意图
-- [x] M1 FastAPI + PostgreSQL
-- [x] M2 Function Calling 记一笔 / 查账
-- [ ] M3-M4 LangGraph Agent + 聊天前端
-
-**第 2 周**
-- [ ] M5-M6 文件导入 + RAG 知识库
-- [ ] M7-M8 Embeddings/RAG 语义搜账 + 月报工作流
-
-**第 3 周**
-- [ ] M9-M11 Memory / HITL / Skills
-- [ ] M12-M13 Fine-tuning 实验 + 仪表盘
-
 ## 🛠️ 技术栈
 
 - **Agent**: LangChain + LangGraph + Function Calling

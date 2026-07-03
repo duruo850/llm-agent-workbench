@@ -2,9 +2,10 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 const apiTarget = "http://127.0.0.1:8000";
-const agentProxy = {
+const apiProxy = {
   target: apiTarget,
   changeOrigin: true,
+  rewrite: (path: string) => path.replace(/^\/api/, ""),
   timeout: 120_000,
   proxyTimeout: 120_000,
 };
@@ -15,14 +16,14 @@ export default defineConfig({
     host: "127.0.0.1",
     port: 5173,
     proxy: {
-      "/agent": agentProxy,
+      "/api": apiProxy,
     },
   },
   preview: {
     host: "127.0.0.1",
     port: 5173,
     proxy: {
-      "/agent": agentProxy,
+      "/api": apiProxy,
     },
   },
 });

@@ -1,0 +1,35 @@
+# BillMind 配置模板 
+
+# --- LLM（必填）---
+deepseek_api_key: ""
+
+# 可选：终端 SOCKS 代理时必须走代理时设为 true，并 pip install "httpx[socks]"
+# deepseek_use_system_proxy: false
+
+# --- Database ---
+# 本地
+database_url: postgresql+asyncpg://billmind:billmind@localhost:5432/billmind
+
+# --- Ollama ---
+# 本地
+ollama_uri: http://ollama:11434
+ollama_vision_model: qwen2.5vl:7b
+ollama_embedding_model: nomic-embed-text
+
+
+# --- MCP / Geo ---
+amap_maps_api_key: ""
+# geo_default_ip: ""
+
+# --- RAG（Milvus + Ollama embedding）---
+milvus_uri: http://milvus:19530
+rag_top_k: 4
+
+# --- 交易语义搜索（记账后自动 upsert 向量，设为 false 关闭）---
+# txn_search_incremental: true
+
+# --- LangSmith（APAC endpoint；勿提交真实 Key）---
+langsmith_tracing: true
+langsmith_endpoint: https://apac.api.smith.langchain.com
+langsmith_api_key: ""
+langsmith_project:

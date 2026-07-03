@@ -1,10 +1,7 @@
+import { resolveApiBase } from "./base";
+
 const TOKEN_KEY = "billmind_token";
 const ACCOUNT_NAME_KEY = "billmind_account_name";
-
-const API_BASE = (import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000").replace(
-  /\/$/,
-  "",
-);
 
 export interface LoginResponse {
   token: string;
@@ -40,14 +37,14 @@ export class AuthApiError extends Error {
 export async function postLogin(name: string): Promise<LoginResponse> {
   let response: Response;
   try {
-    response = await fetch(`${API_BASE}/accounts/login`, {
+    response = await fetch(`${resolveApiBase()}/accounts/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: name.trim() }),
     });
   } catch {
     throw new AuthApiError(
-      `无法连接后端 API（${API_BASE}）。请先运行：python server/main.py`,
+      `无法连接后端 API（${resolveApiBase()}）。请先运行：python server/main.py`,
     );
   }
 

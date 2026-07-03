@@ -1,16 +1,7 @@
+import { resolveApiBase } from "./base";
 import { clearAuth, getToken } from "./auth";
 
-declare global {
-  interface Window {
-    __BILLMIND_ENV__?: { VITE_API_BASE?: string };
-  }
-}
-
-const API_BASE = (
-  window.__BILLMIND_ENV__?.VITE_API_BASE ??
-  import.meta.env.VITE_API_BASE ??
-  "http://127.0.0.1:8000"
-).replace(/\/$/, "");
+const API_BASE = resolveApiBase();
 
 export class ApiError extends Error {
   constructor(message: string) {

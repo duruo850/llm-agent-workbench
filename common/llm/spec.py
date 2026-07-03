@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
-from dotenv import load_dotenv
+from common.env import load_config
 from common.llm.types import LLMCapability, LLMProvider, ProviderSpec
 from common.llm.setting import DEEPSEEK_BASE_URL, DEEPSEEK_MODEL, OLLAMA_BASE_URL, OLLAMA_VISION_MODEL, OLLAMA_TEXT_MODEL
 
-_env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
-load_dotenv(_env_path)
+load_config()
 
 
 def resolve_spec(
@@ -20,7 +18,7 @@ def resolve_spec(
         api_key = os.getenv("DEEPSEEK_API_KEY")
         if not api_key:
             raise ValueError(
-                "未找到 DEEPSEEK_API_KEY。请复制 .env.example 为 .env 并填入 API Key。"
+                "未找到 DEEPSEEK_API_KEY。请复制 config.yaml.example 为 config.yaml 并填入 API Key。"
             )
         if capability is LLMCapability.VISION:
             raise ValueError("DeepSeek deepseek-chat 不支持视觉输入，请使用 Ollama 视觉模型。")

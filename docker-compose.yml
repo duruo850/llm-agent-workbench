@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: billmind
       POSTGRES_DB: billmind
     ports:
-      - "5432:5432"
+      - "5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
@@ -17,6 +17,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - billmind
 
   # Ollama：启动后自动 pull 视觉 + embedding 模型
   ollama:
@@ -24,7 +26,7 @@ services:
     container_name: billmind-ollama
     restart: unless-stopped
     ports:
-      - "11434:11434"
+      - "11434"
     volumes:
       - ./data/ollama:/root/.ollama
     environment:
@@ -47,6 +49,8 @@ services:
       timeout: 10s
       retries: 40
       start_period: 60s
+    networks:
+      - billmind
 
   # Etcd：Milvus 的分布式 KV 存储
   etcd:
@@ -66,6 +70,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - billmind
 
   # Minio：Milvus 的分布式对象存储
   minio:
@@ -83,6 +89,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - billmind
 
   # Milvus：向量数据库
   milvus:
@@ -98,8 +106,8 @@ services:
     volumes:
       - ./data/milvus:/var/lib/milvus
     ports:
-      - "19530:19530"
-      - "9091:9091"
+      - "19530"
+      - "9091"
     depends_on:
       etcd:
         condition: service_healthy
@@ -110,21 +118,17 @@ services:
       interval: 15s
       timeout: 10s
       retries: 10
+    networks:
+      - billmind
 
   server:
-    image: billmind-server:1.0.0
+    image: billmind-server:latest
     container_name: billmind-server
     restart: unless-stopped
     ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://billmind:billmind@postgres:5432/billmind
-      MILVUS_URI: http://milvus:19530
-      OLLAMA_URI: http://ollama:11434
-      OLLAMA_BASE_URL: http://ollama:11434/v1
-      WEB_ORIGIN: http://127.0.0.1:5173,http://localhost:5173
+      - "8000"
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -140,15 +144,23 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    networks:
+      - billmind
 
   web:
-    image: billmind-web:1.0.0
+    image: billmind-web:latest
     container_name: billmind-web
     restart: unless-stopped
     ports:
       - "5173:80"
-    environment:
-      VITE_API_BASE: http://127.0.0.1:8000
+    volumes:
+      - ./web/my.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       server:
         condition: service_healthy
+    networks:
+      - billmind
+
+networks:
+  billmind:
+    driver: bridge
