@@ -110,3 +110,45 @@ services:
       interval: 15s
       timeout: 10s
       retries: 10
+
+  server:
+    image: billmind-server:1.0.0
+    container_name: billmind-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://billmind:billmind@postgres:5432/billmind
+      MILVUS_URI: http://milvus:19530
+      OLLAMA_URI: http://ollama:11434
+      OLLAMA_BASE_URL: http://ollama:11434/v1
+      WEB_ORIGIN: http://127.0.0.1:5173,http://localhost:5173
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  web:
+    image: billmind-web:1.0.0
+    container_name: billmind-web
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    environment:
+      VITE_API_BASE: http://127.0.0.1:8000
+    depends_on:
+      server:
+        condition: service_healthy

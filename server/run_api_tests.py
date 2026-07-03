@@ -29,7 +29,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PYTHON = ROOT / ".venv" / "bin" / "python3.14"
 API_BASE = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 HEALTH_URL = f"{API_BASE}/health"
-HEALTH_TIMEOUT_SEC = 30
+HEALTH_TIMEOUT_SEC = 120
 
 
 def _check_health() -> bool:

@@ -1,9 +1,16 @@
 import { clearAuth, getToken } from "./auth";
 
-const API_BASE = (import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000").replace(
-  /\/$/,
-  "",
-);
+declare global {
+  interface Window {
+    __BILLMIND_ENV__?: { VITE_API_BASE?: string };
+  }
+}
+
+const API_BASE = (
+  window.__BILLMIND_ENV__?.VITE_API_BASE ??
+  import.meta.env.VITE_API_BASE ??
+  "http://127.0.0.1:8000"
+).replace(/\/$/, "");
 
 export class ApiError extends Error {
   constructor(message: string) {
