@@ -1,4 +1,4 @@
-"""工具 prompt 编排元数据 — 供 promt.system_prompt 自动生成规则。"""
+"""工具 prompt 编排元数据 — 供 ``system_not_tools`` / ``system`` 自动生成规则。"""
 
 from __future__ import annotations
 

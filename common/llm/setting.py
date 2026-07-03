@@ -1,4 +1,5 @@
 from common.env import (
+    get_deepseek_model,
     get_ollama_base_url,
     get_ollama_text_model,
     get_ollama_vision_model,
@@ -6,7 +7,7 @@ from common.env import (
 )
 
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
-DEEPSEEK_MODEL = "deepseek-chat"
+DEEPSEEK_MODEL = get_deepseek_model()
 
 OLLAMA_BASE_URL = get_ollama_base_url()
 OLLAMA_VISION_MODEL = get_ollama_vision_model()

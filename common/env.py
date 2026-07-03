@@ -140,6 +140,22 @@ def is_deepseek_use_system_proxy() -> bool:
     return os.getenv("DEEPSEEK_USE_SYSTEM_PROXY", "").lower() in ("1", "true", "yes")
 
 
+def get_deepseek_model() -> str:
+    """DeepSeek Chat 模型 ID（默认 ``deepseek-v4-flash``）。"""
+    load_config()
+    return os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash").strip()
+
+
+def get_checkpointer_pool_max() -> int:
+    """AsyncPostgresSaver 连接池 ``max_size``（默认 5）。"""
+    load_config()
+    raw = os.getenv("CHECKPOINTER_POOL_MAX", "5").strip()
+    try:
+        return max(1, int(raw))
+    except ValueError:
+        return 5
+
+
 def get_ollama_uri() -> str:
     """Ollama 原生 API 根地址（Embedding 等，非 Chat 用的 OpenAI 兼容 /v1）。
 

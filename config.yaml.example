@@ -6,9 +6,15 @@ deepseek_api_key: ""
 # 可选：终端 SOCKS 代理时必须走代理时设为 true，并 pip install "httpx[socks]"
 # deepseek_use_system_proxy: false
 
+# DeepSeek Chat 模型 ID（默认 deepseek-v4-flash；legacy deepseek-chat 将于 2026-07-24 退役）
+# deepseek_model: deepseek-v4-flash
+
 # --- Database ---
 # 本地
 database_url: postgresql+asyncpg://billmind:billmind@localhost:5432/billmind
+
+# AsyncPostgresSaver 连接池 max_size（默认 5）
+# checkpointer_pool_max: 5
 
 # --- Ollama ---
 # 本地

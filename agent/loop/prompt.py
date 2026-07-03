@@ -5,7 +5,7 @@
 1. **Prompt（本文件）**：让模型在 reasoning 阶段就意识到「别死磕同一工具」
 2. **Harness（harness.py）**：模型若无视 prompt，``same_tool_streak`` 仍会强制中断
 
-引用方：``agent/agent/promt/system.py`` 在 ``system_prompt()`` 末尾拼接 ``LOOP_ENGINEERING_RULES``。
+引用方：``agent/agent/promt/system_not_tools.py`` 在 ``system_prompt()`` 末尾拼接 ``LOOP_ENGINEERING_RULES``。
 数值与 ``policy.py`` 保持同源，避免 prompt 写 3 次、代码写 5 次的不一致。
 """
 

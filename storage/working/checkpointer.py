@@ -34,7 +34,7 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
-from common.env import get_database_url
+from common.env import get_checkpointer_pool_max, get_database_url
 
 logger = logging.getLogger("billmind.storage.working")
 
@@ -65,7 +65,12 @@ async def init_checkpointer() -> None:
         return
 
     dsn = _to_psycopg_dsn(get_database_url())
-    _pool = AsyncConnectionPool(dsn, kwargs=_CONNECTION_KWARGS, open=False)
+    _pool = AsyncConnectionPool(
+        dsn,
+        kwargs=_CONNECTION_KWARGS,
+        max_size=get_checkpointer_pool_max(),
+        open=False,
+    )
     await _pool.open()
     _checkpointer = AsyncPostgresSaver(_pool)
     await _checkpointer.setup()

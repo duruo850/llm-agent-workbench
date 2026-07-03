@@ -18,6 +18,7 @@
 | Memory + Human-in-the-loop | M12 | [M12-memory-hitl.md](M12-memory-hitl.md) | 待建 | 待提取 |
 | Fine-tuning / LoRA | M12 | [M12-fine-tuning.md](M12-fine-tuning.md) | 待建 | 待提取 |
 | 可插拔 Agent Skills | M14 | [M14-agent-skills.md](M14-agent-skills.md) | `agent/skills/`（待建） | 待提取 |
+| Agent 延迟与成本优化 | — | [agent-optimization.md](agent-optimization.md) | `agent/agent/promt/system.py`, `common/llm/setting.py` | done |
 
 ## 如何使用
 
