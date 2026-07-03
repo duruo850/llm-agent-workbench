@@ -147,6 +147,24 @@ services:
     networks:
       - billmind
 
+  # 知识库 embedding 入库（一次性任务，跑完退出）
+  knowledge-index:
+    image: billmind-server:latest
+    profiles: ["rag"]
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    command: ["python", "-m", "storage.rag.knowledge_index"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+      milvus:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    restart: "no"
+    networks:
+      - billmind
+
   web:
     image: billmind-web:latest
     container_name: billmind-web
