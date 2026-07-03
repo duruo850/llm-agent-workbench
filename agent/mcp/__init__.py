@@ -21,4 +21,4 @@ async def init():
     """初始化"""
     await AmapMCPClient.init()
     MCP_TOOLS.clear()
-    MCP_TOOLS.extend(AmapMCPClient.SKILL_TOOLS)
+    MCP_TOOLS.extend(AmapMCPClient.SKILL_USED_TOOLS) # 仅使用2个工具

@@ -25,18 +25,8 @@ def test_is_configured(require_amap: None) -> None:
 def test_init_loads_all_tools(require_amap: None) -> None:
     async def run() -> None:
         await AmapMCPClient.init()
-        tools = await AmapMCPClient.get_tools()
-        for tool in tools:
-            print("============tool,", tool.name)
-            print("tool.description,", tool.description)
-            print("tool.args,", tool.args)
-            print("tool.args_schema,", tool.args_schema)
-            print("tool.response_format,", tool.response_format)
-        names = {tool.name for tool in tools}
-        assert AmapMCPClient.AMAP_AUTH_MCP_TOOL_NAMES <= names, (
-            f"缺少所需工具: {AmapMCPClient.AMAP_AUTH_MCP_TOOL_NAMES - names}"
-        )
-        assert len(tools) >= len(AmapMCPClient.AMAP_AUTH_MCP_TOOL_NAMES)
+        names = {tool.name for tool in AmapMCPClient.SKILL_USED_TOOLS}
+        assert names == set(AmapMCPClient.AMAP_AUTH_MCP_TOOL_NAMES)
 
     asyncio.run(run())
 

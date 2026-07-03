@@ -19,7 +19,8 @@ class AmapMCPClient:
 
     _client: MultiServerMCPClient | None = None
     _initialized: bool = False
-    SKILL_TOOLS: list[BaseTool] = []
+    SKILL_TOOLS: list[BaseTool] = []  # 所有工具
+    SKILL_USED_TOOLS: list[BaseTool] = []  # 授权的工具
 
     @classmethod
     async def init(cls):
@@ -42,6 +43,7 @@ class AmapMCPClient:
             }
         )
         cls.SKILL_TOOLS = await cls._client.get_tools()
+        cls.SKILL_USED_TOOLS = [t for t in cls.SKILL_TOOLS if t.name in cls.AMAP_AUTH_MCP_TOOL_NAMES]
 
     @classmethod
     async def get_tools(cls) -> list[BaseTool]:
