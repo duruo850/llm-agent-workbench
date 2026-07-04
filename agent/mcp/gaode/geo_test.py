@@ -1,4 +1,4 @@
-"""IP 定位 + 天气编排集成测试 — resolve_ip_weather。"""
+"""IP 定位 + 天气集成测试。"""
 
 from __future__ import annotations
 
@@ -9,25 +9,38 @@ sys.path.insert(0, str(next(p for p in Path(__file__).resolve().parents if (p / 
 
 import asyncio
 
-from agent.mcp.gaode.geo import resolve_ip_weather
-from common.test.public_ip import fetch_current_public_ip
+from agent.mcp.gaode.geo import IpLocationResult, format_location_context, resolve_ip_location, resolve_weather
 
 
-def test_resolve_ip_weather(require_amap: None) -> None:
+def test_resolve_ip_location(require_amap: None) -> None:
     async def run() -> None:
-        # 使用当前公网 IP,vpn可能走外网，高德不识别
-        ip = fetch_current_public_ip()
-
-        # 写死厦门ip
-        ip = '112.48.54.75'
-        print("current_public_ip,", ip)
-        result = await resolve_ip_weather(ip)
-        print("result,", result)
+        ip = "112.48.54.75"
+        result = await resolve_ip_location(ip)
         assert result.ip == ip
-        assert result.city or result.province, (
-            f"未解析到城市/省份: city={result.city!r} province={result.province!r}"
-        )
-        assert result.adcode, f"未解析到 adcode: {result!r}"
-        assert result.weather, f"未解析到天气: {result!r}"
+        assert result.city or result.province
+        assert result.adcode
 
     asyncio.run(run())
+
+
+def test_resolve_weather(require_amap: None) -> None:
+    async def run() -> None:
+        location = await resolve_ip_location("112.48.54.75")
+        assert location.adcode
+        weather = await resolve_weather(location.adcode)
+        assert weather.adcode == location.adcode
+        assert weather.weather
+
+    asyncio.run(run())
+
+
+def test_format_location_context() -> None:
+    text = format_location_context(
+        IpLocationResult(
+            ip="112.48.54.75",
+            province="福建省",
+            city="厦门市",
+            adcode="350200",
+        )
+    )
+    assert text == "用户所在地：福建省厦门市"

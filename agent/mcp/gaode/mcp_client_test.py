@@ -11,7 +11,7 @@ import asyncio
 
 import pytest
 
-from agent.mcp.gaode.geo import resolve_ip_weather
+from agent.mcp.gaode.geo import resolve_ip_location, resolve_weather
 from agent.mcp.gaode.mcp_client import AmapMCPClient
 from common.test.public_ip import (
     fetch_current_public_ip,
@@ -52,14 +52,17 @@ def test_call_tool_maps_ip_location(require_amap: None) -> None:
         raw = await AmapMCPClient.call_tool("maps_ip_location", {"ip": ip})
         print("maps_ip_location raw,", raw)
 
-        result = await resolve_ip_weather(ip)
-        print("resolve_ip_weather,", result)
+        result = await resolve_ip_location(ip)
+        print("resolve_ip_location,", result)
 
         assert result.ip == ip
         assert result.city or result.province, (
             f"未解析到城市/省份: city={result.city!r} province={result.province!r}"
         )
         assert result.adcode, f"未解析到 adcode: {result!r}"
-        assert result.weather, f"未解析到天气: {result!r}"
+
+        weather = await resolve_weather(result.adcode)
+        print("resolve_weather,", weather)
+        assert weather.weather, f"未解析到天气: {weather!r}"
 
     asyncio.run(run())

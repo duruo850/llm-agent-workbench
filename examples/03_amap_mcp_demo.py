@@ -18,7 +18,7 @@ _root = Path(__file__).resolve().parents[1]
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-from agent.mcp.gaode import AmapMCPClient, resolve_ip_weather
+from agent.mcp.gaode import AmapMCPClient, resolve_ip_location, resolve_weather
 from common.env import get_amap_api_key
 
 
@@ -39,10 +39,15 @@ async def main() -> None:
     tools = await AmapMCPClient.get_tools()
     print("MCP tools:", ", ".join(tool.name for tool in tools) or "(无)")
 
-    result = await resolve_ip_weather(args.ip)
-    print(f"IP: {result.ip}")
-    print(f"位置: {result.province or '-'} {result.city or '-'} (adcode={result.adcode or '-'})")
-    print(f"天气: {result.weather or '-'} {result.temperature or '-'}°C")
+    location = await resolve_ip_location(args.ip)
+    print(f"IP: {location.ip}")
+    print(f"位置: {location.province or '-'} {location.city or '-'} (adcode={location.adcode or '-'})")
+
+    if location.adcode:
+        weather = await resolve_weather(location.adcode)
+        print(f"天气: {weather.weather or '-'} {weather.temperature or '-'}°C")
+    else:
+        print("天气: (无 adcode，跳过)")
 
 
 if __name__ == "__main__":

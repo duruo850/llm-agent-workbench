@@ -1,4 +1,4 @@
-"""IP 定位 + 天气编排 — 依次调用 maps_ip_location、maps_weather。"""
+"""高德 MCP 编排 — IP 定位与天气查询分离。"""
 
 from __future__ import annotations
 
@@ -14,11 +14,20 @@ logger = logging.getLogger("billmind.amap.geo")
 
 
 @dataclass(frozen=True)
-class GeoWeatherResult:
+class IpLocationResult:
+    """``maps_ip_location`` 解析结果。"""
+
     ip: str
     province: str | None = None
     city: str | None = None
     adcode: str | None = None
+
+
+@dataclass(frozen=True)
+class WeatherResult:
+    """``maps_weather`` 解析结果。"""
+
+    adcode: str
     weather: str | None = None
     temperature: str | None = None
 
@@ -107,32 +116,49 @@ def _extract_weather(payload: Any) -> dict[str, str | None]:
     return {"weather": None, "temperature": None}
 
 
-async def resolve_ip_weather(ip: str) -> GeoWeatherResult:
-    """先 IP 定位，再按 adcode 查天气。"""
+async def resolve_ip_location(ip: str) -> IpLocationResult:
+    """IP → 省/市/adcode。"""
     if not AmapMCPClient.is_configured():
         raise RuntimeError("未配置 AMAP_MAPS_API_KEY")
 
     location_raw = await AmapMCPClient.call_tool("maps_ip_location", {"ip": ip})
     location_payload = _parse_tool_payload(location_raw)
     location = _extract_location(location_payload)
-
     adcode = location["adcode"]
-    weather_info = {"weather": None, "temperature": None}
-    if adcode:
-        weather_raw = await AmapMCPClient.call_tool(
-            "maps_weather",
-            {"city": adcode},
-        )
-        weather_payload = _parse_tool_payload(weather_raw)
-        weather_info = _extract_weather(weather_payload)
-    else:
+    if not adcode:
         logger.warning("maps_ip_location 未返回 adcode: ip=%s raw=%s", ip, location_raw)
 
-    return GeoWeatherResult(
+    return IpLocationResult(
         ip=ip,
         province=location["province"],
         city=location["city"],
         adcode=adcode,
+    )
+
+
+async def resolve_weather(adcode: str) -> WeatherResult:
+    """adcode → 当日天气。"""
+    if not AmapMCPClient.is_configured():
+        raise RuntimeError("未配置 AMAP_MAPS_API_KEY")
+
+    code = adcode.strip()
+    if not code:
+        raise ValueError("adcode 不能为空")
+
+    weather_raw = await AmapMCPClient.call_tool("maps_weather", {"city": code})
+    weather_payload = _parse_tool_payload(weather_raw)
+    weather_info = _extract_weather(weather_payload)
+
+    return WeatherResult(
+        adcode=code,
         weather=weather_info["weather"],
         temperature=weather_info["temperature"],
     )
+
+
+def format_location_context(result: IpLocationResult) -> str:
+    """将 IP 定位结果格式化为 Agent 上下文。"""
+    location = f"{result.province or ''}{result.city or ''}".strip()
+    if not location:
+        return ""
+    return f"用户所在地：{location}"

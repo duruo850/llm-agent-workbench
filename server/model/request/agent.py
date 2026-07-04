@@ -15,6 +15,9 @@ class AgentChatRequest(RequestBase):
     file_name: str | None = Field(default=None, max_length=255)
     file_text: str | None = Field(default=None, max_length=2_000_000)
     thread_id: str | None = Field(default=None, max_length=128)
+    client_ip: str | None = Field(default=None, max_length=45)
+    province: str | None = Field(default=None, max_length=64)
+    city: str | None = Field(default=None, max_length=64)
 
     @model_validator(mode="after")
     def message_or_attachment_required(self) -> Self:
