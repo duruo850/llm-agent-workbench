@@ -16,6 +16,7 @@ import pytest
 from sqlalchemy import text
 
 from common.env import get_database_url, load_env
+from common.test.setting import wait_conversation_write_settle
 from server.api.conftest import _txn_list_rows
 from server.db.session import Database
 
@@ -176,7 +177,7 @@ def test_agent_chat_loop_steps_persisted(
     unique_suffix: str,
     require_llm: None,
 ) -> None:
-    """HTTP 默认 ``invoke``（LangSmith 自动 trace）；``invoke_v2`` 保留供 Loop Harness 测试。"""
+    """invoke_v2 异步落库 — loop_steps 在 settle 后可见。"""
     thread_id = f"loop-persist-{unique_suffix}"
     response = _post_agent_chat(
         http_client,
@@ -186,9 +187,8 @@ def test_agent_chat_loop_steps_persisted(
     assert response["reply"]
     assert response["thread_id"] == thread_id
 
+    wait_conversation_write_settle()
     step_count = asyncio.run(_count_loop_steps_for_thread(thread_id))
-    if step_count == 0:
-        pytest.skip("HTTP 使用 invoke()，不写入 agent_loop_steps；invoke_v2 路径未启用")
     assert step_count >= 1
 
 

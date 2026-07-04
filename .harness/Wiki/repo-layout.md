@@ -59,6 +59,24 @@ server/
 └── alembic/
 ```
 
+## storage/postgres/
+
+```
+storage/postgres/
+├── service/        # 薄 CRUD
+└── controller/     # 异步落库队列（conversation 等）
+    └── conversation/
+```
+
+## common/test/
+
+```
+common/test/
+├── setting.py      # 集成测试常量（如 CONVERSATION_WRITE_SETTLE_SECONDS）
+├── db.py           # DB 连通性检查
+└── ...
+```
+
 ## examples/ 结构
 
 ```

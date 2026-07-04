@@ -1,4 +1,4 @@
-"""Agent HTTP API — 编排文本 / 文件 / 图片输入，统一交给 Agent.invoke。"""
+"""Agent HTTP API — 编排文本 / 文件 / 图片输入，统一交给 Agent.invoke_v2(落库异步)。"""
 
 from __future__ import annotations
 
@@ -59,6 +59,7 @@ async def agent_chat(
         reply, thread_id, _tool_names = await Agent.invoke_v2(
             message,
             account_id=account.id,
+            db=db,
             thread_id=body.thread_id,
         )
         return AgentChatResponse(reply=reply, thread_id=thread_id)

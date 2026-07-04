@@ -10,6 +10,8 @@ import httpx
 
 sys.path.insert(0, str(next(p for p in Path(__file__).resolve().parents if (p / "pytest.ini").is_file())))
 
+from common.test.setting import wait_conversation_write_settle
+
 AGENT_CHAT_TIMEOUT = 60.0
 
 
@@ -30,6 +32,8 @@ def test_conversations_after_agent_chat(
     body = chat_response.json()
     assert body["thread_id"] == thread_id
     assert body["reply"]
+
+    wait_conversation_write_settle()
 
     list_response = http_client.get("/conversations", timeout=15.0)
     list_response.raise_for_status()

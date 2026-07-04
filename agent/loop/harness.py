@@ -23,6 +23,7 @@ M2 ``agent/agent/`` 的 for 循环目前不走本 Harness,可复用 ``policy`` /
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -37,20 +38,14 @@ from utils.agent.common.result import is_no_tool_result
 from utils.agent.common.text import extract_reply
 from utils.agent.common.token import extract_token_usage
 from server.model.conversation import Conversation
-from server.model.chat_message import ChatMessage
 from agent.loop.hooks import LoopHooks, LoopStepMetrics
 from agent.loop.policy import (
     RECURSION_LIMIT,
     SAME_TOOL_GIVE_UP_REPLY,
     SAME_TOOL_NO_RESULT_LIMIT,
 )
-from server.model.agent_loop_run import AgentLoopRun
-from server.model.agent_loop_step import AgentLoopStep
 from langchain_core.messages import AIMessage
-from storage.postgres.service.agent_loop_run import agent_loop_run_service
-from storage.postgres.service.agent_loop_step import agent_loop_step_service
 from storage.postgres.service.conversation import conversation_service
-from storage.postgres.service.chat_message import chat_message_service
 
 logger = logging.getLogger("billmind.loop.harness")
 
@@ -176,7 +171,7 @@ class LoopHarness:
         run_result: LoopRunResult,
     ) -> tuple[str, str, str]:
         """
-        完成turn轮次:创建 chat_messages / loop_run / loop_steps, 返回 (reply, thread_id, turn_id)。
+        完成 turn 轮次：异步入队落库（不等待），返回 (reply, thread_id, turn_id)。
 
         Args:
             db: 数据库会话
@@ -186,57 +181,18 @@ class LoopHarness:
         Returns:
             tuple[str, str, str]: 回复, 会话线程 ID, 本轮 turn ID
         """
-        # 提取回复
-        reply = extract_reply(run_result.messages)
-
-        # 用户消息 ID
-        user_message_id: int | None = None
-        # 写入用户消息(一次turn轮次对应一个用户消息)
-        if ctx.message.strip():
-            user_row = await chat_message_service.create(
-                db,
-                ChatMessage(conversation_id=ctx.conversation.id, role="user", content=ctx.message),
-            )
-            user_message_id = user_row.id
-            
-        # 写入agent 反馈消息(一次turn轮次对应一个反馈消息)
-        await chat_message_service.create(
-            db,
-            ChatMessage(conversation_id=ctx.conversation.id, role="assistant", content=reply),
+        del db
+        from storage.postgres.controller.conversation.controller import (
+            TurnPersistTask,
+            conversation_controller,
         )
-        
-        # 写入agent loop 步骤记录(每个步骤对应一个步骤记录)
-        for metrics in ctx.pending_steps:
-            await agent_loop_step_service.create(
-                db,
-                AgentLoopStep(
-                    account_id=ctx.account_id,
-                    conversation_id=ctx.conversation.id,
-                    thread_id=ctx.thread_id,
-                    turn_id=ctx.turn_id,
-                    user_chat_message_id=user_message_id,
-                    step_count=metrics.step_count,
-                    token_usage=metrics.token_usage,
-                    node_name=metrics.node_name,
-                    tool_name=metrics.tool_name,
-                ),
-            )
 
-        # 写入agent loop 运行记录(一次turn轮次对应一个运行记录)
-        await agent_loop_run_service.create(
-            db,
-            AgentLoopRun(
-                account_id=ctx.account_id,
-                conversation_id=ctx.conversation.id,
-                thread_id=ctx.thread_id,
-                turn_id=ctx.turn_id,
-                user_chat_message_id=user_message_id,
-                total_steps=run_result.total_steps,
-                total_tokens=run_result.total_tokens,
-                stopped_reason=run_result.stopped_reason,
-                input_message=ctx.message,
-                output_message=reply,
-            ),
+        reply = extract_reply(run_result.messages)
+        # 异步入队落库
+        asyncio.create_task(
+            conversation_controller.enqueue(
+                TurnPersistTask(ctx=ctx, run_result=run_result),
+            )
         )
 
         logger.info(

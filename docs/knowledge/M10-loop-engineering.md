@@ -29,21 +29,21 @@ sequenceDiagram
   participant GA as graph/agent.invoke_v2
   participant LH as LoopHarness
   participant Graph as create_react_agent
-  participant DB as agent_loop_steps
+  participant Ctrl as ConversationController
+  participant DB as PostgreSQL
 
   API->>GA: message, db, thread_id
-  GA->>GA: turn_id = uuid4()
-  GA->>LH: run(graph, input, hooks)
+  GA->>LH: prepare_turn (ensure conversation)
+  GA->>LH: invoke_turn (astream_events)
   loop each step event
     LH->>Graph: astream_events v2
     Graph-->>LH: on_chat_model_end / on_tool_end
-    LH->>LH: step_count++, token_usage, same_tool tracker
-    LH->>DB: create_step (on_step hook)
-    LH->>LH: should_stop / streak >= 3 ?
+    LH->>LH: pending_steps append (内存)
   end
-  LH-->>GA: LoopRunResult
-  GA-->>API: reply, thread_id, turn_id
-  API->>DB: link_user_message(turn_id)
+  LH->>Ctrl: complete_turn enqueue(ctx, run_result)
+  Ctrl-->>GA: reply 立即返回
+  GA-->>API: reply, thread_id
+  Note over Ctrl,DB: 后台 worker 单事务写 chat_messages + loop_*
 ```
 
 ### Step 1 — 硬限制
@@ -54,9 +54,9 @@ sequenceDiagram
 
 连续 3 次调用同一工具且返回为空 / `{}` / 含 `error` 的 JSON → 中断并回复「我搞不定」。
 
-### Step 3 — 步级落库
+### Step 3 — 步级落库（异步）
 
-每步 `on_step` 写入 `agent_loop_steps`：`step_count`、`token_usage`、`node_name`、`tool_name`。
+图跑完后 `complete_turn` **入队** `TurnPersistTask(ctx, run_result)`；[`storage/postgres/controller/conversation/`](../../storage/postgres/controller/conversation/) 后台 worker **单事务**写入 `chat_messages`、`agent_loop_steps`、`agent_loop_runs`。失败 `logger.error` + 1s 重试直至成功；进程 shutdown 时 `queue.join()` 排空队列。
 
 ---
 
@@ -65,7 +65,7 @@ sequenceDiagram
 | 术语 | 含义 |
 |------|------|
 | `invoke()` | M4 基线：`ainvoke`，`recursion_limit = MAX_TOOL_ROUNDS*2+1`，不落 loop 表 |
-| `invoke_v2()` | M10：`LoopHarness.run` + `astream_events`，落库 + 结构化日志 |
+| `invoke_v2()` | M10：`LoopHarness` + `astream_events`；落库经 ConversationController 异步队列 |
 | `turn_id` | 单次 HTTP invoke 的 UUID，关联一组 loop steps |
 | `LoopHooks` | `on_step`（观测/落库）、`should_stop`（自定义超轮次停止） |
 | `same_tool_streak` | 同一工具连续「无结果」计数，Harness 兜底 |
@@ -78,8 +78,9 @@ sequenceDiagram
 |------|------------|---------------|
 | 执行 API | `graph.ainvoke` | `graph.astream_events` v2 |
 | `recursion_limit` | 11（5 轮工具 × 2 + 1） | 15（`policy.RECURSION_LIMIT`） |
-| 步级落库 | 否 | 是 → `agent_loop_steps` |
+| 步级落库 | 否 | 是 → 异步队列 → `agent_loop_*` + `chat_messages` |
 | 同工具 streak 兜底 | 否 | 是 |
+| HTTP 响应 | 含同步 checkpointer | **不含**末尾 batch INSERT（最终一致） |
 | 生产 HTTP | 可回滚对照 | **默认** `POST /agent/chat` |
 
 ---
@@ -92,7 +93,8 @@ sequenceDiagram
 | 事件循环核心 | `agent/loop/harness.py` → `LoopHarness.run` |
 | System prompt 软规则 | `agent/loop/prompt.py` → `LOOP_ENGINEERING_RULES` |
 | v2 入口 | `agent/graph/agent.py` → `Agent.invoke_v2` |
-| HTTP 接线 | `server/api/agent.py` → `invoke_v2` + `link_user_message` |
+| 异步落库 | `storage/postgres/controller/conversation/controller.py` → `ConversationController` |
+| HTTP 接线 | `server/api/agent.py` → `invoke_v2` + `db` |
 | 步级表 | `server/model/agent_loop_step.py` |
 | 迁移 | `server/alembic/versions/004_agent_loop_steps.py` |
 | 服务 | `storage/postgres/service/agent_loop_step.py` |
