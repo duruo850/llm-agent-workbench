@@ -15,13 +15,14 @@ from agent.skills import SKILL_TOOLS
 from agent.graph.graph import build_agent_graph
 from utils.agent.common.text import extract_reply, extract_tool_names
 from agent.loop.harness import LoopHarness
+from langgraph.graph.state import CompiledStateGraph
 from agent.mcp import MCP_TOOLS
 
 MAX_TOOL_ROUNDS = 5
 
 logger = logging.getLogger("billmind.graph.agent")
 
-_COMPILED_GRAPH: Any | None = None
+_COMPILED_GRAPH: CompiledStateGraph = None
 _RECURSION_LIMIT: int = MAX_TOOL_ROUNDS * 2 + 1
 
 # reply, thread_id, tool_names

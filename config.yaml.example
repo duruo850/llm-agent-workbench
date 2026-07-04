@@ -9,9 +9,9 @@ deepseek_api_key: ""
 # DeepSeek Chat 模型 ID（默认 deepseek-v4-flash；legacy deepseek-chat 将于 2026-07-24 退役）
 # deepseek_model: deepseek-v4-flash
 
-# V4 推理强度（Agent 默认 low；可选 low / medium / high；none 表示不传）
-# deepseek_reasoning_effort: low
-# 旧键 deepseek_thinking_disabled: true 仍兼容，等价于 low
+# V4 Agent 默认关闭 Thinking（extra_body thinking.type=disabled）；见 M11.1 知识文档
+# deepseek_thinking_disabled: true
+# 若需开启推理：deepseek_thinking_disabled: false  或  deepseek_reasoning_effort: enabled
 
 # --- Database ---
 # 本地

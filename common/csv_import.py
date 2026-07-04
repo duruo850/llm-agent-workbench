@@ -132,7 +132,7 @@ async def import_csv_transactions(
             errors.append(f"row {row_num}: import failed ({exc})")
 
     # 将创建的交易向量添加到 Milvus向量库
-    transaction_rag.create(created_transactions)
+    await transaction_rag.produce(created_transactions)
     return ImportResult(
         imported_count=len(imported_rows),
         skipped_count=skipped_count,

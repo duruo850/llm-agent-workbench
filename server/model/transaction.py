@@ -110,8 +110,9 @@ class Transaction(SQLModel, table=True):
             merchant=str(data.get("merchant", "")),
             note=str(data.get("note", "")),
             transacted_at=datetime.fromisoformat(str(data.get("transacted_at", ""))),
-            search_score=data.get("search_score"),
         )
+        if (score := data.get("search_score")) is not None:
+            txn.search_score = float(score)
         if created_raw := data.get("created_at"):
             txn.created_at = datetime.fromisoformat(str(created_raw))
         return txn

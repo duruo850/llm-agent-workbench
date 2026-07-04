@@ -2,6 +2,8 @@
 
 门面 ``TransactionRagService``（单例 ``transaction_rag``）提供向量层增删改查；
 CLI：``python -m storage.rag.transaction --account-id 1 [--force]``。
+
+增量索引采用生产者-消费者：``produce`` 异步入队，后台线程 ``consume`` 写入 Milvus。
 """
 
 from __future__ import annotations
@@ -9,10 +11,11 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+import queue
+import threading
 from collections.abc import Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
 
 from common.env import (
     get_database_url,
@@ -38,18 +41,43 @@ class TransactionRagService(RagBaseService):
 
     def __init__(self) -> None:
         super().__init__()
+        self._tasks: queue.Queue[list[Transaction]] = queue.Queue()
+        self._consumer = threading.Thread(
+            target=self._consume_loop,
+            name="transaction-rag-consumer",
+            daemon=True,
+        )
+        self._consumer.start()
 
-    def create(self, txns: Sequence[Transaction]) -> List[str]:
-        """批量增量索引（受 ``TXN_SEARCH_INCREMENTAL`` 控制）。"""
-        if not is_txn_search_incremental_enabled() or not txns:
-            return []
-        if not self.is_ready():
-            return []
+    def _consume_loop(self) -> None:
+        while True:
+            try:
+                self.consume()
+            except Exception as exc:
+                logger.warning("交易向量 consume 循环异常: %s", exc)
+
+    def consume(self) -> None:
+        """从队列取一批交易并同步写入 Milvus（消费者线程调用）。"""
+        txns = self._tasks.get()
         try:
-            return self.add_documents(self.COLLECTION_NAME, [txn.to_document() for txn in txns])
-        except Exception as exc:
-            logger.warning("交易向量 create 失败: %s", exc)
-            return []
+            if not txns or not self.is_ready():
+                return
+            try:
+                docs = [txn.to_document() for txn in txns]
+                ids = [txn.doc_id() for txn in txns]
+                self.add_documents(self.COLLECTION_NAME, docs, ids=ids)
+            except Exception as exc:
+                logger.warning("交易向量写入失败: %s", exc)
+        finally:
+            self._tasks.task_done()
+
+    async def produce(self, txns: Sequence[Transaction]) -> None:
+        """生产者 — 仅入队，不等待 embedding / Milvus 完成。"""
+        if not is_txn_search_incremental_enabled() or not txns:
+            return
+        if not self.is_ready():
+            return
+        self._tasks.put(list(txns))
 
     async def index(
         self,
@@ -58,9 +86,7 @@ class TransactionRagService(RagBaseService):
         *,
         force: bool = False,
     ) -> int:
-        """
-        从 PG 全量同步账号交易到 Milvus。
-        """
+        """从 PG 全量同步账号交易到 Milvus。"""
         result = await transaction_service.get_list(
             db,
             TransactionListQueryRequest(AccountId=account_id, Page=0, PageSize=100000),
@@ -82,7 +108,9 @@ class TransactionRagService(RagBaseService):
         if not self.is_ready():
             raise RuntimeError("交易语义搜索未就绪（Milvus 或 Ollama embedding 不可用）")
 
-        return self.create(rows)
+        await self.produce(rows)
+        self._tasks.join()
+        return len(rows)
 
     def search(
         self,

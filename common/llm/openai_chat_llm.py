@@ -7,7 +7,7 @@ import os
 import httpx
 from langchain_openai import ChatOpenAI
 
-from common.env import get_deepseek_reasoning_effort
+from common.env import get_deepseek_reasoning_effort, is_deepseek_thinking_disabled
 from common.llm.types import LLMCapability, LLMProvider
 from common.llm.spec import resolve_spec
 from common.llm.setting import OLLAMA_BASE_URL, use_system_proxy
@@ -19,10 +19,12 @@ def get_openai_chat_llm(
     provider: LLMProvider = LLMProvider.DEEPSEEK,
     capability: LLMCapability = LLMCapability.TEXT,
     temperature: float = 0,
-    check_health: bool = True
+    check_health: bool = True,
 ) -> ChatOpenAI:
     """根据提供者与能力，创建 LangChain ChatOpenAI 实例。
-    所有 Provider 均走 OpenAI 兼容接口，LangChain 侧统一为 ChatOpenAI。
+
+    所有 Provider 均走 OpenAI 兼容接口；DeepSeek 在构造时注入 ``extra_body.thinking``，
+    每次 ``invoke`` / ``ainvoke`` 由 LangChain 自动带入请求，无需调用方再设。
     """
     spec = resolve_spec(provider, capability)
 
@@ -36,10 +38,16 @@ def get_openai_chat_llm(
     if spec.provider is LLMProvider.DEEPSEEK and not use_system_proxy():
         kwargs["http_client"] = httpx.Client(trust_env=False)
 
+    # 设置DeepSeek的extra_body
     if spec.provider is LLMProvider.DEEPSEEK:
-        if reasoning_effort := get_deepseek_reasoning_effort():
-            kwargs["model_kwargs"] = {"reasoning_effort": reasoning_effort}
-        
+        # DeepSeek 官方：thinking 走 extra_body；开启时另传顶层 reasoning_effort
+        # https://api-docs.deepseek.com/guides/thinking_mode
+        if is_deepseek_thinking_disabled():
+            kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
+        else:
+            kwargs["extra_body"] = {"thinking": {"type": "enabled"}}
+            kwargs["reasoning_effort"] = get_deepseek_reasoning_effort()
+
     if check_health and spec.provider is LLMProvider.OLLAMA:
         check_ollama_health()
 

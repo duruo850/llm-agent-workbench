@@ -98,6 +98,7 @@ class RagBaseService:
         documents: list[Document],
         *,
         drop_old: bool = False,
+        ids: list[str] | None = None,
     ) -> List[str]:
         """
         将 documents 添加到向量库。
@@ -106,10 +107,14 @@ class RagBaseService:
             collection_name: 集合名称。
             documents: 要添加的 documents 列表。
             drop_old: 是否删除旧的 documents。
+            ids: Milvus 主键（``auto_id=False`` 时必填）。
         Return:
             List[str]: 添加的 documents 的 列表。
         """
-        return self.get_vector_store(collection_name, drop_old=drop_old).add_documents(documents)
+        return self.get_vector_store(collection_name, drop_old=drop_old).add_documents(
+            documents,
+            ids=ids,
+        )
         
         
     @classmethod

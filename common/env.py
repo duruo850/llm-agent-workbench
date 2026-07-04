@@ -146,26 +146,34 @@ def get_deepseek_model() -> str:
     return os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash").strip()
 
 
-def get_deepseek_reasoning_effort() -> str | None:
-    """DeepSeek V4 ``reasoning_effort``（默认 ``low``；``none``/空 表示不传）。
+def is_deepseek_thinking_disabled() -> bool:
+    """DeepSeek V4 是否关闭 Thinking（``thinking.type=disabled``，默认 true）。
 
-    兼容旧配置 ``DEEPSEEK_THINKING_DISABLED``：``true`` → ``low``，``false`` → 不传。
+    ``DEEPSEEK_REASONING_EFFORT=low/medium/high`` 仍会产出 reasoning_tokens，Agent 路径一律视为关闭。
+    仅 ``DEEPSEEK_THINKING_DISABLED=false`` 或 ``DEEPSEEK_REASONING_EFFORT=enabled`` 时开启。
     见 ``docs/knowledge/M11.1-slim-prompt-reasoning-latency.md``。
     """
     load_config()
-    explicit = os.getenv("DEEPSEEK_REASONING_EFFORT", "").strip().lower()
-    if explicit:
-        if explicit in ("none", "off", "false", "0", "disabled"):
-            return None
-        return explicit
+    effort = os.getenv("DEEPSEEK_REASONING_EFFORT", "").strip().lower()
+    if effort in ("enabled", "on", "true", "1"):
+        return False
+    if os.getenv("DEEPSEEK_THINKING_DISABLED", "").strip().lower() in ("0", "false", "no", "off"):
+        return False
+    return True
 
-    legacy = os.getenv("DEEPSEEK_THINKING_DISABLED", "").strip().lower()
-    if legacy in ("0", "false", "no", "off"):
-        return None
-    if legacy in ("1", "true", "yes", "on"):
-        return "low"
 
-    return "low"
+def get_deepseek_reasoning_effort() -> str:
+    """Thinking 开启时传给 API 的 ``reasoning_effort``（默认 ``high``，可选 ``max``）。"""
+    load_config()
+    raw = os.getenv("DEEPSEEK_REASONING_EFFORT", "high").strip().lower()
+    if raw in ("enabled", "on", "true", "1", ""):
+        return "high"
+    if raw in ("max", "high"):
+        return raw
+    # DeepSeek 文档：low/medium 在 thinking 模式下映射为 high
+    if raw in ("low", "medium"):
+        return "high"
+    return raw
 
 
 def get_checkpointer_pool_max() -> int:

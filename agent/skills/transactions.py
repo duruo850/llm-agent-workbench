@@ -46,7 +46,7 @@ async def add_transaction(
                 transacted_at=datetime.now().replace(microsecond=0),
             ),
         )
-        transaction_rag.create([created])
+        await transaction_rag.produce([created])
         return format_tool_result(created)
     except (IntegrityError, SQLAlchemyError) as exc:
         return format_db_error(exc)

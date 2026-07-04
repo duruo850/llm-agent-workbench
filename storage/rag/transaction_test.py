@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 from decimal import Decimal
 
+import pytest
+
 from server.model.transaction import Transaction
+from storage.rag.transaction import transaction_rag
 
 
 def _sample_txn(**overrides: object) -> Transaction:
@@ -36,6 +40,42 @@ def test_embedding_text_empty_merchant_note() -> None:
         transacted_at=datetime(2026, 1, 1),
     )
     assert txn.embedding_text() == "2026-01-01 交通   10元"
+
+
+def test_doc_id_for_milvus_pk() -> None:
+    txn = _sample_txn(id=99, account_id=7)
+    assert txn.doc_id() == "7_99"
+
+
+def test_produce_enqueues_for_consumer(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "storage.rag.transaction.is_txn_search_incremental_enabled",
+        lambda: True,
+    )
+    monkeypatch.setattr(transaction_rag, "is_ready", lambda: True)
+    called: list[list] = []
+
+    def fake_add_documents(
+        collection_name: str,
+        documents: list,
+        *,
+        drop_old: bool = False,
+        ids: list[str] | None = None,
+    ) -> list[str]:
+        del collection_name, drop_old
+        called.append(documents)
+        return ids or []
+
+    monkeypatch.setattr(transaction_rag, "add_documents", fake_add_documents)
+
+    async def _run() -> None:
+        await transaction_rag.produce([_sample_txn()])
+        transaction_rag._tasks.join()
+
+    asyncio.run(_run())
+
+    assert len(called) == 1
+    assert called[0][0].metadata["transaction_id"] == 1
 
 
 def test_milvus_document_round_trip() -> None:
