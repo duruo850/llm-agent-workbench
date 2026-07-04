@@ -52,7 +52,7 @@ curl -X POST http://localhost:8000/transactions -H 'Content-Type: application/js
 curl 'http://localhost:8000/transactions?month=2025-06'
 
 # 月度汇总
-curl 'http://localhost:8000/summary/monthly?month=2025-06'
+curl 'http://localhost:8000/summary?period=month&start=2025-06-01T00:00:00&end=2025-06-30T23:59:59'
 
 # 更新 / 删除
 curl -X PATCH http://localhost:8000/transactions/1 -H 'Content-Type: application/json' -d '{"note":"午餐"}'

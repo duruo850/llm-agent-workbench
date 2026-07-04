@@ -26,7 +26,7 @@ from utils.agent.eval.scorers import (
     [
         (["add_transaction"], ["add_transaction"], "all", True),
         (["query_transactions"], ["add_transaction"], "all", False),
-        (["get_monthly_summary"], ["add_transaction", "get_monthly_summary"], "any", True),
+        (["get_summary"], ["add_transaction", "get_summary"], "any", True),
         ([], [], "all", True),
         ([], [], "none", True),
         (["add_transaction"], [], "none", False),

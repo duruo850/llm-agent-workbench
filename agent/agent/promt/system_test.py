@@ -31,7 +31,7 @@ def _representative_tools() -> list[StructuredTool]:
         " Parameters: account_id 从 config 注入。"
     )
     return [
-        _fake_tool("get_daily_summary", long_desc),
+        _fake_tool("get_summary", long_desc),
         _fake_tool(
             "find_closest_transaction",
             "在指定日期查找最接近目标金额的一笔交易。Args: date, target_amount。",
@@ -40,10 +40,6 @@ def _representative_tools() -> list[StructuredTool]:
             "search_similar_transactions",
             "按语义搜索历史消费记录，适用于模糊回忆场景。",
         ),
-        _fake_tool(
-            "get_monthly_summary",
-            "查询指定月份的消费汇总。Args: month — YYYY-MM。",
-        ),
         _fake_tool("import_csv_file", "从 CSV 文本批量导入交易。"),
         _fake_tool("parse_image_file", "从支付截图 data URL 识别记账信息。"),
     ]
@@ -51,18 +47,12 @@ def _representative_tools() -> list[StructuredTool]:
 
 def _register_test_policies() -> None:
     policies = {
-        "get_daily_summary": ToolPromptPolicy(
+        "get_summary": ToolPromptPolicy(
             scope="账单查询",
-            time_scope="day",
-            user_triggers=("今天", "今日"),
-            time_param="date",
-            forbid_tools=("get_monthly_summary",),
+            time_scope="none",
+            forbid_tools=("query_transactions",),
             example_queries=("今天花了多少",),
-            example_note="今天总支出，date={today_date}",
-        ),
-        "get_monthly_summary": ToolPromptPolicy(
-            scope="账单查询",
-            time_scope="month",
+            example_note="查汇总，period=day + 当天 start/end",
         ),
         "parse_image_file": ToolPromptPolicy(scope="图片文件识别"),
         "import_csv_file": ToolPromptPolicy(scope="CSV 导入"),
@@ -105,6 +95,26 @@ def test_system_not_tools_prompt_is_slim_without_tool_list() -> None:
 
 def test_system_not_tools_prompt_retains_orchestration_rules() -> None:
     _assert_orchestration_rules(system_prompt())
+
+
+def test_system_prompt_does_not_duplicate_get_summary_rules() -> None:
+    tools = _representative_tools()
+    _register_test_policies()
+    prompt = system_prompt_for_tools(tools)
+
+    assert "查汇总统一用 get_summary" not in prompt
+    assert "不再有分日/分月汇总工具" not in prompt
+
+
+def test_get_summary_docstring_includes_unified_rules() -> None:
+    """编排说明写在 __doc__, 由 bind_tools 注入 schema."""
+    from agent.skills.summary import get_summary
+
+    doc = get_summary.__doc__ or ""
+    assert "唯一汇总工具" in doc
+    assert "hour=某整点" in doc
+    assert "week=锚点所在 ISO 周" in doc
+    assert "period=day" in doc
 
 
 def test_system_not_tools_is_slimmer_than_system_prompt() -> None:

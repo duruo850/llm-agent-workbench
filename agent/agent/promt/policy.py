@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 SessionFactory = async_sessionmaker[AsyncSession]
 
-OUT_OF_SCOPE_REPLY = "抱歉，BillMind 仅支持账单记账与查询相关业务。"
+OUT_OF_SCOPE_REPLY = "抱歉, BillMind 仅支持账单记账与查询相关业务."
 
 SkillToolFn = Callable[..., Awaitable[str]]
 
@@ -85,7 +85,7 @@ def _register_skill_tool(fn: SkillToolFn, policy: ToolPromptPolicy) -> SkillTool
                 return await fn(db, *args, **kwargs)
 
         llm_tool.__signature__ = llm_sig
-        
+
         # tool装饰器调用，返回langchain的tool对象，增加参数config: RunnableConfig
         return tool(llm_tool)
 

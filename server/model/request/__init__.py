@@ -26,7 +26,7 @@ from server.model.request.conversation import (
     ConversationUpdateRequest,
 )
 from server.model.request.parsed import LoadTransaction, ParsedTransaction, Transaction
-from server.model.request.summary import MonthlySummaryQueryRequest
+from server.model.request.summary import SummaryQueryRequest
 from server.model.request.transaction import (
     TransactionCreateRequest,
     TransactionListQueryRequest,
@@ -52,7 +52,7 @@ __all__ = [
     "ConversationListQueryRequest",
     "ConversationUpdateRequest",
     "LoadTransaction",
-    "MonthlySummaryQueryRequest",
+    "SummaryQueryRequest",
     "ParsedTransaction",
     "Transaction",
     "TransactionCreateRequest",

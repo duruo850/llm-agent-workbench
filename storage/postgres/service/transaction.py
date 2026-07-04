@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, literal, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
+from sqlalchemy.sql import lateral
 
 from utils.date_range import day_range, month_range
-from server.model.budget import Budget
-from server.model.category import Category
 from server.model.request.transaction import TransactionListQueryRequest
 from server.model.transaction import Transaction
 from storage.postgres.service.enter import transaction_crud
@@ -23,28 +24,42 @@ class TransactionList:
 
 
 @dataclass
-class CategorySummaryRow:
-    category: str
-    total_amount: Decimal
-    transaction_count: int
-    budget_limit: Decimal | None = None
-    over_budget: bool | None = None
-
-
-@dataclass
-class MonthlySummary:
-    month: str
-    categories: list[CategorySummaryRow]
+class SummaryResult:
+    start: datetime
+    end: datetime
     total_amount: Decimal
     total_count: int
 
 
 @dataclass
-class DailySummary:
-    date: str
-    categories: list[CategorySummaryRow]
-    total_amount: Decimal
-    total_count: int
+class ClosestAmountNeighbors:
+    """目标金额邻近的三档候选: 小于 / 等于 / 大于."""
+
+    target_amount: Decimal
+    below: Transaction | None
+    equal: Transaction | None
+    above: Transaction | None
+
+    def closest(self) -> Transaction | None:
+        if candidates := [t for t in (self.below, self.equal, self.above) if t is not None]:
+            return min(
+                candidates,
+                key=lambda t: (abs(t.amount - self.target_amount), t.amount),
+            )
+        else:
+            return None
+
+    def as_payload(self) -> dict[str, object]:
+        def row(txn: Transaction | None) -> dict[str, object] | None:
+            return txn.model_dump(mode="json") if txn else None
+
+        return {
+            "target_amount": str(self.target_amount),
+            "below": row(self.below),
+            "equal": row(self.equal),
+            "above": row(self.above),
+            "closest": row(self.closest()),
+        }
 
 
 class TransactionService:
@@ -69,7 +84,10 @@ class TransactionService:
             filters["account_id"] = req.AccountId
         if req.Id is not None:
             filters["id"] = req.Id
-        if req.Month:
+        if req.TransactedAtStart is not None and req.TransactedAtEnd is not None:
+            filters["transacted_at__gte"] = req.TransactedAtStart
+            filters["transacted_at__lte"] = req.TransactedAtEnd
+        elif req.Month:
             start, end = month_range(req.Month)
             filters["transacted_at__gte"] = start
             filters["transacted_at__lt"] = end
@@ -91,116 +109,90 @@ class TransactionService:
         )
         return TransactionList(data=result["data"], total_count=result["total_count"])
 
-    async def get_monthly_summary(
-        self, db: AsyncSession, *, account_id: int, month: str
-    ) -> MonthlySummary:
-        """按月聚合交易，并关联预算对比（无独立 summary 表）。"""
-        start, end = month_range(month)
-
-        txn_stmt = (
-            select(
-                Transaction.category,
-                func.sum(Transaction.amount).label("total_amount"),
-                func.count().label("transaction_count"),
-            )
-            .where(
-                Transaction.account_id == account_id,
-                Transaction.transacted_at >= start,
-                Transaction.transacted_at < end,
-            )
-            .group_by(Transaction.category)
-            .order_by(Transaction.category)
-        )
-        txn_result = await db.execute(txn_stmt)
-        txn_rows = txn_result.all()
-
-        budget_stmt = (
-            select(Category.name, Budget.limit_amount)
-            .join(Budget, Budget.category_id == Category.id)
-            .where(
-                Category.account_id == account_id,
-                Budget.account_id == account_id,
-                Budget.month == month,
-            )
-        )
-        budget_result = await db.execute(budget_stmt)
-        budget_by_category = dict(budget_result.all())
-
-        categories: list[CategorySummaryRow] = []
-        total_amount = Decimal("0")
-        total_count = 0
-
-        for category_name, amount, count in txn_rows:
-            amount = amount or Decimal("0")
-            count = int(count)
-            total_amount += amount
-            total_count += count
-            limit = budget_by_category.get(category_name)
-            over_budget = None
-            if limit is not None:
-                over_budget = amount > limit
-            categories.append(
-                CategorySummaryRow(
-                    category=category_name,
-                    total_amount=amount,
-                    transaction_count=count,
-                    budget_limit=limit,
-                    over_budget=over_budget,
-                )
-            )
-
-        return MonthlySummary(
-            month=month,
-            categories=categories,
-            total_amount=total_amount,
-            total_count=total_count,
-        )
-
-    async def get_daily_summary(
-        self, db: AsyncSession, *, account_id: int, date: str
-    ) -> DailySummary:
-        """按日聚合交易。"""
+    async def get_closest_amount_neighbors(
+        self,
+        db: AsyncSession,
+        *,
+        account_id: int,
+        date: str,
+        target_amount: Decimal,
+    ) -> ClosestAmountNeighbors:
+        """指定自然日内, 各取一笔 ``amount < N`` / ``= N`` / ``> N`` 的邻近记录."""
         start, end = day_range(date)
+        base = and_(
+            Transaction.account_id == account_id,
+            Transaction.transacted_at >= start,
+            Transaction.transacted_at < end,
+        )
 
-        txn_stmt = (
+        def neighbor_lateral(amount_cond: object, *order_by: object):
+            return lateral(
+                select(Transaction)
+                .where(base, amount_cond)
+                .order_by(*order_by)
+                .limit(1)
+            ).alias()
+
+        below_lat = neighbor_lateral(
+            Transaction.amount < target_amount,
+            Transaction.amount.desc(),
+        )
+        equal_lat = neighbor_lateral(
+            Transaction.amount == target_amount,
+            Transaction.transacted_at.desc(),
+        )
+        above_lat = neighbor_lateral(
+            Transaction.amount > target_amount,
+            Transaction.amount.asc(),
+        )
+        Below = aliased(Transaction, below_lat)
+        Equal = aliased(Transaction, equal_lat)
+        Above = aliased(Transaction, above_lat)
+        anchor = select(literal(1).label("_anchor")).subquery()
+
+        stmt = (
+            select(Below, Equal, Above)
+            .select_from(anchor)
+            .outerjoin(below_lat, true())
+            .outerjoin(equal_lat, true())
+            .outerjoin(above_lat, true())
+        )
+        row = (await db.execute(stmt)).one()
+        below, equal, above = row
+
+        return ClosestAmountNeighbors(
+            target_amount=target_amount,
+            below=below,
+            equal=equal,
+            above=above,
+        )
+
+    async def get_summary(
+        self,
+        db: AsyncSession,
+        *,
+        account_id: int,
+        start: datetime,
+        end: datetime,
+    ) -> SummaryResult:
+        """按闭区间 ``[start, end]`` SQL 聚合总支出与笔数."""
+        stmt = (
             select(
-                Transaction.category,
-                func.sum(Transaction.amount).label("total_amount"),
-                func.count().label("transaction_count"),
+                func.coalesce(func.sum(Transaction.amount), 0).label("total_amount"),
+                func.count().label("total_count"),
             )
             .where(
                 Transaction.account_id == account_id,
                 Transaction.transacted_at >= start,
-                Transaction.transacted_at < end,
+                Transaction.transacted_at <= end,
             )
-            .group_by(Transaction.category)
-            .order_by(Transaction.category)
         )
-        txn_result = await db.execute(txn_stmt)
-        txn_rows = txn_result.all()
-
-        categories: list[CategorySummaryRow] = []
-        total_amount = Decimal("0")
-        total_count = 0
-
-        for category_name, amount, count in txn_rows:
-            amount = amount or Decimal("0")
-            count = int(count)
-            total_amount += amount
-            total_count += count
-            categories.append(
-                CategorySummaryRow(
-                    category=category_name,
-                    total_amount=amount,
-                    transaction_count=count,
-                )
-            )
-
-        return DailySummary(
-            date=date,
-            categories=categories,
-            total_amount=total_amount,
-            total_count=total_count,
+        row = (await db.execute(stmt)).one()
+        return SummaryResult(
+            start=start,
+            end=end,
+            total_amount=row.total_amount or Decimal("0"),
+            total_count=int(row.total_count),
         )
 
     async def update(self, db: AsyncSession, transaction: Transaction) -> Transaction | None:

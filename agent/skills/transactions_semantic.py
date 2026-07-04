@@ -13,13 +13,12 @@ from common.format import format_tool_result
 @tool_policy(
     scope="语义搜历史账单",
     forbid_tools=(
-        "get_monthly_summary",
-        "get_daily_summary",
+        "get_summary",
         "query_transactions",
         "find_closest_transaction",
     ),
     example_queries=("上次星巴克花了多少", "类似出差住宿的消费"),
-    example_note="模糊回忆消费，无明确月份/日期/金额时用；有明确时间或金额则用对应 SQL skill",
+    example_note="模糊回忆消费, 无明确月份/日期/金额时用; 有明确时间或金额则用对应 SQL skill",
 )
 async def search_similar_transactions(
     db: AsyncSession,
@@ -27,10 +26,10 @@ async def search_similar_transactions(
     *,
     config: RunnableConfig,
 ) -> str:
-    """按语义相似度搜索历史交易。用于「上次星巴克花了多少」「类似出差住宿的消费」等模糊回忆；有明确月份/日期/金额时不要使用。
+    """按语义相似度搜索历史交易. 用于 "上次星巴克花了多少", "类似出差住宿的消费" 等模糊回忆; 有明确月份/日期/金额时不要使用.
 
     Args:
-        query: 用户描述或关键词，如「星巴克」「出差住宿」。
+        query: 用户描述或关键词, 如 "星巴克", "出差住宿".
     """
     # 故意不用db，走的是Milvus向量库
     del db
@@ -40,7 +39,7 @@ async def search_similar_transactions(
         return format_tool_result(
             {
                 "error": True,
-                "detail": "交易语义搜索未就绪（Milvus 或 Ollama embedding 不可用）",
+                "detail": "交易语义搜索未就绪(Milvus 或 Ollama embedding 不可用)",
             }
         )
 

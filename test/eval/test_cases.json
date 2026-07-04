@@ -34,21 +34,21 @@
     {
       "id": "query-month-category",
       "message": "查一下本月餐饮花了多少",
-      "expected_tools": ["get_monthly_summary"],
+      "expected_tools": ["get_summary"],
       "tool_match": "any",
       "reply_keywords": ["餐饮"]
     },
     {
       "id": "query-month-total",
       "message": "这个月一共花了多少钱",
-      "expected_tools": ["get_monthly_summary"],
+      "expected_tools": ["get_summary"],
       "tool_match": "any",
       "reply_keywords": ["月"]
     },
     {
       "id": "query-today",
       "message": "我今天用了多少钱",
-      "expected_tools": ["get_daily_summary"],
+      "expected_tools": ["get_summary"],
       "tool_match": "any",
       "reply_keywords": ["今天", "日"]
     },
@@ -118,7 +118,7 @@
     {
       "id": "month-summary-traffic",
       "message": "本月交通支出汇总",
-      "expected_tools": ["get_monthly_summary"],
+      "expected_tools": ["get_summary"],
       "tool_match": "any",
       "reply_keywords": ["交通"]
     },
@@ -132,7 +132,7 @@
     {
       "id": "query-yesterday",
       "message": "昨天花了多少钱",
-      "expected_tools": ["get_daily_summary"],
+      "expected_tools": ["get_summary"],
       "tool_match": "any",
       "reply_keywords": ["昨天", "日"]
     },

@@ -53,6 +53,8 @@ class TransactionListQueryRequest(RequestBase):
     AccountId: int | None = None
     Month: str = Field(default="", alias="month")
     Date: str = Field(default="", alias="date")
+    TransactedAtStart: datetime | None = Field(default=None, alias="transacted_at_start")
+    TransactedAtEnd: datetime | None = Field(default=None, alias="transacted_at_end")
     Category: str = Field(default="", alias="category")
 
     model_config = RequestBase.model_config | {"populate_by_name": True}
