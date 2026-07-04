@@ -18,12 +18,19 @@ class AgentLoopStepList:
 
 
 class AgentLoopStepService:
-    async def create(self, db: AsyncSession, row: AgentLoopStep) -> AgentLoopStep:
+    async def create(
+        self,
+        db: AsyncSession,
+        row: AgentLoopStep,
+        *,
+        commit: bool = True,
+    ) -> AgentLoopStep:
         created = await agent_loop_step_crud.create(
             db,
             object=row,
             schema_to_select=AgentLoopStep,
             return_as_model=True,
+            commit=commit,
         )
         if created is None:
             raise RuntimeError("create agent_loop_step returned None")

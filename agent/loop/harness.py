@@ -23,7 +23,6 @@ M2 ``agent/agent/`` 的 for 循环目前不走本 Harness,可复用 ``policy`` /
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -188,11 +187,9 @@ class LoopHarness:
         )
 
         reply = extract_reply(run_result.messages)
-        # 异步入队落库
-        asyncio.create_task(
-            conversation_controller.enqueue(
-                TurnPersistTask(ctx=ctx, run_result=run_result),
-            )
+        # 同步入队；后台 worker 线程异步落库（勿用 create_task，未持有引用会被 GC）
+        conversation_controller.enqueue_nowait(
+            TurnPersistTask(ctx=ctx, run_result=run_result),
         )
 
         logger.info(

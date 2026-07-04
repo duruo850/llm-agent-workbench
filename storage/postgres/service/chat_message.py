@@ -18,12 +18,19 @@ class ChatMessageList:
 
 
 class ChatMessageService:
-    async def create(self, db: AsyncSession, message: ChatMessage) -> ChatMessage:
+    async def create(
+        self,
+        db: AsyncSession,
+        message: ChatMessage,
+        *,
+        commit: bool = True,
+    ) -> ChatMessage:
         created = await chat_message_crud.create(
             db,
             object=message,
             schema_to_select=ChatMessage,
             return_as_model=True,
+            commit=commit,
         )
         if created is None:
             raise RuntimeError("create chat_message returned None")
