@@ -11,6 +11,83 @@
 - 系统掌握 AI 应用全链路：Chain → Agent → RAG → Embeddings → Skills → Fine-tuning
 - 交付可演示的后端 + 前端 + Agent 面试级项目
 
+## 🏗️ 系统架构
+
+### 部署架构（分层）
+
+```mermaid
+flowchart TB
+  subgraph L1 [客户端层]
+    Browser[浏览器]
+  end
+
+  subgraph L2 [网关层]
+    Web["web :5173\nNginx 静态页 + /api 反代"]
+  end
+
+  subgraph L3 [服务层]
+    subgraph ServerInternal ["主应用服务 · server :8000"]
+      direction TB
+      API["API 网关\nserver/api · REST + 鉴权"]
+      Agent["Agent 引擎\nagent/ · LangGraph ReAct"]
+      Skills["Skills 工具\nagent/skills · @tool_policy"]
+      MCP["MCP 扩展\nagent/mcp · 高德地图"]
+      StorageMod["存储抽象\nstorage/ · PG + RAG + checkpointer"]
+      Common["公共组件\ncommon/ · config + LLM 客户端"]
+      API --> Agent
+      Agent --> Skills
+      Agent --> MCP
+      Skills --> StorageMod
+      Agent --> StorageMod
+      Agent --> Common
+    end
+    KnowledgeService["知识服务\nknowledge-index · RAG 入库与检索"]
+  end
+
+  subgraph L5 [大模型层]
+    direction LR
+    Ollama["自建大模型\nOllama · 视觉 + embedding"]
+    DeepSeek["第三方大模型\nDeepSeek API · 文本推理"]
+  end
+
+  subgraph L4 [存储层]
+    direction LR
+    PG[(PostgreSQL)]
+    Milvus[Milvus]
+    Etcd[etcd]
+    Minio[minio]
+  end
+
+  subgraph L6 [外接层]
+    direction LR
+    AmapMCP[高德 MCP]
+    LangSmith[LangSmith 可选]
+  end
+
+  L1 --> L2
+  L2 --> L3
+  L3 --> L5
+  L3 --> L4
+  L3 --> L6
+  Browser -->|":5173"| Web
+  Web -->|"/api/* → server:8000"| API
+  Common --> Ollama
+  Common --> DeepSeek
+  StorageMod --> PG
+  StorageMod --> Milvus
+  KnowledgeService --> Ollama
+  KnowledgeService --> Milvus
+  MCP --> AmapMCP
+  Common -.-> LangSmith
+  Milvus --> Etcd
+  Milvus --> Minio
+```
+
+- **配置**：`config.yaml`（本地）/ `config.docker.yaml`（Docker 挂载）
+- **向量库**：Milvus + Ollama `nomic-embed-text`（非 Chroma）
+- **知识服务**：`docker compose --profile rag up knowledge-index`（RAG 入库）
+- **深度说明**：[`docs/me/architecture-decisions.md`](docs/me/architecture-decisions.md)
+
 ## 🛠️ 技术栈
 
 - **Agent**: LangChain + LangGraph + Function Calling
