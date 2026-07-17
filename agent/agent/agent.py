@@ -41,8 +41,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent.agent.promt.image import IMAGE_SYSTEM_PROMPT
 from agent.agent.promt.system import system_prompt
-from agent.skills import SKILL_TOOLS, SKILL_TOOLS_MAP
-from agent.mcp import MCP_TOOLS
+from agent.common.skill_registry import skill_registry
 from common.llm import LLMCapability, LLMProvider, get_openai_chat_llm
 from server.db.session import Database
 from server.model.request.parsed import LoadTransaction
@@ -58,9 +57,8 @@ class Agent:
     @classmethod
     def init(cls) -> None:
         """在 ``Database.init`` 之后调用，加载 skill 与 MCP 工具。"""
-        skill_names = ", ".join(SKILL_TOOLS)
-        mcp_names = ", ".join(tool.name for tool in MCP_TOOLS)
-        logger.info("agent skills loaded: %s; mcp tools: %s", skill_names, mcp_names)
+        skill_names = ", ".join(skill_registry.all_tool_names())
+        logger.info("agent skills loaded: %s", skill_names)
 
     @classmethod
     async def invoke(
@@ -88,12 +86,11 @@ class Agent:
     """
         logger.info("input: %s", message)
 
-        if not SKILL_TOOLS:
+        if not skill_registry.all_tools():
             raise RuntimeError("Agent 未初始化，请先调用 Agent.init()")
 
-        # 聚合所有工具:skill tools + mcp tools
-        tools = list(SKILL_TOOLS.values()) + MCP_TOOLS
-        tools_map = {**SKILL_TOOLS_MAP, **{tool.name: tool for tool in MCP_TOOLS}}
+        tools = skill_registry.all_tools()
+        tools_map = skill_registry.tools_map()
 
         llm = get_openai_chat_llm(
             provider=LLMProvider.DEEPSEEK,

@@ -1,0 +1,90 @@
+---
+milestone: M12
+seq: 1
+slug: intent-recognition
+status: done
+skills:
+  - extract-ai-knowledge
+  - db-migrate
+  - add-api-endpoint
+  - http-integration-test
+depends_on:
+  - M11_1-eval-langsmith
+---
+
+# M12 前置意图识别 — Hybrid 三级漏斗
+
+## 里程碑
+
+**M12** — 在 `LoopHarness.prepare_turn` 之前插入 Intent Router，实现 Rule / Embedding / BERT 三种分类器与 Hybrid 漏斗，按场景绑定工具子集并预编译 LangGraph 子图。
+
+## 关联 Skill
+
+| Skill | 用途 |
+|-------|------|
+| [extract-ai-knowledge](../Skills/extract-ai-knowledge/SKILL.md) | `docs/knowledge/M12-intent-recognition.md` |
+| [db-migrate](../Skills/db-migrate/SKILL.md) | `agent_loop_runs` intent 字段迁移 |
+| [add-api-endpoint](../Skills/add-api-endpoint/SKILL.md) | `GET /intent/classify` |
+| [http-integration-test](../Skills/http-integration-test/SKILL.md) | `agent_test` intent 落库断言 |
+
+## 范围
+
+### 交付文件
+
+| 文件 | 说明 |
+|------|------|
+| `agent/intent/` | scenes、types、三种分类器、hybrid、router |
+| `agent/graph/agent.py` | 场景子图预编译 + `invoke_v2` 动态选图 |
+| `agent/loop/harness.py` | `LoopTurnContext` 携带 intent |
+| `scripts/train_intent_classifier.py` | BERT 离线训练 |
+| `test/eval/intent_cases.json` | 意图标注用例（≥50 条） |
+| `test/eval/run_intent_eval.py` | 离线准确率 / 延迟评测 |
+| `data/intent/bert-classifier/` | BERT 权重 |
+| `server/model/agent_loop_run.py` | intent 字段 |
+| `server/alembic/versions/007_intent_fields.py` | 迁移 |
+| `server/api/intent.py` | 调试 API |
+| `examples/06_intent_demo.py` | CLI 对比 hybrid vs 全量 tools |
+| `docs/knowledge/M12-intent-recognition.md` | 知识点文档 |
+
+### 不在范围内
+
+- 修改 `.harness/Wiki/architecture.md`
+- 替换 `create_react_agent` 为手写 StateGraph
+- 在线自动重训 BERT
+- 前端意图展示 UI（归 M17）
+
+## 知识点文档
+
+| slug | 文件 | 验收 |
+|------|------|------|
+| `intent-recognition` | `docs/knowledge/M12-intent-recognition.md` | README 索引 status → done |
+
+## 步骤清单
+
+- [x] 1. 本 plan + milestones M12–M16 顺延为 M13–M17
+- [x] 2. `agent/intent/` 核心模块
+- [x] 3. BERT 训练脚本 + intent_cases + 权重
+- [x] 4. 场景子图 + `invoke_v2` 接入
+- [x] 5. DB 字段 + REST + 落库
+- [x] 6. Eval + demo + 知识文档
+- [x] 7. README agent 处理流程图
+
+## 运行命令
+
+```bash
+docker compose up -d
+.venv/bin/python3.14 scripts/train_intent_classifier.py
+.venv/bin/python3.14 -m pytest agent/intent/ -v -m "not bert"
+.venv/bin/python3.14 test/eval/run_intent_eval.py
+.venv/bin/python3.14 examples/06_intent_demo.py
+.venv/bin/python3.14 -m pytest server/api/agent_test.py -v -k intent
+```
+
+## 验收标准
+
+- [ ] Hybrid 准确率 ≥ 90%（`intent_cases.json`）
+- [ ] Top-1 召回 ≥ 95%
+- [ ] P99 意图分类延迟 < 100ms（Rule+Embedding）；BERT 兜底 < 300ms
+- [ ] `general_chat` 场景禁止调用 DB tools
+- [ ] `agent_loop_runs.intent_scene` 非空（invoke_v2）
+- [ ] `docs/knowledge/M12-intent-recognition.md` 存在且 README 索引为 done

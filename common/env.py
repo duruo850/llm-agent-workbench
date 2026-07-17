@@ -233,6 +233,33 @@ def is_txn_search_incremental_enabled() -> bool:
     return _env_flag("TXN_SEARCH_INCREMENTAL", default=True)
 
 
+def get_intent_embedding_threshold() -> float:
+    """意图嵌入阈值（``INTENT_EMBEDDING_THRESHOLD``，默认 0.7)。
+
+    Returns:
+        float: 意图嵌入阈值
+    """
+    load_config()
+    raw = os.getenv("INTENT_EMBEDDING_THRESHOLD", "0.7").strip()
+    try:
+        return float(raw)
+    except ValueError:
+        return 0.7
+
+
+def get_intent_bert_threshold() -> float:
+    """意图 BERT 阈值（``INTENT_BERT_THRESHOLD``，默认 0.8)。
+
+    Returns:
+        float: 意图 BERT 阈值
+    """
+    load_config()
+    raw = os.getenv("INTENT_BERT_THRESHOLD", "0.8").strip()
+    try:
+        return float(raw)
+    except ValueError:
+        return 0.8
+
 def configure_langsmith() -> None:
     """按 LangSmith Quickstart 同步 ``LANGSMITH_*`` 到进程环境，供 LangGraph 自动 trace。"""
     load_config()

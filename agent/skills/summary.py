@@ -8,15 +8,18 @@ from langchain_core.runnables import RunnableConfig
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from agent.agent.promt.policy import account_id_from_config, tool_policy
+from agent.common.skill_policy import account_id_from_config
+from agent.skills.common import tool_register
 from common.format import format_db_error, format_tool_result
 from server.model.response import SummaryResponse
 from storage.postgres import transaction_service
 from utils.date_range import bounds_from_period
+from agent.common.skill_category import SkillCategoryTransaction
 
 
-@tool_policy(
+@tool_register(
     scope="查汇总",
+    skill_category=SkillCategoryTransaction,
     time_scope="none",
     forbid_tools=(
         "query_transactions",

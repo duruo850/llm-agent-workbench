@@ -42,10 +42,14 @@ Fine-tuning / Skills (分类微调 / 可插拔技能模块)
 | **M7** | `indexer/embeddings.py` | 语义搜历史消费 |
 | **M8** | 月报 / 预算分析图 | LangGraph 复杂工作流 |
 | **M9** | Checkpoint + HITL | 长期记忆 + 大额人工确认 |
-| **M10** | Eval + LangSmith | 工具选择准确率 / Tracing |
-| **M11** | `skills/` 模块 | 可插拔 Skills（报税 / 投资等） |
-| **M12** | Fine-tuning 实验 | 消费分类 LoRA（可选进阶） |
-| **M13** | 前端仪表盘 | 图表 + 完整产品体验 |
+| **M10** | Loop engineering | Harness + 步级落库 |
+| **M11** | Eval + LangSmith | 工具选择准确率 / Tracing |
+| **M12** | 前置意图识别 | Hybrid 漏斗 → 场景工具子集 |
+| **M13** | Memory + HITL | 长期记忆 + 大额人工确认 |
+| **M14** | 月报工作流 | LangGraph 复杂工作流 |
+| **M15** | Skills 模块 | 可插拔 Skills（报税 / 投资等） |
+| **M16** | Fine-tuning 实验 | 消费分类 LoRA（可选进阶） |
+| **M17** | 前端仪表盘 | 图表 + 完整产品体验 |
 
 ### 1.4 目标项目结构（随里程碑逐步创建）
 
@@ -459,7 +463,15 @@ agent/skills/
 
 ---
 
-#### Day 20-21：Fine-tuning 进阶 + M12（可选）
+#### Day 20-21：前置意图识别 + M12
+
+**实战任务 → M12：** Hybrid 意图路由（Rule → Embedding → BERT），按场景绑定工具子集。
+
+**验收：** `python test/eval/run_intent_eval.py` 准确率 ≥ 90%；`GET /intent/classify` 可调试。
+
+---
+
+#### Day 22-23：Fine-tuning 进阶 + M16（可选）
 
 **必学概念：** 数据准备、LoRA/QLoRA、分类任务微调 vs Prompt 方案对比。
 
@@ -469,7 +481,7 @@ agent/skills/
 - Hugging Face PEFT / LoRA：https://huggingface.co/docs/peft
 - DeepSeek Fine-tuning 指南（若官方提供）
 
-**实战任务 → M12：** 消费分类 Fine-tuning 实验。
+**实战任务 → M16：** 消费分类 Fine-tuning 实验。
 
 1. 从 MySQL 导出 `(merchant, note) → category` 训练集（≥500 条）
 2. 训练 LoRA 分类头 或 微调小模型
@@ -479,9 +491,9 @@ agent/skills/
 
 ---
 
-#### Day 22-23：前端仪表盘 + M13
+#### Day 24-25：前端仪表盘 + M17
 
-**实战任务 → M13：** 完善前端产品体验。
+**实战任务 → M17：** 完善前端产品体验。
 
 | 页面 | 功能 |
 |------|------|
@@ -578,7 +590,7 @@ agent/skills/
 | 5 | https://python.langchain.com/docs/concepts/embedding_models/ | 0.5 天 | M7 Embeddings |
 | 6 | https://langchain-ai.github.io/langgraph/concepts/persistence/ | 0.5 天 | M9 Memory |
 | 7 | https://docs.smith.langchain.com/ | 0.5 天 | M10 Eval |
-| 8 | 项目实战 | 持续 | M1-M13 增量交付 |
+| 8 | 项目实战 | 持续 | M1-M17 增量交付 |
 
 ---
 
@@ -602,10 +614,14 @@ agent/skills/
 
 第 3 周
 - [ ] M9  Memory + HITL 大额确认
-- [ ] M10 Eval + LangSmith
-- [ ] M11 Agent Skills 模块化
-- [ ] M12 Fine-tuning 实验（可选）
-- [ ] M13 前端仪表盘
+- [ ] M10 Loop engineering
+- [ ] M11 Eval + LangSmith
+- [ ] M12 前置意图识别
+- [ ] M13 Memory + HITL
+- [ ] M14 月报工作流
+- [ ] M15 Agent Skills 模块化
+- [ ] M16 Fine-tuning 实验（可选）
+- [ ] M17 前端仪表盘
 ```
 
 ---

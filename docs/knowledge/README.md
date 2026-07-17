@@ -15,11 +15,12 @@
 | Memory OS（分层存储 + 流水线） | M9 | [M9-memory-os.md](M9-memory-os.md) | `agent/storage/`, `AsyncPostgresSaver` | done |
 | Loop Engineering（Harness + 步级落库） | M10 | [M10-loop-engineering.md](M10-loop-engineering.md) | `agent/loop/`, `invoke_v2` | done |
 | Eval + LangSmith | M11 | [M11-eval-langsmith.md](M11-eval-langsmith.md) | `test/eval/`, `invoke` + `LANGSMITH_*` | done |
+| 前置意图识别（Hybrid 漏斗） | M12 | [M12-intent-recognition.md](M12-intent-recognition.md) | `agent/intent/`, `invoke_v2` | done |
 | 精简 Prompt 后变慢（Reasoning） | M11.1 | [M11.1-slim-prompt-reasoning-latency.md](M11.1-slim-prompt-reasoning-latency.md) | `common/llm/openai_chat_llm.py`, `system_not_tools.py` | done |
 | Agent 延迟与成本优化 | M11.2 | [M11.2-agent-optimization.md](M11.2-agent-optimization.md) | `agent/agent/promt/`, `common/llm/setting.py` | done |
-| Memory + Human-in-the-loop | M12 | [M12-memory-hitl.md](M12-memory-hitl.md) | 待建 | 待提取 |
-| Fine-tuning / LoRA | M12 | [M12-fine-tuning.md](M12-fine-tuning.md) | 待建 | 待提取 |
-| 可插拔 Agent Skills | M14 | [M14-agent-skills.md](M14-agent-skills.md) | `agent/skills/`（待建） | 待提取 |
+| Memory + Human-in-the-loop | M13 | [M13-memory-hitl.md](M13-memory-hitl.md) | 待建 | 待提取 |
+| Fine-tuning / LoRA | M16 | [M16-fine-tuning.md](M16-fine-tuning.md) | 待建 | 待提取 |
+| 可插拔 Agent Skills | M15 | [M15-agent-skills.md](M15-agent-skills.md) | `agent/skills/`（待建） | 待提取 |
 
 ## 如何使用
 

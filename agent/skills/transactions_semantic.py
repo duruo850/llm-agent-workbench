@@ -5,13 +5,16 @@ from __future__ import annotations
 from langchain_core.runnables import RunnableConfig
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from agent.agent.promt.policy import account_id_from_config, tool_policy
+from agent.common.skill_policy import account_id_from_config
+from agent.skills.common import tool_register
 from storage.rag.transaction import transaction_rag
 from common.format import format_tool_result
+from agent.common.skill_category import SkillCategoryTransaction
 
 
-@tool_policy(
+@tool_register(
     scope="语义搜历史账单",
+    skill_category=SkillCategoryTransaction,
     forbid_tools=(
         "get_summary",
         "query_transactions",

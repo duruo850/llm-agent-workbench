@@ -8,10 +8,11 @@ from langchain_core.runnables import RunnableConfig
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agent.agent.promt.image import IMAGE_SYSTEM_PROMPT
-from agent.agent.promt.policy import tool_policy
+from agent.skills.common import tool_register
 from common.format import format_tool_result
 from common.llm import LLMCapability, LLMProvider, get_openai_chat_llm
 from server.model.request.parsed import LoadTransaction
+from agent.common.skill_category import SkillCategoryTransaction
 
 
 async def recognize_image_file(image_data_url: str) -> str:
@@ -45,8 +46,9 @@ async def recognize_image_file(image_data_url: str) -> str:
     )
 
 
-@tool_policy(
+@tool_register(
     scope="图片文件识别",
+    skill_category=SkillCategoryTransaction,
     user_triggers=("截图", "图片", "支付截图", "转账截图"),
     example_queries=("识别这张支付截图",),
     example_note="用户上传图片时使用 parse_image_file（多模态），不要用于 CSV",

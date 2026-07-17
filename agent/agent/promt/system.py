@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from langchain_core.tools import BaseTool
-from agent.agent.promt.policy import OUT_OF_SCOPE_REPLY
+from agent.common.skill_policy import OUT_OF_SCOPE_REPLY
 from agent.loop.prompt import LOOP_ENGINEERING_RULES
-from agent.skills import SKILL_POLICYS
+from agent.common.skill_registry import skill_registry
 
 
 def _tool_summary(tool: BaseTool) -> str:
@@ -34,11 +34,17 @@ def _format_time_range_rules(tools: list[BaseTool], today_date: str, month: str)
     """从各 tool 的 ToolPromptPolicy 生成时间范围编排规则."""
     lines: list[str] = []
 
-    day_tools = [t for t in tools if (p := SKILL_POLICYS.get(t.name)) and p.time_scope == "day"]
-    month_tools = [t for t in tools if (p := SKILL_POLICYS.get(t.name)) and p.time_scope == "month"]
+    day_tools = [
+        t for t in tools
+        if (p := skill_registry.policy_for_tool(t.name)) and p.time_scope == "day"
+    ]
+    month_tools = [
+        t for t in tools
+        if (p := skill_registry.policy_for_tool(t.name)) and p.time_scope == "month"
+    ]
 
     for registered in day_tools:
-        policy = SKILL_POLICYS.get(registered.name)
+        policy = skill_registry.policy_for_tool(registered.name)
         if policy is None:
             continue
         triggers = '", "'.join(policy.user_triggers)
@@ -54,7 +60,7 @@ def _format_time_range_rules(tools: list[BaseTool], today_date: str, month: str)
             lines.append(f'- "{example}" = {note}')
 
     if month_tools:
-        month_triggers = SKILL_POLICYS[month_tools[0].name].month_triggers if month_tools else ()
+        month_triggers = skill_registry.policy_for_tool(month_tools[0].name).month_triggers if month_tools else ()
         triggers = '", "'.join(month_triggers)
         names = " 或 ".join(t.name for t in month_tools)
         lines.append(
@@ -75,7 +81,7 @@ def _format_business_scope(tools: list[BaseTool]) -> str:
     """从各 tool 的 ToolPromptPolicy.scope 汇总业务范围."""
     scopes: list[str] = []
     for registered in tools:
-        policy = SKILL_POLICYS.get(registered.name)
+        policy = skill_registry.policy_for_tool(registered.name)
         if policy and policy.scope and policy.scope not in scopes:
             scopes.append(policy.scope)
 

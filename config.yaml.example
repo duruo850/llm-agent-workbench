@@ -43,3 +43,7 @@ langsmith_tracing: true
 langsmith_endpoint: https://apac.api.smith.langchain.com
 langsmith_api_key: ""
 langsmith_project:
+
+# --- M12 意图识别 ---
+# intent_embedding_threshold: 0.7
+# intent_bert_threshold: 0.8

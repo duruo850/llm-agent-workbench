@@ -1,6 +1,6 @@
 # 🤖 BillMind — 个人记账助理 Agent
 
-> 边学 LangChain / LangGraph / LlamaIndex，边做全栈 AI Agent 实战项目
+> 边学 LangChain / LangGraph / RAG（Milvus），边做全栈 AI Agent 实战项目
 
 ## 🎯 项目目标
 
@@ -84,16 +84,16 @@ flowchart TB
 ```
 
 - **配置**：`config.yaml`（本地）/ `config.docker.yaml`（Docker 挂载）
-- **向量库**：Milvus + Ollama `nomic-embed-text`（非 Chroma）
+- **向量库**：Milvus + Ollama `nomic-embed-text`
 - **知识服务**：`docker compose --profile rag up knowledge-index`（RAG 入库）
 - **深度说明**：[`docs/me/architecture-decisions.md`](docs/me/architecture-decisions.md)
 
 ## 🛠️ 技术栈
 
 - **Agent**: LangChain + LangGraph + Function Calling
-- **RAG**: LlamaIndex + Chroma + Embeddings
+- **RAG**: LangChain + Milvus + Ollama Embeddings
 - **LLM**: DeepSeek（云端文本）+ Ollama（本地视觉，OpenAI 兼容接口）
-- **存储**: PostgreSQL + Chroma（向量，M6+）
+- **存储**: PostgreSQL + Milvus（向量，M6+）
 - **后端**: FastAPI（SSE 流式）
 - **前端**: React + Vite
 - **进阶**: Embeddings、Fine-tuning、Agent Skills、LangSmith
@@ -146,7 +146,8 @@ curl -X POST http://127.0.0.1:8000/agent/chat \
 llm-agent-workbench/
 ├── server/                  # FastAPI + PostgreSQL
 ├── agent/                   # LangGraph Agent + Tools + Skills
-├── indexer/                 # LlamaIndex RAG + Embeddings
+├── storage/                 # PostgreSQL CRUD + Milvus RAG + checkpointer
+│   └── rag/                 # 知识库 / 交易语义检索（Milvus + Embeddings）
 ├── web/                     # 聊天 + 仪表盘
 ├── common/                  # LLM 平台抽象 + DeepSeek / Ollama 封装
 ├── examples/                # 各阶段独立 demo
@@ -177,3 +178,51 @@ conversation（1 次会话，thread_id）
 | **loop 单步** | `agent_loop_steps` | ReAct 循环内每一步的 token / 工具名 |
 
 跨轮记忆：`thread_id` → LangGraph checkpointer；业务历史 → `chat_messages`。
+
+## 🤖 Agent 处理流程（M12 意图识别）
+
+一次 `POST /agent/chat`（`invoke_v2`）的端到端路径：
+
+```mermaid
+flowchart TB
+  subgraph Client [客户端]
+    UserMsg[用户消息 / CSV / 图片]
+  end
+
+  subgraph API [server/api/agent.py]
+  Preprocess[HTTP 轻预处理\n拼接 IP / 文件块]
+  end
+
+  subgraph Intent [agent/intent M12]
+  Router[IntentRouter.classify]
+  Hybrid[Hybrid 漏斗\nRule → Embedding → BERT]
+  ScenePick[选择 scene_id\n绑定工具子集]
+  Router --> Hybrid --> ScenePick
+  end
+
+  subgraph Graph [agent/graph]
+  SceneGraph[scene_graphs 子图\n或 fallback 全量图]
+  ReAct[LangGraph ReAct 循环]
+  SceneGraph --> ReAct
+  end
+
+  subgraph Loop [agent/loop M10]
+  Harness[LoopHarness\nastream_events 步级监控]
+  Persist[异步落库\nchat_messages + loop_steps + intent_scene]
+  Harness --> Persist
+  end
+
+  UserMsg --> Preprocess --> Router
+  ScenePick --> SceneGraph
+  ReAct --> Harness --> Reply[Assistant 回复]
+```
+
+| 阶段 | 模块 | 说明 |
+|------|------|------|
+| 预处理 | `server/api/agent.py` | CSV/图片块、客户端 IP |
+| **意图识别** | `agent/intent/` | Hybrid 漏斗 → `scene_id` + confidence |
+| 选图 | `agent/graph/agent.py` | `general_chat` 空工具 / `fallback_all` 全量 |
+| ReAct | LangGraph | DeepSeek + 场景 tools |
+| 监控落库 | `agent/loop/harness.py` | `intent_scene` 写入 `agent_loop_runs` |
+
+调试：`GET /intent/classify?q=...&method=hybrid`（需鉴权）。CLI：`python examples/06_intent_demo.py`。

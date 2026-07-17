@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from agent.agent.promt.policy import OUT_OF_SCOPE_REPLY
+from agent.common.skill_policy import OUT_OF_SCOPE_REPLY
 from agent.agent.promt.system import _format_response_rules
 from agent.loop.prompt import LOOP_ENGINEERING_RULES
 

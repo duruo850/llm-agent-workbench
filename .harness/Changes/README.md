@@ -39,6 +39,7 @@ M{n}_{seq}-{slug}.plan
 | [M9_1-memory-os.plan](M9_1-memory-os.plan) | M9 | 1 | done |
 | [M10_1-loop-engineering.plan](M10_1-loop-engineering.plan) | M10 | 1 | done |
 | [M11_1-eval-langsmith.plan](M11_1-eval-langsmith.plan) | M11 | 1 | done |
+| [M12_1-intent-recognition.plan](M12_1-intent-recognition.plan) | M12 | 1 | done |
 
 > M1 已在 harness 建立前完成，无编号 plan；后续 M1 补丁可用 `M1_1-*.plan`。
 

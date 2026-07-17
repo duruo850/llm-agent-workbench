@@ -1,35 +1,20 @@
-"""Agent skills — 按领域拆分 @tool，统一合并为对外工具列表。"""
+"""Agent skills — 按领域拆分 @tool，统一由 SkillRegistry 聚合。"""
 
 from __future__ import annotations
 
 import importlib
 import pkgutil
 
-from langchain_core.tools import BaseTool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from agent.agent.promt.policy import ToolPromptPolicy
+from agent.common.skill_registry import skill_registry
 
-SKILL_TOOLS: dict[str, BaseTool] = {}
-SKILL_TOOLS_MAP: dict[str, BaseTool] = {}
-SKILL_POLICYS: dict[str, ToolPromptPolicy] = {}
+_INITIALIZED = False
 
 
-def _register_module_tools(
-    module_name: str,
-    db_session_factory: async_sessionmaker[AsyncSession],
-) -> None:
+def _import_skill_modules(module_name: str) -> None:
+    """import skill 模块，触发 ``@tool_register`` 注册到 SkillRegistry。"""
     module = importlib.import_module(module_name)
-    policies = getattr(module, "POLICIES", None)
-    if isinstance(policies, dict):
-        SKILL_POLICYS.update(policies)
-    builders = getattr(module, "TOOL_BUILDERS", None)
-    if isinstance(builders, list):
-        for build in builders:
-            tool_obj = build(db_session_factory)
-            SKILL_TOOLS[tool_obj.name] = tool_obj
-            SKILL_TOOLS_MAP[tool_obj.name] = tool_obj
-
     if not hasattr(module, "__path__"):
         return
 
@@ -38,12 +23,13 @@ def _register_module_tools(
         short = sub_info.name.removeprefix(prefix).split(".")[-1]
         if short.startswith("_") or short == "route":
             continue
-        _register_module_tools(sub_info.name, db_session_factory)
+        _import_skill_modules(sub_info.name)
 
 
 def init(db_session_factory: async_sessionmaker[AsyncSession]) -> None:
-    """扫描 ``agent/skills/`` 及子包（如 ``file/``），填充 SKILL_TOOLS。"""
-    if SKILL_TOOLS:
+    """扫描 ``agent/skills/`` 及子包（如 ``file/``），注册到 SkillRegistry。"""
+    global _INITIALIZED
+    if _INITIALIZED:
         return
 
     prefix = f"{__name__}."
@@ -51,7 +37,10 @@ def init(db_session_factory: async_sessionmaker[AsyncSession]) -> None:
         short_name = module_info.name.removeprefix(prefix)
         if short_name.startswith("_"):
             continue
-        _register_module_tools(module_info.name, db_session_factory)
+        _import_skill_modules(module_info.name)
+
+    skill_registry.init(db_session_factory)
+    _INITIALIZED = True
 
 
-__all__ = ["SKILL_TOOLS", "SKILL_TOOLS_MAP", "SKILL_POLICYS", "discover_skill_modules"]
+__all__ = ["init"]

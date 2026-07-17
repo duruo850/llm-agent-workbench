@@ -6,10 +6,12 @@ from langchain_core.runnables import RunnableConfig
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from agent.agent.promt.policy import account_id_from_config, tool_policy
+from agent.common.skill_policy import account_id_from_config
+from agent.skills.common import tool_register
 from agent.agent.common.parse_sentence import parse_sentence
 from common.csv_import import ImportResult, import_csv_transactions
 from common.format import format_db_error, format_tool_result
+from agent.common.skill_category import SkillCategoryTransaction
 
 
 def _format_import_summary(result: ImportResult) -> dict:
@@ -38,8 +40,9 @@ def _format_import_summary(result: ImportResult) -> dict:
     }
 
 
-@tool_policy(
+@tool_register(
     scope="CSV文件导入",
+    skill_category=SkillCategoryTransaction,
     user_triggers=("CSV", "csv", "流水文件", "账单文件"),
     example_queries=("导入这份 CSV 文件",),
     example_note="用户上传 .csv 文件时使用 import_csv_file，不要用图片识别",

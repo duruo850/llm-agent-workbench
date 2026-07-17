@@ -57,7 +57,8 @@ Agent 实现 BillMind 功能前的**必读入口**。本目录沉淀目录结构
 - [Wiki/architecture.md](Wiki/architecture.md) — Web / Server / Agent / PostgreSQL 整体架构（**只读，Agent 不得修改**）
 - [Wiki/repo-layout.md](Wiki/repo-layout.md) — 实际目录 vs learning-plan
 - [Wiki/server.md](Wiki/server.md) — 服务端启动、API、中间件
-- [Wiki/milestones.md](Wiki/milestones.md) — M0–M13 进度索引
+- [Wiki/milestones.md](Wiki/milestones.md) — M0–M17 进度索引
+- **意图分类器说明**: [`agent/intent/classifiers/README.md`](../agent/intent/classifiers/README.md) — Rule / Embedding / BERT / Hybrid 原理与用法 (M12)
 
 ## 禁止
 

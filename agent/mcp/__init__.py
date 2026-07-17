@@ -12,6 +12,18 @@ from agent.mcp.gaode import (
 from langchain_core.tools import BaseTool
 import logging
 
+from agent.common.skill_category import register_skill_category
+from agent.common.skill_category import SkillCategoryMcpGaode
+from agent.common.skill_registry import skill_registry
+
+# 注册高德地图分类
+register_skill_category(
+    SkillCategoryMcpGaode,
+    description="地理位置与天气：我在哪、当前城市、今天天气、气温",
+    keywords=("天气", "气温", "下雨", "定位", "在哪", "城市"),
+    patterns=(r".*天气.*", r".*我在哪.*", r".*当前.*城市.*"),
+)
+
 __all__ = [
     "AMAP_AUTH_MCP_TOOL_NAMES",
     "AmapMCPClient",
@@ -23,15 +35,12 @@ __all__ = [
     "resolve_weather",
 ]
 
-## 聚合所有MCP tools
-MCP_TOOLS: list[BaseTool] = []
 
 logger = logging.getLogger("billmind.mcp")
 
 async def init():
     """初始化"""
     await AmapMCPClient.init()
-    MCP_TOOLS.clear()
     
-    # 暂时不绑定给LLM任何的mcp技能，目前用不上
-    # MCP_TOOLS.extend(AmapMCPClient.SKILL_USED_TOOLS) # 仅使用2个工具
+    # 注册高德地图分类的工具
+    skill_registry.register_skills(AmapMCPClient.SKILL_USED_TOOLS, category_id=SkillCategoryMcpGaode)

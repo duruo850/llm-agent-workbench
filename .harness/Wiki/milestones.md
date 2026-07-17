@@ -1,4 +1,4 @@
-# 里程碑索引 M0–M16
+# 里程碑索引 M0–M17
 
 - **learning-plan** = 长期课表：`[docs/learning-plan.md](../../docs/learning-plan.md)`
 - **Changes** = 可执行交付单：`[.harness/Changes/](../Changes/)`
@@ -21,11 +21,12 @@
 | **M9**  | ✅ 完成 | 生产级别 Memory 存储记忆架构               | [M9_1-memory-os](../Changes/M9_1-memory-os.plan)                                                                                                                     |
 | **M10** | ✅ 完成 | Loop engineering                 | [M10_1-loop-engineering](../Changes/M10_1-loop-engineering.plan)                                                                                                                     |
 | **M11** | ✅ 完成 | Eval + LangSmith                 | [M11_1-eval-langsmith](../Changes/M11_1-eval-langsmith.plan)                                                                                                                     |
-| **M12** | ⬜ 待做 | Memory + HITL                    | —                                                                                                                     |
-| **M13** | ⬜ 待做 | 月报工作流                            | —                                                                                                                     |
-| **M14** | ⬜ 待做 | Skills 模块                        | —                                                                                                                     |
-| **M15** | ⬜ 待做 | Fine-tuning                      | —                                                                                                                     |
-| **M16** | ⬜ 待做 | 前端仪表盘                            | —                                                                                                                     |
+| **M12** | ✅ 完成 | 前置意图识别（Hybrid 漏斗）              | [M12_1-intent-recognition](../Changes/M12_1-intent-recognition.plan)                                                                                                           |
+| **M13** | ⬜ 待做 | Memory + HITL                    | —                                                                                                                     |
+| **M14** | ⬜ 待做 | 月报工作流                            | —                                                                                                                     |
+| **M15** | ⬜ 待做 | Skills 模块                        | —                                                                                                                     |
+| **M16** | ⬜ 待做 | Fine-tuning                      | —                                                                                                                     |
+| **M17** | ⬜ 待做 | 前端仪表盘                            | —                                                                                                                     |
 
 
 ### 状态符号
@@ -123,6 +124,16 @@
 - **离线 Eval**：[`test/eval/`](../../test/eval/) — `invoke(..., return_tools=True)` 从 graph messages 取工具链
 - **知识点**：[`docs/knowledge/M11-eval-langsmith.md`](../../docs/knowledge/M11-eval-langsmith.md)
 - **验收**：`pytest test/eval/scorers_test.py`；`python test/eval/run_eval.py`
+
+## M12 要点
+
+- **Intent Router**：[`agent/intent/`](../../agent/intent/) — Rule / Embedding / BERT + Hybrid 三级漏斗
+- **分类器说明**：[`agent/intent/classifiers/README.md`](../../agent/intent/classifiers/README.md) — 原理、用法、优缺点 (Rule / Embedding / BERT / Hybrid)
+- **场景子图**：[`agent/graph/agent.py`](../../agent/graph/agent.py) — `invoke_v2` 按 `scene_id` 选工具子集
+- **落库**：`agent_loop_runs.intent_scene` / `intent_method` / `intent_confidence`
+- **调试 API**：`GET /intent/classify?q=...&method=hybrid`
+- **知识点**：[`docs/knowledge/M12-intent-recognition.md`](../../docs/knowledge/M12-intent-recognition.md)
+- **验收**：`python test/eval/run_intent_eval.py`；`pytest agent/intent/ -m "not bert"`
 
 ## M2+ 启动前
 

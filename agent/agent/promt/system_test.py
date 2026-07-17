@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from langchain_core.tools import StructuredTool
 
-from agent.agent.promt.policy import OUT_OF_SCOPE_REPLY, ToolPromptPolicy
+from agent.common.skill_policy import OUT_OF_SCOPE_REPLY, ToolPromptPolicy
 from agent.agent.promt.system import system_prompt as system_prompt_for_tools
 from agent.agent.promt.system_not_tools import system_prompt
 from agent.loop.prompt import LOOP_ENGINEERING_RULES
-from agent.skills import SKILL_POLICYS
+from agent.common.skill_registry import skill_registry
 
 
 def _fake_tool(name: str, description: str) -> StructuredTool:
@@ -49,15 +49,17 @@ def _register_test_policies() -> None:
     policies = {
         "get_summary": ToolPromptPolicy(
             scope="账单查询",
+            skill_category="transaction",
             time_scope="none",
             forbid_tools=("query_transactions",),
             example_queries=("今天花了多少",),
             example_note="查汇总，period=day + 当天 start/end",
         ),
-        "parse_image_file": ToolPromptPolicy(scope="图片文件识别"),
-        "import_csv_file": ToolPromptPolicy(scope="CSV 导入"),
+        "parse_image_file": ToolPromptPolicy(scope="图片文件识别", skill_category="transaction"),
+        "import_csv_file": ToolPromptPolicy(scope="CSV 导入", skill_category="transaction"),
     }
-    SKILL_POLICYS.update(policies)
+    for name, policy in policies.items():
+        skill_registry.register_policy(name, policy)
 
 
 def _legacy_tools_section(tools: list[StructuredTool]) -> str:

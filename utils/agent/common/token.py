@@ -1,7 +1,25 @@
 from typing import Any
+import json
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def estimate_bind_tools_tokens(tools: list[Any]) -> int:
+    """粗略估算 bind_tools schema 的 token 数（字符数 / 4）。"""
+    if not tools:
+        return 0
+    try:
+        schemas = []
+        for tool in tools:
+            if hasattr(tool, "get_input_jsonschema"):
+                schemas.append(tool.get_input_jsonschema())
+            elif hasattr(tool, "name"):
+                schemas.append({"name": tool.name})
+        payload = json.dumps(schemas, ensure_ascii=False)
+    except Exception:
+        payload = " ".join(getattr(t, "name", str(t)) for t in tools)
+    return max(1, len(payload) // 4)
 
 
 def extract_token_usage(event: dict[str, Any]) -> int:
