@@ -9,11 +9,11 @@ deepseek_api_key: ""
 # deepseek_thinking_disabled: true
 
 # --- Database（compose 映射 5432）---
-database_url: postgresql+asyncpg://billmind:billmind@localhost:5432/billmind
+database_url: postgresql+asyncpg://billmind:billmind@postgres:5432/billmind
 # checkpointer_pool_max: 5
 
 # --- Ollama（compose 映射 11434）---
-ollama_uri: http://localhost:11434
+ollama_uri: http://ollama:11434
 ollama_vision_model: qwen2.5vl:7b
 ollama_embedding_model: nomic-embed-text
 
@@ -22,7 +22,7 @@ amap_maps_api_key: ""
 # geo_default_ip: ""
 
 # --- RAG（compose 映射 19530）---
-milvus_uri: http://localhost:19530
+milvus_uri: http://milvus:19530
 rag_top_k: 4
 
 # --- 交易语义搜索 ---
