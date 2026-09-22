@@ -14,6 +14,10 @@ _INITIALIZED = False
 
 def _import_skill_modules(module_name: str) -> None:
     """import skill 模块，触发 ``@tool_register`` 注册到 SkillRegistry。"""
+    short_name = module_name.rsplit(".", 1)[-1]
+    if short_name.endswith("_test") or short_name.startswith("test_"):
+        return
+
     module = importlib.import_module(module_name)
     if not hasattr(module, "__path__"):
         return
@@ -22,6 +26,8 @@ def _import_skill_modules(module_name: str) -> None:
     for sub_info in pkgutil.iter_modules(module.__path__, prefix):
         short = sub_info.name.removeprefix(prefix).split(".")[-1]
         if short.startswith("_") or short == "route":
+            continue
+        if short.endswith("_test") or short.startswith("test_"):
             continue
         _import_skill_modules(sub_info.name)
 
