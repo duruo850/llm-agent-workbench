@@ -4,10 +4,9 @@
 # 不启：ollama、milvus、etcd、minio、knowledge-index
 #
 # 用法：
-#   cp config.yaml.example config.docker.yaml   # 填 deepseek_api_key
-#   # 建议在 config.docker.yaml 加：
-#   #   intent_classifier: rule          # 不依赖 Ollama embedding
-#   #   txn_search_incremental: false    # 不写向量库
+#   编辑 config.docker.yaml：填 deepseek_api_key
+#   # intent_enabled 默认 false，完整意图识别时再设 true
+#   # txn_search_incremental: false
 #   docker compose -f docker-compose-chat.yml pull
 #   docker compose -f docker-compose-chat.yml up -d
 #

@@ -17,6 +17,7 @@ from utils.agent.common.text import extract_reply, extract_tool_names
 from agent.loop.harness import LoopHarness
 from langgraph.graph.state import CompiledStateGraph
 from agent.intent import init as init_intent, intent_manager
+from common.env import is_intent_enabled
 
 MAX_TOOL_ROUNDS = 5
 
@@ -56,7 +57,8 @@ class Agent:
         
         # 加载技能和工具
         tools = skill_registry.all_tools()
-        init_intent()
+        if is_intent_enabled():
+            init_intent()
 
         # 检查点
         checkpointer = storage.working.get_checkpointer()
@@ -67,9 +69,12 @@ class Agent:
             checkpointer,
             max_tool_rounds=MAX_TOOL_ROUNDS,
         )
-        
-        # 预编译分类图
-        _CATEGORY_GRAPHS = _compile_category_graphs(checkpointer)
+
+        # 预编译分类图（仅意图识别开启时）
+        if is_intent_enabled():
+            _CATEGORY_GRAPHS = _compile_category_graphs(checkpointer)
+        else:
+            _CATEGORY_GRAPHS = {}
 
         skill_names = ", ".join(skill_registry.all_tool_names())
         logger.info("graph agent skills loaded: skill_tools: %s", skill_names)
@@ -125,23 +130,32 @@ class Agent:
         if _COMPILED_GRAPH is None:
             raise RuntimeError("Graph Agent 未初始化，请先调用 Agent.init()")
 
-        # 意图分类
-        intent = intent_manager.classify(message)
-        logger.info(
-            "intent category=%s method=%s confidence=%.3f",
-            intent.scene,
-            intent.method,
-            intent.confidence,
-        )
-        # 通用聊天分类
-        if intent.scene == "general_chat":
-            tool = skill_registry.get_tool("reply_general_chat")
-            if tool is None:
-                raise RuntimeError("reply_general_chat tool 未注册")
-            reply = await tool.ainvoke({}, config=ctx.config)
-            effective_thread_id = ctx.config.get("configurable", {}).get("thread_id", str(uuid4()))
-            logger.info("general_chat direct reply: %s", reply[:80])
-            return str(reply), str(effective_thread_id), ["reply_general_chat"]
+        graph = _COMPILED_GRAPH
+        # 意图分类开启时
+        if is_intent_enabled():
+            # 意图分类
+            intent = intent_manager.classify(message)
+            logger.info(
+                "intent category=%s method=%s confidence=%.3f",
+                intent.scene,
+                intent.method,
+                intent.confidence,
+            )
+            # 通用聊天分类
+            if intent.scene == "general_chat":
+                tool = skill_registry.get_tool("reply_general_chat")
+                if tool is None:
+                    raise RuntimeError("reply_general_chat tool 未注册")
+                reply = await tool.ainvoke({}, config=ctx.config)
+                effective_thread_id = ctx.config.get("configurable", {}).get("thread_id", str(uuid4()))
+                logger.info("general_chat direct reply: %s", reply[:80])
+                return str(reply), str(effective_thread_id), ["reply_general_chat"]
+
+            # 选择子图
+            graph = _CATEGORY_GRAPHS.get(intent.scene, _COMPILED_GRAPH)
+        else:
+            # 意图分类未开启时，直接使用主图
+            graph = _COMPILED_GRAPH
 
         # 准备上下文
         ctx = await LoopHarness.prepare_turn(
@@ -151,10 +165,6 @@ class Agent:
             thread_id=thread_id,
             debug=debug,
         )
-
-        # 选择子图
-        graph = _CATEGORY_GRAPHS.get(intent.scene, _COMPILED_GRAPH)
-        # 执行子图
         run_result = await LoopHarness.invoke_turn(
             graph,
             ctx.graph_input,

@@ -233,6 +233,15 @@ def is_txn_search_incremental_enabled() -> bool:
     return _env_flag("TXN_SEARCH_INCREMENTAL", default=True)
 
 
+def is_intent_enabled() -> bool:
+    """是否开启 M12 前置意图识别（``INTENT_ENABLED``，默认关闭）。
+
+    关闭后 ``invoke_v2`` 直接走主图全量 tools，不预热 Rule/BERT/Embedding。
+    完整栈（含 Ollama）可设 ``intent_enabled: true``。
+    """
+    return _env_flag("INTENT_ENABLED", default=False)
+
+
 def get_intent_embedding_threshold() -> float:
     """意图嵌入阈值（``INTENT_EMBEDDING_THRESHOLD``，默认 0.7)。
 

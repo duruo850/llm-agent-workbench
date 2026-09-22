@@ -35,6 +35,8 @@ langsmith_api_key: ""
 langsmith_project:
 
 # --- M12 意图识别 ---
-# intent_classifier: rule
+# 默认 false；需要意图识别时改为 true（依赖 Ollama embedding 等）
+intent_enabled: false
+# txn_search_incremental: false
 # intent_embedding_threshold: 0.7
 # intent_bert_threshold: 0.8
