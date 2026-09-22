@@ -1,0 +1,40 @@
+# BillMind 测试配置（本机 pytest / 集成测试）
+# 用法：BILLMIND_CONFIG=config.test.yaml pytest …
+# 默认连 docker compose 映射到宿主机的端口（localhost）。
+# 密钥可留空；需要真实 LLM 的用例会 skip 或失败，按测试要求自行填写。
+
+# --- LLM ---
+deepseek_api_key: ""
+# deepseek_model: deepseek-v4-flash
+# deepseek_thinking_disabled: true
+
+# --- Database（compose 映射 5432）---
+database_url: postgresql+asyncpg://billmind:billmind@localhost:5432/billmind
+# checkpointer_pool_max: 5
+
+# --- Ollama（compose 映射 11434）---
+ollama_uri: http://localhost:11434
+ollama_vision_model: qwen2.5vl:7b
+ollama_embedding_model: nomic-embed-text
+
+# --- MCP / Geo ---
+amap_maps_api_key: ""
+# geo_default_ip: ""
+
+# --- RAG（compose 映射 19530）---
+milvus_uri: http://localhost:19530
+rag_top_k: 4
+
+# --- 交易语义搜索 ---
+# txn_search_incremental: false
+
+# --- LangSmith（测试默认关闭）---
+langsmith_tracing: false
+langsmith_endpoint: https://apac.api.smith.langchain.com
+langsmith_api_key: ""
+langsmith_project:
+
+# --- M12 意图识别 ---
+# intent_classifier: rule
+# intent_embedding_threshold: 0.7
+# intent_bert_threshold: 0.8
