@@ -1,6 +1,4 @@
 .env
-config.yaml
-config.docker.yaml
 .venv/
 __pycache__/
 *.pyc
