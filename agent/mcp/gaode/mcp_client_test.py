@@ -47,7 +47,7 @@ def test_call_tool_maps_ip_location(require_amap: None) -> None:
         print("current_public_ip,", ip)
 
         # 写死厦门ip
-        ip = '112.48.54.75'
+        ip = "112.48.54.75"
 
         raw = await AmapMCPClient.call_tool("maps_ip_location", {"ip": ip})
         print("maps_ip_location raw,", raw)
@@ -64,5 +64,65 @@ def test_call_tool_maps_ip_location(require_amap: None) -> None:
         weather = await resolve_weather(result.adcode)
         print("resolve_weather,", weather)
         assert weather.weather, f"未解析到天气: {weather!r}"
+
+    asyncio.run(run())
+
+
+def test_maps_ip_location_trace_remote_ip(require_amap: None) -> None:
+    """对照：国内已知 IP vs 线上访客 IP，打印 raw / payload / 解析结果以定位空 adcode。"""
+    from agent.mcp.gaode.geo import _extract_location, _parse_tool_payload
+
+    known_china_ip = "112.48.54.75"
+    # 线上日志里的访客公网 IP（高德对境外 IP 常返回空）
+    remote_visitor_ip = "143.20.38.88"
+
+    async def probe(ip: str) -> dict[str, object]:
+        raw = await AmapMCPClient.call_tool("maps_ip_location", {"ip": ip})
+        payload = _parse_tool_payload(raw)
+        extracted = _extract_location(payload)
+        resolved = await resolve_ip_location(ip)
+        print("==== maps_ip_location trace ====")
+        print("ip:", ip)
+        print("raw:", raw)
+        print("payload:", payload)
+        print("extracted:", extracted)
+        print("resolved:", resolved)
+        return {
+            "ip": ip,
+            "raw": raw,
+            "payload": payload,
+            "extracted": extracted,
+            "resolved": resolved,
+        }
+
+    async def run() -> None:
+        china = await probe(known_china_ip)
+        remote = await probe(remote_visitor_ip)
+
+        china_resolved = china["resolved"]
+        assert china_resolved.adcode, (
+            f"对照 IP {known_china_ip} 也应有 adcode，否则是 Key/MCP/解析链路坏了: {china}"
+        )
+
+        remote_resolved = remote["resolved"]
+        if not remote_resolved.adcode:
+            # 明确区分：不是解析丢字段，而是高德对该 IP 无定位数据
+            payload = remote["payload"]
+            print(
+                "CONCLUSION: 高德对 "
+                f"{remote_visitor_ip} 未返回省市/adcode。"
+                f" payload={payload!r}"
+            )
+            assert isinstance(payload, dict)
+            # 若 raw 里其实有省市但 extracted 为空 → 解析 bug
+            raw_text = str(remote["raw"])
+            if any(k in raw_text for k in ("province", "city", "adcode")):
+                # 有字段名但值为空列表/空串也常见；仅当出现非空中文省市才算解析漏了
+                import re
+
+                if re.search(r"[\u4e00-\u9fff]{2,}", raw_text):
+                    raise AssertionError(
+                        f"raw 含中文定位信息但解析为空，疑似解析 bug: raw={raw_text}"
+                    )
 
     asyncio.run(run())
