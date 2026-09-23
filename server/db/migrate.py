@@ -55,7 +55,7 @@ def migrate() -> None:
 
 
 async def migrate_on_startup(engine: AsyncEngine) -> None:
-    """应用启动时调用：库不可达则失败；表未就绪则自动迁移。"""
+    """应用启动时调用：库不可达则失败；始终 ``alembic upgrade head``（幂等）。"""
     import server.model.agent_loop_run  # noqa: F401
     import server.model.agent_loop_step  # noqa: F401
     import server.model.account  # noqa: F401
@@ -66,17 +66,9 @@ async def migrate_on_startup(engine: AsyncEngine) -> None:
     import server.model.transaction  # noqa: F401
 
     try:
-        status = await check_db_status(engine)
+        await check_db_status(engine)
     except Exception as exc:
         logger.error("database unreachable: %s", exc)
         raise
 
-    if status["ready"]:
-        logger.info("database schema ready")
-        return
-
-    logger.warning(
-        "database not ready (alembic_version=%s), applying migrations",
-        status["has_alembic_version"],
-    )
     await asyncio.to_thread(migrate)

@@ -29,10 +29,11 @@ description: Alembic 迁移编写与 migrate_on_startup 行为
 
 [`server/db/migrate.py`](../../../server/db/migrate.py)：
 
-1. 连接数据库，检查 `_REQUIRED_TABLES` 是否齐全
-2. 已就绪 → 日志 `database schema ready`，跳过
-3. 未就绪 → 自动执行 `alembic upgrade head`
-4. 库不可达 → 启动失败
+1. 连接数据库，检查 `_REQUIRED_TABLES` 是否齐全（仅日志）
+2. **始终**执行 `alembic upgrade head`（已在 head 时为幂等空操作）
+3. 库不可达 → 启动失败
+
+> 不要因「核心表已存在」跳过迁移：加列 revision（如 `007`/`008`）在旧库上不会因缺表而触发。
 
 ## 文件清单
 
