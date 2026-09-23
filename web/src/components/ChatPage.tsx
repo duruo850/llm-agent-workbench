@@ -12,10 +12,17 @@ function createId(): string {
 
 interface ChatPageProps {
   accountName: string;
+  isGuest?: boolean;
   onLogout: () => void;
+  onLoginRequest?: () => void;
 }
 
-export default function ChatPage({ accountName, onLogout }: ChatPageProps) {
+export default function ChatPage({
+  accountName,
+  isGuest = false,
+  onLogout,
+  onLoginRequest,
+}: ChatPageProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -135,14 +142,25 @@ export default function ChatPage({ accountName, onLogout }: ChatPageProps) {
             >
               新对话
             </button>
-            <button
-              type="button"
-              className="chat-logout-button"
-              disabled={loading}
-              onClick={onLogout}
-            >
-              退出
-            </button>
+            {isGuest ? (
+              <button
+                type="button"
+                className="chat-logout-button"
+                disabled={loading}
+                onClick={onLoginRequest}
+              >
+                登录
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="chat-logout-button"
+                disabled={loading}
+                onClick={onLogout}
+              >
+                退出
+              </button>
+            )}
           </div>
         </div>
       </header>

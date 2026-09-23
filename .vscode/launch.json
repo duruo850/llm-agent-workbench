@@ -14,7 +14,7 @@
       "justMyCode": false
     },
     {
-      "name": "BillMind API (uvicorn reload)",
+      "name": "BillMind Server",
       "type": "debugpy",
       "request": "launch",
       "python": "${workspaceFolder}/.venv/bin/python3.14",
@@ -24,6 +24,15 @@
       "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",
       "jinja": true
+    },
+    {
+      "name": "BillMind Web",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "serve"],
+      "cwd": "${workspaceFolder}/web",
+      "console": "integratedTerminal"
     },
     {
       "name": "Python: Debug Tests",

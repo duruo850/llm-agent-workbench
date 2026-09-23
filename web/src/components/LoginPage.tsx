@@ -4,9 +4,10 @@ import { AuthApiError, postLogin, setAuth } from "../api/auth";
 
 interface LoginPageProps {
   onLogin: () => void;
+  onCancel?: () => void;
 }
 
-export default function LoginPage({ onLogin }: LoginPageProps) {
+export default function LoginPage({ onLogin, onCancel }: LoginPageProps) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +52,17 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <button type="submit" className="login-button" disabled={loading}>
             {loading ? "登录中…" : "登录"}
           </button>
+          {onCancel ? (
+            <button
+              type="button"
+              className="login-button"
+              disabled={loading}
+              onClick={onCancel}
+              style={{ marginTop: "0.5rem", opacity: 0.85 }}
+            >
+              继续以访客使用
+            </button>
+          ) : null}
         </form>
       </div>
     </div>

@@ -2,6 +2,8 @@ import { resolveApiBase } from "./base";
 
 const TOKEN_KEY = "billmind_token";
 const ACCOUNT_NAME_KEY = "billmind_account_name";
+/** 浏览器持久访客 ID；退出登录后仍保留，用于静默 upsert 同一 guest Account。 */
+const GUEST_ID_KEY = "billmind_guest_id";
 
 export interface LoginResponse {
   token: string;
@@ -22,9 +24,23 @@ export function setAuth(token: string, name: string): void {
   localStorage.setItem(ACCOUNT_NAME_KEY, name);
 }
 
+/** 清除 token；保留 guest_id，便于再次静默登录同一访客。 */
 export function clearAuth(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(ACCOUNT_NAME_KEY);
+}
+
+export function getOrCreateGuestId(): string {
+  let id = localStorage.getItem(GUEST_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(GUEST_ID_KEY, id);
+  }
+  return id;
+}
+
+export function isGuestAccount(name: string | null | undefined): boolean {
+  return Boolean(name?.startsWith("guest_"));
 }
 
 export class AuthApiError extends Error {
@@ -62,4 +78,16 @@ export async function postLogin(name: string): Promise<LoginResponse> {
   }
 
   return (await response.json()) as LoginResponse;
+}
+
+/** 有 token 则复用；否则用持久 guest_id 调 login upsert 访客账号。 */
+export async function ensureAuthSession(): Promise<LoginResponse> {
+  const token = getToken();
+  const name = getAccountName();
+  if (token && name) {
+    return { token, account_id: 0, name };
+  }
+  const result = await postLogin(`guest_${getOrCreateGuestId()}`);
+  setAuth(result.token, result.name);
+  return result;
 }
