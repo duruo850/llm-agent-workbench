@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException
@@ -14,6 +15,13 @@ from server.model.account import Account
 from server.model.request.account import AccountListQueryRequest
 from storage.postgres.service.enter import account_crud
 from utils.bearer_token import parse_bearer_token
+from utils.password import hash_password, verify_password
+
+TOKEN_TTL = timedelta(minutes=10)
+
+
+def _token_expiry(now: datetime | None = None) -> datetime:
+    return (now or datetime.now()) + TOKEN_TTL
 
 
 @dataclass
@@ -61,7 +69,12 @@ class AccountService:
     async def update(self, db: AsyncSession, account: Account) -> Account | None:
         return await account_crud.update(
             db,
-            object={"name": account.name, "token": account.token},
+            object={
+                "name": account.name,
+                "token": account.token,
+                "password_hash": account.password_hash,
+                "token_expires_at": account.token_expires_at,
+            },
             id=account.id,
             schema_to_select=Account,
             return_as_model=True,
@@ -89,30 +102,83 @@ class AccountService:
             one_or_none=True,
         )
 
-    async def login_or_register(self, db: AsyncSession, name: str) -> Account:
-        """按 name 查账号；存在则刷新 token，不存在则创建。"""
+    async def register(self, db: AsyncSession, name: str, password: str) -> Account:
+        """账号密码注册；重名则 ValueError。密码仅存单向哈希。"""
         stripped = name.strip()
+        if await self.get_by_name(db, stripped) is not None:
+            raise ValueError("account already exists")
+        return await self.create(
+            db,
+            Account(
+                name=stripped,
+                password_hash=hash_password(password),
+                token=str(uuid.uuid4()),
+                token_expires_at=_token_expiry(),
+            ),
+        )
+
+    async def login_with_password(
+        self, db: AsyncSession, name: str, password: str
+    ) -> Account:
+        """账号密码登录；失败抛 ValueError。"""
+        account = await self.get_by_name(db, name.strip())
+        if account is None or not account.password_hash:
+            raise ValueError("invalid name or password")
+        if not verify_password(password, account.password_hash):
+            raise ValueError("invalid name or password")
         new_token = str(uuid.uuid4())
-        account = await self.get_by_name(db, stripped)
-        if account is None:
-            return await self.create(
-                db,
-                Account(name=stripped, token=new_token),
-            )
-        await account_crud.update(db, object={"token": new_token}, id=account.id)
-        refreshed = await self.get_by_name(db, stripped)
+        await account_crud.update(
+            db,
+            object={"token": new_token, "token_expires_at": _token_expiry()},
+            id=account.id,
+        )
+        refreshed = await self.get_by_name(db, name.strip())
         if refreshed is None:
             raise RuntimeError("account not found after token refresh")
         return refreshed
 
+    async def login_or_register(
+        self, db: AsyncSession, name: str, password: str = "dev"
+    ) -> Account:
+        """内部/CLI/测试：按 name 注册或密码登录（默认密码 ``dev``）。"""
+        existing = await self.get_by_name(db, name.strip())
+        if existing is None:
+            return await self.register(db, name, password)
+        return await self.login_with_password(db, name, password)
+
+    async def login_as_guest(self, db: AsyncSession) -> Account:
+        """游客登录：新建无密码 guest 账号并签发 token。"""
+        guest_id = str(uuid.uuid4())
+        return await self.create(
+            db,
+            Account(
+                name=f"guest_{guest_id}",
+                token=guest_id,
+                password_hash=None,
+                token_expires_at=_token_expiry(),
+            ),
+        )
+
     async def get_current_account(
         self, db: AsyncSession, authorization: str | None
     ) -> Account:
-        """解析 Authorization Bearer 并返回当前账号；格式或 token 非法时抛 ValueError。"""
+        """解析 Bearer；校验过期；未过期则滑动续期 10 分钟。"""
         token = parse_bearer_token(authorization)
         account = await self.get_by_token(db, token)
         if account is None:
             raise ValueError("invalid token")
+
+        # 更新过期时间
+        now = datetime.now()
+        if account.token_expires_at is None or account.token_expires_at <= now:
+            raise ValueError("token expired")
+        new_expiry = _token_expiry(now)
+        await account_crud.update(
+            db,
+            object={"token_expires_at": new_expiry},
+            id=account.id,
+        )
+        account.token_expires_at = new_expiry
         return account
 
 

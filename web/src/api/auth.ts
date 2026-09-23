@@ -2,8 +2,6 @@ import { resolveApiBase } from "./base";
 
 const TOKEN_KEY = "billmind_token";
 const ACCOUNT_NAME_KEY = "billmind_account_name";
-/** 浏览器持久访客 ID；退出登录后仍保留，用于静默 upsert 同一 guest Account。 */
-const GUEST_ID_KEY = "billmind_guest_id";
 
 export interface LoginResponse {
   token: string;
@@ -24,19 +22,9 @@ export function setAuth(token: string, name: string): void {
   localStorage.setItem(ACCOUNT_NAME_KEY, name);
 }
 
-/** 清除 token；保留 guest_id，便于再次静默登录同一访客。 */
 export function clearAuth(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(ACCOUNT_NAME_KEY);
-}
-
-export function getOrCreateGuestId(): string {
-  let id = localStorage.getItem(GUEST_ID_KEY);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(GUEST_ID_KEY, id);
-  }
-  return id;
 }
 
 export function isGuestAccount(name: string | null | undefined): boolean {
@@ -50,13 +38,34 @@ export class AuthApiError extends Error {
   }
 }
 
-export async function postLogin(name: string): Promise<LoginResponse> {
+type SessionExpiredHandler = () => void;
+
+let sessionExpiredHandler: SessionExpiredHandler | null = null;
+
+/** App 注册：token 过期 / 401 时弹出游客或登录选择，避免静默 reload。 */
+export function setSessionExpiredHandler(handler: SessionExpiredHandler | null): void {
+  sessionExpiredHandler = handler;
+}
+
+export function notifySessionExpired(): void {
+  clearAuth();
+  if (sessionExpiredHandler) {
+    sessionExpiredHandler();
+    return;
+  }
+  window.location.reload();
+}
+
+async function postJson(
+  path: string,
+  body: Record<string, unknown>,
+): Promise<LoginResponse> {
   let response: Response;
   try {
-    response = await fetch(`${resolveApiBase()}/accounts/login`, {
+    response = await fetch(`${resolveApiBase()}${path}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim() }),
+      body: JSON.stringify(body),
     });
   } catch {
     throw new AuthApiError(
@@ -65,14 +74,14 @@ export async function postLogin(name: string): Promise<LoginResponse> {
   }
 
   if (!response.ok) {
-    let detail = `登录失败 (${response.status})`;
+    let detail = `请求失败 (${response.status})`;
     try {
-      const body = (await response.json()) as { detail?: string };
-      if (body.detail) {
-        detail = body.detail;
+      const parsed = (await response.json()) as { detail?: string };
+      if (typeof parsed.detail === "string") {
+        detail = parsed.detail;
       }
     } catch {
-      // ignore parse errors
+      // ignore
     }
     throw new AuthApiError(detail);
   }
@@ -80,14 +89,38 @@ export async function postLogin(name: string): Promise<LoginResponse> {
   return (await response.json()) as LoginResponse;
 }
 
-/** 有 token 则复用；否则用持久 guest_id 调 login upsert 访客账号。 */
+export async function postLogin(
+  name: string,
+  password: string,
+): Promise<LoginResponse> {
+  return postJson("/accounts/login", {
+    name: name.trim(),
+    password,
+  });
+}
+
+export async function postRegister(
+  name: string,
+  password: string,
+): Promise<LoginResponse> {
+  return postJson("/accounts/register", {
+    name: name.trim(),
+    password,
+  });
+}
+
+export async function postGuestLogin(): Promise<LoginResponse> {
+  return postJson("/accounts/login", { guest: true });
+}
+
+/** 本地已有 token 则复用；否则游客登录并持久化。 */
 export async function ensureAuthSession(): Promise<LoginResponse> {
   const token = getToken();
   const name = getAccountName();
   if (token && name) {
     return { token, account_id: 0, name };
   }
-  const result = await postLogin(`guest_${getOrCreateGuestId()}`);
+  const result = await postGuestLogin();
   setAuth(result.token, result.name);
   return result;
 }

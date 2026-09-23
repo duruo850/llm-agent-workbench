@@ -1,5 +1,5 @@
 import { resolveApiBase } from "./base";
-import { clearAuth, getToken } from "./auth";
+import { getToken, notifySessionExpired } from "./auth";
 
 const API_BASE = resolveApiBase();
 
@@ -33,8 +33,7 @@ export async function authFetch(
   }
 
   if (response.status === 401) {
-    clearAuth();
-    window.location.reload();
+    notifySessionExpired();
   }
 
   return response;
